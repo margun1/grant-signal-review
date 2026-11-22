@@ -124,6 +124,27 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          id: number
+          kakao_channel_url: string | null
+          reply_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          kakao_channel_url?: string | null
+          reply_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          kakao_channel_url?: string | null
+          reply_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null

@@ -17,7 +17,7 @@ const NAV = [
 
 function NavLinks({ isAdmin, onNav }: { isAdmin: boolean; onNav?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const items = [...NAV, ...(isAdmin ? [{ to: "/admin/invites", label: "직원 초대 관리", icon: Users } as const] : [])];
+  const items = [...NAV, ...(isAdmin ? [{ to: "/admin/invites", label: "직원 초대 관리", icon: Users } as const, { to: "/admin/settings", label: "연락 설정", icon: Users } as const] : [])];
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
       {items.map((it) => {

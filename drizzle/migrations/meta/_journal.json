@@ -15,6 +15,13 @@
       "when": 1795356645911,
       "tag": "0001_always_staff_role",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795356893332,
+      "tag": "0002_company_settings",
+      "breakpoints": true
     }
   ]
 }
