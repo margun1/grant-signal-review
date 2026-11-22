@@ -34,3 +34,6 @@ use the editor.
 - Access control is enforced in the database: `public.is_staff()` (role + active profile) gates every business table and the private `documents` bucket; signup is blocked by the `handle_new_user` trigger unless an invitation exists (first user becomes admin).
 - Plan-review rounds are idempotent via a client-generated `request_key` (unique) plus unique `(announcement_id, round)`.
 - Company facts, fit rules and writing rules for prompts live only in `src/lib/company.ts`.
+- Public intake (homepage inquiries at `/api/public/inquiry`, meeting booking via `src/lib/booking.functions.ts`) validates input and writes with the admin client inside the handler, returning only open slots/ok — internal schedule details never leave the server.
+- Attendance writes only via the `clock()` / `review_attendance_request()` DB functions (server time, one row per user/day); recurring checklist rows are generated idempotently by `generate_checklist(date)`.
+- Customer reply sending records `미연결` in `inquiry_messages` until an email/Kakao sender is wired; only real successful sends may set `답변 완료`.

@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutDashboard, FileSearch, FilePlus2, Users, LogOut, Menu, ShieldAlert, TrendingUp, Coins, Boxes, Settings } from "lucide-react";
+import { LayoutDashboard, FileSearch, FilePlus2, Users, LogOut, Menu, ShieldAlert, TrendingUp, Coins, Boxes, Settings, ListChecks, Clock, MessageSquare, Wrench, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,11 @@ const NAV = [
   { to: "/sales", label: "매출·상품", icon: TrendingUp },
   { to: "/profit", label: "수익성", icon: Coins },
   { to: "/inventory", label: "재고·발주", icon: Boxes },
+  { to: "/checklist", label: "체크리스트", icon: ListChecks },
+  { to: "/attendance", label: "출퇴근", icon: Clock },
+  { to: "/inquiries", label: "고객문의", icon: MessageSquare },
+  { to: "/devices", label: "기기오류", icon: Wrench },
+  { to: "/meetings", label: "미팅·일정", icon: CalendarDays },
   { to: "/announcements", label: "지원사업 공고", icon: FileSearch },
   { to: "/announcements/new", label: "새 공고 분석", icon: FilePlus2 },
 ] as const;

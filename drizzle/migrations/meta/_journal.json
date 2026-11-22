@@ -29,6 +29,20 @@
       "when": 1795357148409,
       "tag": "0003_sales_inventory",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795357643089,
+      "tag": "0004_stage3_ops",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795357665523,
+      "tag": "0005_photos_policies",
+      "breakpoints": true
     }
   ]
 }

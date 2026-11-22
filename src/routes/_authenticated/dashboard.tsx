@@ -31,11 +31,6 @@ function Dashboard() {
       return data ?? [];
     },
   });
-  const pending = [
-    { icon: MessageSquare, label: "미답변 고객문의" },
-    { icon: Users, label: "미확정 미팅 요청" },
-    { icon: ListChecks, label: "오늘 일정·체크리스트" },
-  ];
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="경영현황" desc={`오늘 ${kstDate(new Date())} (한국 시간)`} />
@@ -59,13 +54,7 @@ function Dashboard() {
             <Link to="/announcements" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold underline"><FileSearch className="size-3.5" aria-hidden />공고 목록</Link>
           </div>
           <ShortageCard />
-          {pending.map((p) => (
-            <div key={p.label} className="rounded-md border border-dashed p-4">
-              <div className="mb-2 flex items-center gap-2 font-semibold"><p.icon className="size-4 text-taupe" aria-hidden />{p.label}</div>
-              <StatusBadge label="미연결" tone="info" />
-              <p className="mt-2 text-xs text-muted-foreground">다음 단계에서 연결됩니다.</p>
-            </div>
-          ))}
+          <TodayCards today={today} />
         </div>
       </Panel>
       <Panel title="경영 실적" accent="gold">
@@ -117,5 +106,31 @@ function Performance() {
       </div>
       {series.length > 0 && <div className="h-56"><ResponsiveContainer><LineChart data={series}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="k" /><YAxis tickFormatter={(v) => `${(v / 10000).toLocaleString()}만`} /><Tooltip formatter={(v: number) => won(v)} /><Legend /><Line dataKey="매출액" name="매출액(원)" stroke={C.orange} strokeWidth={2} dot={{ r: 4 }} label={series.length === 1 ? { position: "top" } : false} /></LineChart></ResponsiveContainer></div>}
     </div>
+  );
+}
+
+function TodayCards({ today }: { today: string }) {
+  const q = useQuery({ queryKey: ["dash-today", today], queryFn: async () => {
+    await supabase.rpc("generate_checklist", { _date: today });
+    const [inq, meet, tasks, events] = await Promise.all([
+      supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "미답변"),
+      supabase.from("meetings").select("id", { count: "exact", head: true }).eq("status", "확인 대기"),
+      supabase.from("tasks").select("id,title,done").eq("due_date", today).order("done"),
+      supabase.from("meetings").select("id,kind,title,org,name,start_at").eq("status", "확정").gte("start_at", new Date(`${today}T00:00:00+09:00`).toISOString()).lt("start_at", new Date(`${today}T23:59:59+09:00`).toISOString()).order("start_at"),
+    ]);
+    return { inq: inq.count ?? 0, meet: meet.count ?? 0, tasks: tasks.data ?? [], events: events.data ?? [] };
+  } });
+  const d = q.data;
+  const hm = (iso: string) => new Date(iso).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit" });
+  return (
+    <>
+      <Link to="/inquiries" className="rounded-md border p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><MessageSquare className="size-4 text-taupe" aria-hidden />미답변 고객문의</div><p className="text-2xl font-bold">{d?.inq ?? "-"}건</p></Link>
+      <Link to="/meetings" className="rounded-md border p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><Users className="size-4 text-taupe" aria-hidden />미확정 미팅 요청</div><p className="text-2xl font-bold">{d?.meet ?? "-"}건</p></Link>
+      <div className="rounded-md border p-4"><div className="mb-2 flex items-center gap-2 font-semibold"><ListChecks className="size-4 text-taupe" aria-hidden />오늘 일정·체크리스트</div>
+        <ul className="space-y-1 text-sm">{(d?.events ?? []).map((e) => <li key={e.id}>{hm(e.start_at)} {e.kind === "외부 미팅" ? `미팅 ${e.org ?? e.name ?? ""}` : e.title}</li>)}
+          {(d?.tasks ?? []).slice(0, 5).map((t) => <li key={t.id} className={t.done ? "text-muted-foreground line-through" : ""}>☐ {t.title}</li>)}
+          {d && d.events.length + d.tasks.length === 0 && <li className="text-muted-foreground">오늘 일정과 체크리스트가 없습니다.</li>}</ul>
+        <div className="mt-2 flex gap-3 text-sm font-semibold underline"><Link to="/meetings">일정</Link><Link to="/checklist">체크리스트</Link></div></div>
+    </>
   );
 }

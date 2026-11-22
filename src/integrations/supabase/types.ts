@@ -124,6 +124,108 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          work_date: string
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
+      attendance_requests: {
+        Row: {
+          created_at: string
+          id: string
+          old_check_in: string | null
+          old_check_out: string | null
+          reason: string
+          req_check_in: string | null
+          req_check_out: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          old_check_in?: string | null
+          old_check_out?: string | null
+          reason: string
+          req_check_in?: string | null
+          req_check_out?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+          work_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          old_check_in?: string | null
+          old_check_out?: string | null
+          reason?: string
+          req_check_in?: string | null
+          req_check_out?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
+      checklist_templates: {
+        Row: {
+          active: boolean
+          assignee: string | null
+          created_at: string
+          frequency: string
+          id: string
+          title: string
+          weekday: number | null
+        }
+        Insert: {
+          active?: boolean
+          assignee?: string | null
+          created_at?: string
+          frequency: string
+          id?: string
+          title: string
+          weekday?: number | null
+        }
+        Update: {
+          active?: boolean
+          assignee?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          title?: string
+          weekday?: number | null
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           id: number
@@ -183,6 +285,174 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: []
+      }
+      device_issue_logs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          issue_id: string
+          note: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issue_id: string
+          note: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issue_id?: string
+          note?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_issue_logs_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "device_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_issues: {
+        Row: {
+          assignee: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          device: string
+          id: string
+          inquiry_id: string | null
+          location: string | null
+          occurred_on: string | null
+          photo_path: string | null
+          status: string
+          symptom: string
+        }
+        Insert: {
+          assignee?: string | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          device: string
+          id?: string
+          inquiry_id?: string | null
+          location?: string | null
+          occurred_on?: string | null
+          photo_path?: string | null
+          status?: string
+          symptom: string
+        }
+        Update: {
+          assignee?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          device?: string
+          id?: string
+          inquiry_id?: string | null
+          location?: string | null
+          occurred_on?: string | null
+          photo_path?: string | null
+          status?: string
+          symptom?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_issues_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inquiries: {
+        Row: {
+          assignee: string | null
+          channel: string
+          content: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          org: string | null
+          received_at: string
+          reply_draft: string | null
+          status: string
+        }
+        Insert: {
+          assignee?: string | null
+          channel?: string
+          content: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          org?: string | null
+          received_at?: string
+          reply_draft?: string | null
+          status?: string
+        }
+        Update: {
+          assignee?: string | null
+          channel?: string
+          content?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          org?: string | null
+          received_at?: string
+          reply_draft?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      inquiry_messages: {
+        Row: {
+          body: string
+          created_at: string
+          error: string | null
+          id: string
+          inquiry_id: string
+          result: string
+          sent_by: string | null
+          sent_to: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          inquiry_id: string
+          result: string
+          sent_by?: string | null
+          sent_to?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          inquiry_id?: string
+          result?: string
+          sent_by?: string | null
+          sent_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiry_messages_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_items: {
         Row: {
@@ -273,6 +543,57 @@ export type Database = {
           invited_by?: string | null
           revoked?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      meetings: {
+        Row: {
+          calendar_event_id: string | null
+          calendar_status: string | null
+          created_at: string
+          email: string | null
+          end_at: string
+          id: string
+          kind: string
+          name: string | null
+          org: string | null
+          phone: string | null
+          start_at: string
+          status: string
+          title: string | null
+          topic: string | null
+        }
+        Insert: {
+          calendar_event_id?: string | null
+          calendar_status?: string | null
+          created_at?: string
+          email?: string | null
+          end_at: string
+          id?: string
+          kind?: string
+          name?: string | null
+          org?: string | null
+          phone?: string | null
+          start_at: string
+          status?: string
+          title?: string | null
+          topic?: string | null
+        }
+        Update: {
+          calendar_event_id?: string | null
+          calendar_status?: string | null
+          created_at?: string
+          email?: string | null
+          end_at?: string
+          id?: string
+          kind?: string
+          name?: string | null
+          org?: string | null
+          phone?: string | null
+          start_at?: string
+          status?: string
+          title?: string | null
+          topic?: string | null
         }
         Relationships: []
       }
@@ -506,6 +827,50 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          assignee: string | null
+          created_at: string
+          created_by: string | null
+          done: boolean
+          done_at: string | null
+          due_date: string | null
+          id: string
+          template_id: string | null
+          title: string
+        }
+        Insert: {
+          assignee?: string | null
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          template_id?: string | null
+          title: string
+        }
+        Update: {
+          assignee?: string | null
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          template_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -529,6 +894,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clock: {
+        Args: { _kind: string }
+        Returns: {
+          check_in: string | null
+          check_out: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "attendance"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      generate_checklist: { Args: { _date: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -546,6 +929,10 @@ export type Database = {
       }
       import_sales: { Args: { _file: string; _rows: Json }; Returns: Json }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      review_attendance_request: {
+        Args: { _approve: boolean; _id: string }
+        Returns: undefined
+      }
       set_user_role: {
         Args: {
           _enabled: boolean
