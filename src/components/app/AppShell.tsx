@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutDashboard, FileSearch, FilePlus2, Users, LogOut, Menu, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, FileSearch, FilePlus2, Users, LogOut, Menu, ShieldAlert, TrendingUp, Coins, Boxes, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,16 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/dashboard", label: "경영현황", icon: LayoutDashboard },
+  { to: "/sales", label: "매출·상품", icon: TrendingUp },
+  { to: "/profit", label: "수익성", icon: Coins },
+  { to: "/inventory", label: "재고·발주", icon: Boxes },
   { to: "/announcements", label: "지원사업 공고", icon: FileSearch },
   { to: "/announcements/new", label: "새 공고 분석", icon: FilePlus2 },
 ] as const;
 
 function NavLinks({ isAdmin, onNav }: { isAdmin: boolean; onNav?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const items = [...NAV, ...(isAdmin ? [{ to: "/admin/invites", label: "직원 초대 관리", icon: Users } as const, { to: "/admin/settings", label: "연락 설정", icon: Users } as const] : [])];
+  const items = [...NAV, ...(isAdmin ? [{ to: "/admin/invites", label: "직원 초대 관리", icon: Users } as const, { to: "/admin/settings", label: "연락 설정", icon: Settings } as const] : [])];
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
       {items.map((it) => {

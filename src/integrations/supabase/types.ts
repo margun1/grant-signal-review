@@ -145,6 +145,107 @@ export type Database = {
         }
         Relationships: []
       }
+      data_uploads: {
+        Row: {
+          as_of: string | null
+          created_at: string
+          file_name: string
+          id: string
+          inserted: number
+          kind: string
+          period_end: string | null
+          period_start: string | null
+          replaced: number
+          uploaded_by: string | null
+        }
+        Insert: {
+          as_of?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          inserted?: number
+          kind: string
+          period_end?: string | null
+          period_start?: string | null
+          replaced?: number
+          uploaded_by?: string | null
+        }
+        Update: {
+          as_of?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          inserted?: number
+          kind?: string
+          period_end?: string | null
+          period_start?: string | null
+          replaced?: number
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          kind: string
+          min_stock: number
+          name: string
+          target_stock: number
+          updated_at: string
+        }
+        Insert: {
+          kind?: string
+          min_stock?: number
+          name: string
+          target_stock?: number
+          updated_at?: string
+        }
+        Update: {
+          kind?: string
+          min_stock?: number
+          name?: string
+          target_stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_snapshots: {
+        Row: {
+          as_of: string
+          created_at: string
+          id: string
+          item: string
+          kind: string
+          quantity: number
+          upload_id: string | null
+        }
+        Insert: {
+          as_of: string
+          created_at?: string
+          id?: string
+          item: string
+          kind?: string
+          quantity: number
+          upload_id?: string | null
+        }
+        Update: {
+          as_of?: string
+          created_at?: string
+          id?: string
+          item?: string
+          kind?: string
+          quantity?: number
+          upload_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_snapshots_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "data_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -174,6 +275,44 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
         }
         Relationships: []
+      }
+      part_costs: {
+        Row: {
+          created_at: string
+          id: string
+          part: string
+          product: string
+          qty: number
+          unit_price: number
+          upload_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          part: string
+          product: string
+          qty: number
+          unit_price: number
+          upload_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          part?: string
+          product?: string
+          qty?: number
+          unit_price?: number
+          upload_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_costs_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "data_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plan_reviews: {
         Row: {
@@ -228,6 +367,44 @@ export type Database = {
           },
         ]
       }
+      product_costs: {
+        Row: {
+          basis_date: string
+          created_at: string
+          effective_date: string | null
+          id: string
+          product: string
+          unit_cost: number
+          upload_id: string | null
+        }
+        Insert: {
+          basis_date?: string
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          product: string
+          unit_cost: number
+          upload_id?: string | null
+        }
+        Update: {
+          basis_date?: string
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          product?: string
+          unit_cost?: number
+          upload_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_costs_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "data_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active: boolean
@@ -251,6 +428,83 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          item: string
+          memo: string | null
+          ordered_at: string | null
+          quantity: number
+          received_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item: string
+          memo?: string | null
+          ordered_at?: string | null
+          quantity: number
+          received_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item?: string
+          memo?: string | null
+          ordered_at?: string | null
+          quantity?: number
+          received_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          amount: number
+          buyer_name: string | null
+          created_at: string
+          id: string
+          product: string
+          quantity: number
+          sale_date: string
+          upload_id: string | null
+        }
+        Insert: {
+          amount: number
+          buyer_name?: string | null
+          created_at?: string
+          id?: string
+          product: string
+          quantity: number
+          sale_date: string
+          upload_id?: string | null
+        }
+        Update: {
+          amount?: number
+          buyer_name?: string | null
+          created_at?: string
+          id?: string
+          product?: string
+          quantity?: number
+          sale_date?: string
+          upload_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "data_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -282,6 +536,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_costs: {
+        Args: { _costs: Json; _file: string; _parts: Json }
+        Returns: Json
+      }
+      import_inventory: {
+        Args: { _as_of: string; _file: string; _rows: Json }
+        Returns: Json
+      }
+      import_sales: { Args: { _file: string; _rows: Json }; Returns: Json }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       set_user_role: {
         Args: {
