@@ -1,23 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({ meta: [
+    { title: "주식회사 에너인프라의 경영비서" },
+    { name: "description", content: "정부지원사업 공고 적합성 판단과 사업계획서 검토를 돕는 에너인프라 사내 경영비서" },
+    { property: "og:title", content: "주식회사 에너인프라의 경영비서" },
+    { property: "og:description", content: "정부지원사업 공고 적합성 판단과 사업계획서 검토를 돕는 에너인프라 사내 경영비서" },
+  ] }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+  const navigate = useNavigate();
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => navigate({ to: data.session ? "/dashboard" : "/auth", replace: true }));
+  }, [navigate]);
+  return <div className="p-10 text-muted-foreground">이동 중…</div>;
 }
