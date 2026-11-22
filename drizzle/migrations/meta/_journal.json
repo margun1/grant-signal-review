@@ -43,6 +43,13 @@
       "when": 1795357665523,
       "tag": "0005_photos_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795358286730,
+      "tag": "0006_stage4_ai_calendar",
+      "breakpoints": true
     }
   ]
 }

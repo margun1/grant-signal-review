@@ -53,3 +53,5 @@ export const reviewSchema = z.object({
   manager_checks: z.array(z.string()).describe("실장이 확인할 사실"),
 });
 export type Review = z.infer<typeof reviewSchema>;
+
+export const reportSchema = z.object({ summary: z.string(), sections: z.array(z.object({ title: z.string(), body: z.string() })), missing: z.array(z.string()) });

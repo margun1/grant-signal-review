@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_reports: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          period_end: string
+          period_start: string
+          week_key: string | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          period_end: string
+          period_start: string
+          week_key?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          period_end?: string
+          period_start?: string
+          week_key?: string | null
+        }
+        Relationships: []
+      }
       announcement_materials: {
         Row: {
           announcement_id: string
@@ -231,18 +264,24 @@ export type Database = {
           id: number
           kakao_channel_url: string | null
           reply_email: string | null
+          report_hour: number
+          report_weekday: number
           updated_at: string
         }
         Insert: {
           id?: number
           kakao_channel_url?: string | null
           reply_email?: string | null
+          report_hour?: number
+          report_weekday?: number
           updated_at?: string
         }
         Update: {
           id?: number
           kakao_channel_url?: string | null
           reply_email?: string | null
+          report_hour?: number
+          report_weekday?: number
           updated_at?: string
         }
         Relationships: []
@@ -453,6 +492,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      integration_status: {
+        Row: {
+          last_error: string | null
+          last_error_at: string | null
+          last_success: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          last_error?: string | null
+          last_error_at?: string | null
+          last_success?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          last_error?: string | null
+          last_error_at?: string | null
+          last_success?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       inventory_items: {
         Row: {

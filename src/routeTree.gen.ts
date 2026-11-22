@@ -17,6 +17,7 @@ import { Route as FindAccountRouteImport } from './routes/find-account'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -25,6 +26,7 @@ import { Route as AuthenticatedInquiriesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticated/meetings'
 import { Route as AuthenticatedProfitRouteImport } from './routes/_authenticated/profit'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedAdminInvitesRouteImport } from './routes/_authenticated/admin/invites'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
@@ -32,6 +34,7 @@ import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedAnnouncementsIdRouteImport } from './routes/_authenticated/announcements/$id'
 import { Route as AuthenticatedAnnouncementsNewRouteImport } from './routes/_authenticated/announcements/new'
 import { Route as ApiPublicInquiryRouteImport } from './routes/api/public/inquiry'
+import { Route as ApiPublicJobsHourlyRouteImport } from './routes/api/public/jobs/hourly'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,6 +75,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -110,6 +118,11 @@ const AuthenticatedMeetingsRoute = AuthenticatedMeetingsRouteImport.update({
 const AuthenticatedProfitRoute = AuthenticatedProfitRouteImport.update({
   id: '/profit',
   path: '/profit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
@@ -152,6 +165,11 @@ const ApiPublicInquiryRoute = ApiPublicInquiryRouteImport.update({
   path: '/api/public/inquiry',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsHourlyRoute = ApiPublicJobsHourlyRouteImport.update({
+  id: '/api/public/jobs/hourly',
+  path: '/api/public/jobs/hourly',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -161,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/checklist': typeof AuthenticatedChecklistRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -169,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof AuthenticatedInventoryRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/profit': typeof AuthenticatedProfitRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -176,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/announcements/new': typeof AuthenticatedAnnouncementsNewRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
+  '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -185,6 +206,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/checklist': typeof AuthenticatedChecklistRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -193,6 +215,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof AuthenticatedInventoryRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/profit': typeof AuthenticatedProfitRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -200,6 +223,7 @@ export interface FileRoutesByTo {
   '/announcements/new': typeof AuthenticatedAnnouncementsNewRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/announcements': typeof AuthenticatedAnnouncementsIndexRoute
+  '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -211,6 +235,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/checklist': typeof AuthenticatedChecklistRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -219,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/meetings': typeof AuthenticatedMeetingsRoute
   '/_authenticated/profit': typeof AuthenticatedProfitRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -226,6 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/announcements/new': typeof AuthenticatedAnnouncementsNewRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/_authenticated/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
+  '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,6 +264,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/assistant'
     | '/attendance'
     | '/checklist'
     | '/dashboard'
@@ -245,6 +273,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/meetings'
     | '/profit'
+    | '/reports'
     | '/sales'
     | '/admin/invites'
     | '/admin/settings'
@@ -252,6 +281,7 @@ export interface FileRouteTypes {
     | '/announcements/new'
     | '/api/public/inquiry'
     | '/announcements/'
+    | '/api/public/jobs/hourly'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -261,6 +291,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/assistant'
     | '/attendance'
     | '/checklist'
     | '/dashboard'
@@ -269,6 +300,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/meetings'
     | '/profit'
+    | '/reports'
     | '/sales'
     | '/admin/invites'
     | '/admin/settings'
@@ -276,6 +308,7 @@ export interface FileRouteTypes {
     | '/announcements/new'
     | '/api/public/inquiry'
     | '/announcements'
+    | '/api/public/jobs/hourly'
   id:
     | '__root__'
     | '/'
@@ -286,6 +319,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/_authenticated/assistant'
     | '/_authenticated/attendance'
     | '/_authenticated/checklist'
     | '/_authenticated/dashboard'
@@ -294,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inventory'
     | '/_authenticated/meetings'
     | '/_authenticated/profit'
+    | '/_authenticated/reports'
     | '/_authenticated/sales'
     | '/_authenticated/admin/invites'
     | '/_authenticated/admin/settings'
@@ -301,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/announcements/new'
     | '/api/public/inquiry'
     | '/_authenticated/announcements/'
+    | '/api/public/jobs/hourly'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -313,6 +349,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   ApiPublicInquiryRoute: typeof ApiPublicInquiryRoute
+  ApiPublicJobsHourlyRoute: typeof ApiPublicJobsHourlyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -373,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/attendance': {
       id: '/_authenticated/attendance'
       path: '/attendance'
@@ -429,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfitRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sales': {
       id: '/_authenticated/sales'
       path: '/sales'
@@ -478,10 +529,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicInquiryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/hourly': {
+      id: '/api/public/jobs/hourly'
+      path: '/api/public/jobs/hourly'
+      fullPath: '/api/public/jobs/hourly'
+      preLoaderRoute: typeof ApiPublicJobsHourlyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedChecklistRoute: typeof AuthenticatedChecklistRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -490,6 +549,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
   AuthenticatedMeetingsRoute: typeof AuthenticatedMeetingsRoute
   AuthenticatedProfitRoute: typeof AuthenticatedProfitRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedAdminInvitesRoute: typeof AuthenticatedAdminInvitesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -499,6 +559,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedChecklistRoute: AuthenticatedChecklistRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -507,6 +568,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
   AuthenticatedMeetingsRoute: AuthenticatedMeetingsRoute,
   AuthenticatedProfitRoute: AuthenticatedProfitRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedAdminInvitesRoute: AuthenticatedAdminInvitesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
@@ -528,6 +590,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   ApiPublicInquiryRoute: ApiPublicInquiryRoute,
+  ApiPublicJobsHourlyRoute: ApiPublicJobsHourlyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -37,3 +37,5 @@ use the editor.
 - Public intake (homepage inquiries at `/api/public/inquiry`, meeting booking via `src/lib/booking.functions.ts`) validates input and writes with the admin client inside the handler, returning only open slots/ok — internal schedule details never leave the server.
 - Attendance writes only via the `clock()` / `review_attendance_request()` DB functions (server time, one row per user/day); recurring checklist rows are generated idempotently by `generate_checklist(date)`.
 - Customer reply sending records `미연결` in `inquiry_messages` until an email/Kakao sender is wired; only real successful sends may set `답변 완료`.
+- Google Calendar calls go through `src/lib/server/gcal.server.ts` (connector gateway); app-created events use the deterministic id `ei<meeting uuid hex>` so retries never duplicate, and every call records `integration_status`.
+- A managed hourly schedule hits `/api/public/jobs/hourly` (cron-auth) to create recurring checklist rows and the weekly AI report at the admin-set weekday/hour (`week_key` unique).
