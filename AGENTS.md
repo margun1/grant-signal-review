@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- AI calls and announcement fetching live in `src/lib/*.functions.ts` server functions guarded by `requireSupabaseAuth`; model/Firecrawl helpers are in `src/lib/server/` and are dynamically imported inside handlers so they never reach the browser bundle.
+- Access control is enforced in the database: `public.is_staff()` (role + active profile) gates every business table and the private `documents` bucket; signup is blocked by the `handle_new_user` trigger unless an invitation exists (first user becomes admin).
+- Plan-review rounds are idempotent via a client-generated `request_key` (unique) plus unique `(announcement_id, round)`.
+- Company facts, fit rules and writing rules for prompts live only in `src/lib/company.ts`.
