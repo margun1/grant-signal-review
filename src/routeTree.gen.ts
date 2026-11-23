@@ -32,9 +32,6 @@ import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedAdminInvitesRouteImport } from './routes/_authenticated/admin/invites'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
-import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_authenticated/announcements/index'
-import { Route as AuthenticatedAnnouncementsIdRouteImport } from './routes/_authenticated/announcements/$id'
-import { Route as AuthenticatedAnnouncementsNewRouteImport } from './routes/_authenticated/announcements/new'
 import { Route as ApiPublicInquiryRouteImport } from './routes/api/public/inquiry'
 import { Route as ApiPublicJobsHourlyRouteImport } from './routes/api/public/jobs/hourly'
 import { Route as ApiPublicSecretaryChatRouteImport } from './routes/api/public/secretary/chat'
@@ -155,24 +152,6 @@ const AuthenticatedAdminSettingsRoute =
     path: '/admin/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAnnouncementsIndexRoute =
-  AuthenticatedAnnouncementsIndexRouteImport.update({
-    id: '/announcements/',
-    path: '/announcements/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAnnouncementsIdRoute =
-  AuthenticatedAnnouncementsIdRouteImport.update({
-    id: '/announcements/$id',
-    path: '/announcements/$id',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAnnouncementsNewRoute =
-  AuthenticatedAnnouncementsNewRouteImport.update({
-    id: '/announcements/new',
-    path: '/announcements/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const ApiPublicInquiryRoute = ApiPublicInquiryRouteImport.update({
   id: '/api/public/inquiry',
   path: '/api/public/inquiry',
@@ -212,10 +191,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
-  '/announcements/$id': typeof AuthenticatedAnnouncementsIdRoute
-  '/announcements/new': typeof AuthenticatedAnnouncementsNewRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
-  '/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
   '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
 }
@@ -242,10 +218,7 @@ export interface FileRoutesByTo {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
-  '/announcements/$id': typeof AuthenticatedAnnouncementsIdRoute
-  '/announcements/new': typeof AuthenticatedAnnouncementsNewRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
-  '/announcements': typeof AuthenticatedAnnouncementsIndexRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
   '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
 }
@@ -274,10 +247,7 @@ export interface FileRoutesById {
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
-  '/_authenticated/announcements/$id': typeof AuthenticatedAnnouncementsIdRoute
-  '/_authenticated/announcements/new': typeof AuthenticatedAnnouncementsNewRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
-  '/_authenticated/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
   '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
 }
@@ -306,10 +276,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/invites'
     | '/admin/settings'
-    | '/announcements/$id'
-    | '/announcements/new'
     | '/api/public/inquiry'
-    | '/announcements/'
     | '/api/public/jobs/hourly'
     | '/api/public/secretary/chat'
   fileRoutesByTo: FileRoutesByTo
@@ -336,10 +303,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/invites'
     | '/admin/settings'
-    | '/announcements/$id'
-    | '/announcements/new'
     | '/api/public/inquiry'
-    | '/announcements'
     | '/api/public/jobs/hourly'
     | '/api/public/secretary/chat'
   id:
@@ -367,10 +331,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support'
     | '/_authenticated/admin/invites'
     | '/_authenticated/admin/settings'
-    | '/_authenticated/announcements/$id'
-    | '/_authenticated/announcements/new'
     | '/api/public/inquiry'
-    | '/_authenticated/announcements/'
     | '/api/public/jobs/hourly'
     | '/api/public/secretary/chat'
   fileRoutesById: FileRoutesById
@@ -552,27 +513,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/announcements/': {
-      id: '/_authenticated/announcements/'
-      path: '/announcements'
-      fullPath: '/announcements/'
-      preLoaderRoute: typeof AuthenticatedAnnouncementsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/announcements/$id': {
-      id: '/_authenticated/announcements/$id'
-      path: '/announcements/$id'
-      fullPath: '/announcements/$id'
-      preLoaderRoute: typeof AuthenticatedAnnouncementsIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/announcements/new': {
-      id: '/_authenticated/announcements/new'
-      path: '/announcements/new'
-      fullPath: '/announcements/new'
-      preLoaderRoute: typeof AuthenticatedAnnouncementsNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/api/public/inquiry': {
       id: '/api/public/inquiry'
       path: '/api/public/inquiry'
@@ -613,9 +553,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedAdminInvitesRoute: typeof AuthenticatedAdminInvitesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
-  AuthenticatedAnnouncementsIdRoute: typeof AuthenticatedAnnouncementsIdRoute
-  AuthenticatedAnnouncementsNewRoute: typeof AuthenticatedAnnouncementsNewRoute
-  AuthenticatedAnnouncementsIndexRoute: typeof AuthenticatedAnnouncementsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -634,9 +571,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedAdminInvitesRoute: AuthenticatedAdminInvitesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
-  AuthenticatedAnnouncementsIdRoute: AuthenticatedAnnouncementsIdRoute,
-  AuthenticatedAnnouncementsNewRoute: AuthenticatedAnnouncementsNewRoute,
-  AuthenticatedAnnouncementsIndexRoute: AuthenticatedAnnouncementsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutDashboard, FileSearch, FilePlus2, Users, LogOut, Menu, ShieldAlert, TrendingUp, Coins, Boxes, Settings, ListChecks, Clock, MessageSquare, Wrench, CalendarDays, Bot, FileText } from "lucide-react";
+import { LayoutDashboard, FileSearch, Users, LogOut, Menu, ShieldAlert, TrendingUp, Coins, Boxes, Settings, ListChecks, Clock, MessageSquare, Wrench, CalendarDays, Bot, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -23,8 +23,6 @@ const NAV = [
   { to: "/inquiries", label: "고객문의", icon: MessageSquare },
   { to: "/devices", label: "기기오류", icon: Wrench },
   { to: "/meetings", label: "미팅·일정", icon: CalendarDays },
-  { to: "/announcements", label: "지원사업 공고", icon: FileSearch },
-  { to: "/announcements/new", label: "새 공고 분석", icon: FilePlus2 },
 ] as const;
 
 function NavLinks({ isAdmin, onNav }: { isAdmin: boolean; onNav?: () => void }) {
@@ -33,7 +31,7 @@ function NavLinks({ isAdmin, onNav }: { isAdmin: boolean; onNav?: () => void }) 
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
       {items.map((it) => {
-        const active = it.to === "/announcements" ? path === "/announcements" || (/^\/announcements\/(?!new)/.test(path)) : path.startsWith(it.to);
+        const active = path.startsWith(it.to);
         return (
           <Link
             key={it.to}
