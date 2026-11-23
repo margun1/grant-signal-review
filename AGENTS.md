@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Weather is fetched only by staff-authenticated server functions; the server helper uses the user-selected data.go.kr endpoint with the guide's serviceKey parameters, encodes the decoding key once, and never logs provider URLs or raw errors to prevent secret disclosure.
 - AI calls and announcement fetching live in `src/lib/*.functions.ts` server functions guarded by `requireSupabaseAuth`; model/Firecrawl helpers are in `src/lib/server/` and are dynamically imported inside handlers so they never reach the browser bundle.
 - Access control is enforced in the database: `public.is_staff()` (role + active profile) gates every business table and the private `documents` bucket; signup is blocked by the `handle_new_user` trigger unless an invitation exists (first user becomes admin).
 - Plan-review rounds are idempotent via a client-generated `request_key` (unique) plus unique `(announcement_id, round)`.
