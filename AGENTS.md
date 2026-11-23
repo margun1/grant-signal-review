@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- POWERBOARD sample records stay in a dedicated static analysis module and never feed business ledgers or secretary summaries, because simulated results must not be mistaken for actual performance.
 - The secretary home uses one account-persisted conversation and AI Elements; daily owner briefings use a database claim keyed by user/KST date and only explicit regeneration may replace them, preventing duplicate paid generations.
 - Secretary prompts use only the database-aggregated secretary_summary projection and today's external snapshot; never reuse the legacy raw inquiry context for chat, because customer text and ledger rows must not reach AI.
 - K-Startup recommendations use the documented ServiceKey/returnType API with the live-verified cond[rcrt_prgs_yn::EQ]=Y filter plus local KST receipt-date checks; rank only explicit notice evidence and keep unknown eligibility marked for confirmation.
