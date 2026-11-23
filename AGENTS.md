@@ -30,6 +30,9 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- The secretary home uses one account-persisted conversation and AI Elements; daily owner briefings use a database claim keyed by user/KST date and only explicit regeneration may replace them, preventing duplicate paid generations.
+- Secretary prompts use only the database-aggregated secretary_summary projection and today's external snapshot; never reuse the legacy raw inquiry context for chat, because customer text and ledger rows must not reach AI.
+- K-Startup recommendations use the documented ServiceKey/returnType API with the live-verified cond[rcrt_prgs_yn::EQ]=Y filter plus local KST receipt-date checks; rank only explicit notice evidence and keep unknown eligibility marked for confirmation.
 - Weather is fetched only by staff-authenticated server functions; the server helper uses the user-selected data.go.kr endpoint with the guide's serviceKey parameters, encodes the decoding key once, and never logs provider URLs or raw errors to prevent secret disclosure.
 - AI calls and announcement fetching live in `src/lib/*.functions.ts` server functions guarded by `requireSupabaseAuth`; model/Firecrawl helpers are in `src/lib/server/` and are dynamically imported inside handlers so they never reach the browser bundle.
 - Access control is enforced in the database: `public.is_staff()` (role + active profile) gates every business table and the private `documents` bucket; signup is blocked by the `handle_new_user` trigger unless an invitation exists (first user becomes admin).

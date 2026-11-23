@@ -1,66 +1,283 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Send, Check, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { z } from "zod";
+import { RefreshCw, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { PageHeader, Panel } from "@/components/app/ui";
-import { askAssistant } from "@/lib/assistant.functions";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
+import { Shimmer } from "@/components/ai-elements/shimmer";
+import { supabase } from "@/integrations/supabase/client";
+import { ensureSecretaryBriefing, getSecretaryScreen } from "@/lib/secretary.functions";
+import { shortAnswer } from "@/lib/secretary";
+import { useMe } from "@/hooks/use-auth";
 
+const screenOptions = queryOptions({
+  queryKey: ["secretary-screen"],
+  queryFn: () => getSecretaryScreen(),
+  staleTime: 30000,
+  retry: false,
+});
 export const Route = createFileRoute("/_authenticated/assistant")({
-  head: () => ({ meta: [{ title: "AI 비서 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "매출·재고·일정·문의·공고를 묻고 초안을 받는 AI 비서" }] }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(screenOptions),
+  head: () => ({
+    meta: [
+      { title: "AI 비서 · 에너인프라 오늘의 브리핑" },
+      {
+        name: "description",
+        content: "에너인프라 오늘의 업무·매출·날씨·지원사업 브리핑과 저장되는 AI 대화",
+      },
+      { property: "og:title", content: "AI 비서 · 에너인프라" },
+      { property: "og:description", content: "오늘의 브리핑과 근거 숫자로 답하는 경영비서" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AssistantPage,
 });
-type Action = { type: "none" | "add_task" | "add_meeting"; title: string | null; date: string | null; start_time: string | null; end_time: string | null };
-type Msg = { role: "user" | "assistant"; content: string; sources?: string[]; action?: Action; actionState?: "pending" | "done" | "cancelled" | undefined };
-const EXAMPLES = ["최근 30일 매출과 매출총이익 알려줘", "부족한 재고와 권장 발주량은?", "이번 주 마감 공고 정리해줘", "내일 10시에 생산회의 일정 추가해줘"];
-
+const QUICK = ["이번 주 뭘 준비할까?", "지난달과 비교해줘", "비 온 날 매출은?"];
 function AssistantPage() {
-  const ask = useServerFn(askAssistant); const qc = useQueryClient();
-  const [msgs, setMsgs] = useState<Msg[]>([]); const [input, setInput] = useState("");
-  const end = useRef<HTMLDivElement>(null); useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [msgs]);
-  const send = useMutation({
-    mutationFn: async (text: string) => { const next = [...msgs, { role: "user" as const, content: text }]; setMsgs(next); setInput("");
-      return ask({ data: { messages: next.slice(-12).map((m) => ({ role: m.role, content: m.content })) } }); },
-    onSuccess: (r) => setMsgs((m) => [...m, { role: "assistant", content: r.answer, sources: r.sources, action: r.action, actionState: r.action.type !== "none" ? "pending" : undefined }]),
-    onError: (e) => toast.error((e as Error).message || "답변을 받지 못했습니다."),
+  const { data } = useSuspenseQuery(screenOptions);
+  const qc = useQueryClient();
+  const ensure = useServerFn(ensureSecretaryBriefing);
+  const [requestKey] = useState(() => crypto.randomUUID());
+  const attempted = useRef(false);
+  const [briefError, setBriefError] = useState("");
+  const mutation = useMutation({
+    mutationFn: ({ force, key }: { force: boolean; key: string }) =>
+      ensure({ data: { force, requestKey: key } }),
+    onSuccess: (brief) => {
+      qc.setQueryData(screenOptions.queryKey, { ...data, brief });
+      setBriefError("");
+    },
+    onError: (e) => setBriefError(e.message),
   });
-  const run = async (i: number) => {
-    const a = msgs[i]!.action!;
-    try {
-      if (a.type === "add_task") { const { error } = await supabase.from("tasks").insert({ title: a.title ?? "할 일", due_date: a.date }); if (error) throw error; }
-      if (a.type === "add_meeting") { if (!a.date || !a.start_time) throw new Error("날짜와 시간이 필요합니다.");
-        const s = new Date(`${a.date}T${a.start_time}:00+09:00`); const e = a.end_time ? new Date(`${a.date}T${a.end_time}:00+09:00`) : new Date(s.getTime() + 3600000);
-        const { error } = await supabase.from("meetings").insert({ kind: "내부 회의", title: a.title ?? "내부 회의", start_at: s.toISOString(), end_at: e.toISOString(), status: "확정" }); if (error) throw error; }
-      setMsgs((m) => m.map((x, j) => (j === i ? { ...x, actionState: "done" } : x))); qc.invalidateQueries(); toast.success("등록했습니다.");
-    } catch (e) { toast.error((e as Error).message || "등록하지 못했습니다."); }
+  const start = mutation.mutate;
+  useEffect(() => {
+    if (!data.brief && data.isAdmin && !attempted.current) {
+      attempted.current = true;
+      start({ force: false, key: requestKey });
+    }
+  }, [data.brief, data.isAdmin, requestKey, start]);
+  useEffect(() => {
+    if (data.brief?.status !== "generating") return;
+    const timer = setInterval(
+      () => void qc.invalidateQueries({ queryKey: screenOptions.queryKey }),
+      2500,
+    );
+    return () => clearInterval(timer);
+  }, [data.brief?.status, qc]);
+  const { session } = useMe();
+  const initialMessages: UIMessage[] = data.messages.map((m) => ({
+    id: m.client_id,
+    role: m.role === "assistant" ? "assistant" : "user",
+    parts: z.array(z.object({ type: z.literal("text"), text: z.string() })).parse(m.parts),
+  }));
+  return (
+    <div className="mx-auto flex min-h-[calc(100dvh-6rem)] max-w-4xl flex-col">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b pb-5">
+        <div className="flex items-center gap-3">
+          <div
+            className="flex size-10 items-center justify-center rounded-md bg-primary font-bold text-primary-foreground"
+            aria-hidden
+          >
+            EI
+          </div>
+          <div>
+            <h1 className="text-xl font-bold">에너인프라 경영비서</h1>
+            <p className="mt-1 text-xs text-muted-foreground">Lovable AI · {data.today}</p>
+          </div>
+        </div>
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-1 text-sm font-semibold underline"
+        >
+          경영현황
+          <ArrowUpRight className="size-4" />
+        </Link>
+      </header>
+      <section aria-label="오늘의 브리핑" className="border-b py-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-bold">오늘의 브리핑</h2>
+          {data.isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={mutation.isPending || data.brief?.status === "generating"}
+              onClick={() => mutation.mutate({ force: true, key: crypto.randomUUID() })}
+            >
+              <RefreshCw className="size-3.5" />
+              다시 만들기
+            </Button>
+          )}
+        </div>
+        {data.brief?.content && (
+          <Message from="assistant">
+            <MessageContent>
+              <MessageResponse className="whitespace-pre-line leading-relaxed">
+                {shortAnswer(data.brief.content)}
+              </MessageResponse>
+            </MessageContent>
+          </Message>
+        )}
+        {((mutation.isPending && data.brief?.status !== "ready") ||
+          data.brief?.status === "generating") && (
+          <Shimmer>오늘의 브리핑을 준비하고 있습니다…</Shimmer>
+        )}
+        {(briefError || data.brief?.error) && (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {briefError || data.brief?.error}
+          </p>
+        )}
+        {!data.isAdmin && !data.brief && (
+          <p className="text-sm text-muted-foreground">사장님 브리핑은 관리자 계정에 저장됩니다.</p>
+        )}
+        {data.brief?.content && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {new Date(data.brief.updated_at).toLocaleTimeString("ko-KR", {
+              timeZone: "Asia/Seoul",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}{" "}
+            저장 · {data.brief.revision}회차 · 접수 기간과 지원 금액은{" "}
+            <Link to="/support" className="underline">
+              공고 원문
+            </Link>
+            에서 확인
+          </p>
+        )}
+      </section>
+      {session && (
+        <SecretaryConversation
+          key={session.user.id}
+          userId={session.user.id}
+          initialMessages={initialMessages}
+        />
+      )}
+    </div>
+  );
+}
+function SecretaryConversation({
+  userId,
+  initialMessages,
+}: {
+  userId: string;
+  initialMessages: UIMessage[];
+}) {
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  const [input, setInput] = useState("");
+  const [error, setError] = useState("");
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/public/secretary/chat",
+        headers: async () => {
+          const { data } = await supabase.auth.getSession();
+          return data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {};
+        },
+      }),
+    [],
+  );
+  const chat = useChat({
+    id: `secretary-${userId}`,
+    messages: initialMessages,
+    transport,
+    onError: (e) => {
+      setError(e.message);
+      textarea.current?.focus();
+    },
+    onFinish: () => {
+      textarea.current?.focus();
+    },
+  });
+  const busy = chat.status === "submitted" || chat.status === "streaming";
+  useEffect(() => {
+    textarea.current?.focus();
+  }, []);
+  useEffect(() => {
+    if (!busy) textarea.current?.focus();
+  }, [busy]);
+  const send = (text: string) => {
+    if (busy || !text.trim()) return;
+    setError("");
+    setInput("");
+    void chat.sendMessage({ text: text.trim() });
+    textarea.current?.focus();
   };
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4">
-      <PageHeader title="AI 비서" desc="로그인한 권한 안의 자료로 답합니다. 일정·할 일 추가는 확인 버튼을 눌러야 실행됩니다." />
-      <Panel className="min-h-[50vh]">
-        {msgs.length === 0 && <div className="flex flex-wrap gap-2">{EXAMPLES.map((e) => <Button key={e} variant="outline" size="sm" onClick={() => send.mutate(e)}>{e}</Button>)}</div>}
-        <div className="space-y-4">{msgs.map((m, i) => (
-          <div key={i} className={m.role === "user" ? "ml-auto max-w-[85%] rounded-lg bg-accent p-3" : "max-w-[90%] rounded-lg border bg-card p-3"}>
-            <p className="whitespace-pre-wrap text-sm">{m.content}</p>
-            {m.sources && m.sources.length > 0 && <p className="mt-2 text-xs text-muted-foreground">근거: {m.sources.join(" · ")}</p>}
-            {m.action && m.action.type !== "none" && (
-              <div className="mt-3 rounded-md border border-primary/40 bg-primary/5 p-3 text-sm">
-                <p className="font-semibold">{m.action.type === "add_task" ? "할 일 추가" : "내부 회의 추가"} 제안</p>
-                <p>{m.action.title} · {m.action.date ?? "날짜 없음"}{m.action.start_time ? ` ${m.action.start_time}` : ""}{m.action.end_time ? `~${m.action.end_time}` : ""}</p>
-                {m.actionState === "pending" ? <div className="mt-2 flex gap-2"><Button size="sm" onClick={() => run(i)}><Check className="size-4" />확인하고 실행</Button><Button size="sm" variant="outline" onClick={() => setMsgs((x) => x.map((y, j) => (j === i ? { ...y, actionState: "cancelled" } : y)))}><X className="size-4" />취소</Button></div>
-                  : <p className="mt-1 text-xs text-muted-foreground">{m.actionState === "done" ? "실행 완료" : "취소됨"}</p>}
-              </div>)}
-          </div>))}
-          {send.isPending && <p className="text-sm text-muted-foreground">답변을 준비하고 있습니다…</p>}<div ref={end} /></div>
-      </Panel>
-      <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (input.trim()) send.mutate(input.trim()); }}>
-        <Textarea aria-label="질문" rows={2} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (input.trim()) send.mutate(input.trim()); } }} placeholder="무엇이든 물어보세요" />
-        <Button type="submit" disabled={send.isPending || !input.trim()} className="h-auto"><Send className="size-4" />보내기</Button>
-      </form>
-    </div>
+    <>
+      <Conversation className="min-h-52 max-h-[55dvh] grow" aria-label="경영비서 대화">
+        <ConversationContent className="gap-5 px-0 py-5">
+          {chat.messages.map((m) => (
+            <Message key={m.id} from={m.role}>
+              <MessageContent>
+                {m.parts.map((p, i) =>
+                  p.type === "text" ? (
+                    <MessageResponse className="whitespace-pre-line leading-relaxed" key={i}>
+                      {m.role === "assistant" ? shortAnswer(p.text) : p.text}
+                    </MessageResponse>
+                  ) : null,
+                )}
+              </MessageContent>
+            </Message>
+          ))}
+          {busy && <Shimmer>사장님께 보고를 준비하고 있습니다…</Shimmer>}
+        </ConversationContent>
+        <ConversationScrollButton aria-label="최근 대화로 이동" />
+      </Conversation>
+      {error && (
+        <p role="alert" className="mb-3 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      <div className="sticky bottom-0 space-y-3 bg-background pb-2 pt-3">
+        <div className="flex flex-wrap gap-2">
+          {QUICK.map((q) => (
+            <Button
+              key={q}
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              className="whitespace-normal text-left"
+              onClick={() => send(q)}
+            >
+              {q}
+            </Button>
+          ))}
+        </div>
+        <PromptInput onSubmit={({ text }) => send(text)} maxFiles={0}>
+          <PromptInputTextarea
+            ref={textarea}
+            aria-label="비서에게 질문"
+            placeholder="사장님, 무엇을 확인해 드릴까요?"
+            maxLength={4000}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <PromptInputFooter className="justify-end">
+            <PromptInputSubmit
+              status={chat.status}
+              aria-label={busy ? "답변 중지" : "질문 보내기"}
+              title={busy ? "답변 중지" : "질문 보내기"}
+              onStop={() => void chat.stop()}
+              disabled={!busy && !input.trim()}
+            />
+          </PromptInputFooter>
+        </PromptInput>
+      </div>
+    </>
   );
 }

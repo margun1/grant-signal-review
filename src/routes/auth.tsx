@@ -23,8 +23,8 @@ function Login() {
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => data.session && navigate({ to: "/dashboard", replace: true }));
-    const { data } = supabase.auth.onAuthStateChange((e, s) => { if (e === "SIGNED_IN" && s) navigate({ to: "/dashboard", replace: true }); });
+    supabase.auth.getSession().then(({ data }) => data.session && navigate({ to: "/assistant", replace: true }));
+    const { data } = supabase.auth.onAuthStateChange((e, s) => { if (e === "SIGNED_IN" && s) navigate({ to: "/assistant", replace: true }); });
     return () => data.subscription.unsubscribe();
   }, [navigate]);
   async function submit(e: React.FormEvent) {

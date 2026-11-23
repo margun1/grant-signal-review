@@ -16,10 +16,10 @@ class WeatherFailure extends Error {
   constructor(readonly reason: "auth" | "nodata" | "unavailable") { super(reason); }
 }
 
-async function requestWeather(method: WeatherMethod, key: string, stamp: { base_date: string; base_time: string }) {
+export async function requestWeather(method: WeatherMethod, key: string, stamp: { base_date: string; base_time: string }, grid?: { nx: number; ny: number }) {
   // Never log fetch exceptions, URLs or raw provider messages: they may contain the credential.
   let response: Response;
-  try { response = await fetch(weatherUrl(method, key, stamp), { headers: { Accept: "application/json" }, redirect: "manual", signal: AbortSignal.timeout(15000) }); }
+  try { response = await fetch(weatherUrl(method, key, stamp, grid), { headers: { Accept: "application/json" }, redirect: "manual", signal: AbortSignal.timeout(15000) }); }
   catch { throw new WeatherFailure("unavailable"); }
   if (!response.ok) throw new WeatherFailure(response.status === 401 || response.status === 403 ? "auth" : "unavailable");
   let payload: unknown;

@@ -10,8 +10,9 @@ import { APP_TITLE } from "@/lib/company";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/dashboard", label: "경영현황", icon: LayoutDashboard },
   { to: "/assistant", label: "AI 비서", icon: Bot },
+  { to: "/dashboard", label: "경영현황", icon: LayoutDashboard },
+  { to: "/support", label: "지원사업", icon: FileSearch },
   { to: "/reports", label: "AI 리포트", icon: FileText },
   { to: "/sales", label: "매출·상품", icon: TrendingUp },
   { to: "/profit", label: "수익성", icon: Coins },

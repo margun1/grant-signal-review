@@ -28,6 +28,7 @@ import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProfitRouteImport } from './routes/_authenticated/profit'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedAdminInvitesRouteImport } from './routes/_authenticated/admin/invites'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_authenticated/announcements/index'
@@ -35,6 +36,7 @@ import { Route as AuthenticatedAnnouncementsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAnnouncementsNewRouteImport } from './routes/_authenticated/announcements/new'
 import { Route as ApiPublicInquiryRouteImport } from './routes/api/public/inquiry'
 import { Route as ApiPublicJobsHourlyRouteImport } from './routes/api/public/jobs/hourly'
+import { Route as ApiPublicSecretaryChatRouteImport } from './routes/api/public/secretary/chat'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -130,6 +132,11 @@ const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminInvitesRoute =
   AuthenticatedAdminInvitesRouteImport.update({
     id: '/admin/invites',
@@ -170,6 +177,11 @@ const ApiPublicJobsHourlyRoute = ApiPublicJobsHourlyRouteImport.update({
   path: '/api/public/jobs/hourly',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSecretaryChatRoute = ApiPublicSecretaryChatRouteImport.update({
+  id: '/api/public/secretary/chat',
+  path: '/api/public/secretary/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -190,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/profit': typeof AuthenticatedProfitRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/sales': typeof AuthenticatedSalesRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/announcements/$id': typeof AuthenticatedAnnouncementsIdRoute
@@ -197,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
+  '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -217,6 +231,7 @@ export interface FileRoutesByTo {
   '/profit': typeof AuthenticatedProfitRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/sales': typeof AuthenticatedSalesRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/announcements/$id': typeof AuthenticatedAnnouncementsIdRoute
@@ -224,6 +239,7 @@ export interface FileRoutesByTo {
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/announcements': typeof AuthenticatedAnnouncementsIndexRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
+  '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -246,6 +262,7 @@ export interface FileRoutesById {
   '/_authenticated/profit': typeof AuthenticatedProfitRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/announcements/$id': typeof AuthenticatedAnnouncementsIdRoute
@@ -253,6 +270,7 @@ export interface FileRoutesById {
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/_authenticated/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
+  '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -275,6 +293,7 @@ export interface FileRouteTypes {
     | '/profit'
     | '/reports'
     | '/sales'
+    | '/support'
     | '/admin/invites'
     | '/admin/settings'
     | '/announcements/$id'
@@ -282,6 +301,7 @@ export interface FileRouteTypes {
     | '/api/public/inquiry'
     | '/announcements/'
     | '/api/public/jobs/hourly'
+    | '/api/public/secretary/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -302,6 +322,7 @@ export interface FileRouteTypes {
     | '/profit'
     | '/reports'
     | '/sales'
+    | '/support'
     | '/admin/invites'
     | '/admin/settings'
     | '/announcements/$id'
@@ -309,6 +330,7 @@ export interface FileRouteTypes {
     | '/api/public/inquiry'
     | '/announcements'
     | '/api/public/jobs/hourly'
+    | '/api/public/secretary/chat'
   id:
     | '__root__'
     | '/'
@@ -330,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profit'
     | '/_authenticated/reports'
     | '/_authenticated/sales'
+    | '/_authenticated/support'
     | '/_authenticated/admin/invites'
     | '/_authenticated/admin/settings'
     | '/_authenticated/announcements/$id'
@@ -337,6 +360,7 @@ export interface FileRouteTypes {
     | '/api/public/inquiry'
     | '/_authenticated/announcements/'
     | '/api/public/jobs/hourly'
+    | '/api/public/secretary/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -350,6 +374,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   ApiPublicInquiryRoute: typeof ApiPublicInquiryRoute
   ApiPublicJobsHourlyRoute: typeof ApiPublicJobsHourlyRoute
+  ApiPublicSecretaryChatRoute: typeof ApiPublicSecretaryChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -487,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/invites': {
       id: '/_authenticated/admin/invites'
       path: '/admin/invites'
@@ -536,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsHourlyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/secretary/chat': {
+      id: '/api/public/secretary/chat'
+      path: '/api/public/secretary/chat'
+      fullPath: '/api/public/secretary/chat'
+      preLoaderRoute: typeof ApiPublicSecretaryChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -551,6 +590,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfitRoute: typeof AuthenticatedProfitRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedAdminInvitesRoute: typeof AuthenticatedAdminInvitesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAnnouncementsIdRoute: typeof AuthenticatedAnnouncementsIdRoute
@@ -570,6 +610,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfitRoute: AuthenticatedProfitRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedAdminInvitesRoute: AuthenticatedAdminInvitesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAnnouncementsIdRoute: AuthenticatedAnnouncementsIdRoute,
@@ -591,6 +632,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   ApiPublicInquiryRoute: ApiPublicInquiryRoute,
   ApiPublicJobsHourlyRoute: ApiPublicJobsHourlyRoute,
+  ApiPublicSecretaryChatRoute: ApiPublicSecretaryChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

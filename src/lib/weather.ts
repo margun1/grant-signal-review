@@ -37,9 +37,9 @@ export function dailyBase(now: Date) {
 
 // User chose the data.go.kr endpoint and the guide's parameter-table name serviceKey.
 // URLSearchParams encodes the saved decoding value exactly once, and this URL never leaves the server.
-export function weatherUrl(method: WeatherMethod, key: string, stamp: { base_date: string; base_time: string }) {
+export function weatherUrl(method: WeatherMethod, key: string, stamp: { base_date: string; base_time: string }, grid: { nx: number; ny: number } = WEATHER_REGION) {
   const url = new URL(`${WEATHER_API}/${method}`);
-  url.search = new URLSearchParams({ serviceKey: key, numOfRows: "2000", pageNo: "1", dataType: "JSON", ...stamp, nx: String(WEATHER_REGION.nx), ny: String(WEATHER_REGION.ny) }).toString();
+  url.search = new URLSearchParams({ serviceKey: key, numOfRows: "2000", pageNo: "1", dataType: "JSON", ...stamp, nx: String(grid.nx), ny: String(grid.ny) }).toString();
   return url;
 }
 

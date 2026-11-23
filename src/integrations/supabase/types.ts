@@ -890,6 +890,153 @@ export type Database = {
           },
         ]
       }
+      secretary_ai_access: {
+        Row: {
+          message: string
+          reason: string
+          scope: string
+          status: number
+          updated_at: string
+        }
+        Insert: {
+          message: string
+          reason: string
+          scope: string
+          status: number
+          updated_at?: string
+        }
+        Update: {
+          message?: string
+          reason?: string
+          scope?: string
+          status?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      secretary_briefings: {
+        Row: {
+          briefing_date: string
+          content: string | null
+          created_at: string
+          error: string | null
+          id: string
+          request_key: string
+          revision: number
+          sources: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          briefing_date: string
+          content?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          request_key: string
+          revision?: number
+          sources?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          briefing_date?: string
+          content?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          request_key?: string
+          revision?: number
+          sources?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secretary_briefings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      secretary_messages: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          parts: Json
+          role: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          parts: Json
+          role: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          parts?: Json
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secretary_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_preferences: {
+        Row: {
+          annual_revenue: number | null
+          business_years: number | null
+          industry: string
+          interests: string[]
+          region: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annual_revenue?: number | null
+          business_years?: number | null
+          industry?: string
+          interests?: string[]
+          region?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annual_revenue?: number | null
+          business_years?: number | null
+          industry?: string
+          interests?: string[]
+          region?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assignee: string | null
@@ -957,6 +1104,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_secretary_briefing: {
+        Args: { _force: boolean; _request_key: string }
+        Returns: Json
+      }
       clock: {
         Args: { _kind: string }
         Returns: {
@@ -996,6 +1147,7 @@ export type Database = {
         Args: { _approve: boolean; _id: string }
         Returns: undefined
       }
+      secretary_summary: { Args: { _today: string }; Returns: Json }
       set_user_role: {
         Args: {
           _enabled: boolean

@@ -1,0 +1,5 @@
+CREATE TABLE public.support_preferences (user_id uuid PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE, industry text NOT NULL DEFAULT '', region text NOT NULL DEFAULT '', business_years numeric, annual_revenue numeric, interests text[] NOT NULL DEFAULT '{}', updated_at timestamptz NOT NULL DEFAULT now(), CHECK(business_years IS NULL OR business_years>=0), CHECK(annual_revenue IS NULL OR annual_revenue>=0), CHECK(interests <@ ARRAY['판로','마케팅','자금','교육']::text[]));
+GRANT SELECT,INSERT,UPDATE ON public.support_preferences TO authenticated;
+GRANT ALL ON public.support_preferences TO service_role;
+ALTER TABLE public.support_preferences ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own staff support preferences" ON public.support_preferences FOR ALL TO authenticated USING(user_id=auth.uid() AND public.is_staff(auth.uid())) WITH CHECK(user_id=auth.uid() AND public.is_staff(auth.uid()));
