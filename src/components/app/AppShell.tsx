@@ -101,7 +101,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen md:flex">
       <aside className="hidden w-64 shrink-0 border-r bg-sidebar md:block md:sticky md:top-0 md:h-screen">{side}</aside>
-      <header className="flex items-center justify-between border-b bg-card px-4 py-3 md:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-card px-4 py-3 md:hidden">
         <span className="text-sm font-bold">{APP_TITLE}</span>
         <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="메뉴 열기"><Menu /></Button>
       </header>
