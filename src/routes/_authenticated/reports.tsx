@@ -32,16 +32,35 @@ function ReportsPage() {
         <RangePicker value={range} onChange={setRange} presets={[[7, "최근 7일"], [30, "최근 30일"]]} />
         <Button className="mt-3" disabled={make.isPending} onClick={() => make.mutate()}><Sparkles className="size-4" />{make.isPending ? "작성 중… (1분 정도)" : "리포트 만들기"}</Button>
       </Panel>
-      <div className="grid gap-6 md:grid-cols-[16rem_1fr]">
-        <Panel title="목록"><ul className="space-y-1">{(list.data ?? []).map((r) => <li key={r.id}><button type="button" onClick={() => setSel(r.id)} className={`w-full rounded-md p-2 text-left text-sm hover:bg-accent ${cur?.id === r.id ? "bg-accent" : ""}`}>
-          <StatusBadge label={r.kind} tone={r.kind === "주간" ? "good" : "info"} /> <span className="block">{r.period_start} ~ {r.period_end}</span><span className="text-xs text-muted-foreground">{kst(r.created_at)}</span></button></li>)}
-          {(list.data ?? []).length === 0 && <li className="text-sm text-muted-foreground">아직 리포트가 없습니다.</li>}</ul></Panel>
+      <div className="space-y-6">
+        <Panel title="목록">
+          {(list.data ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">아직 리포트가 없습니다.</p>
+          ) : (
+            <ul className="grid auto-cols-[minmax(10rem,1fr)] grid-flow-col gap-2 overflow-x-auto pb-2">
+              {list.data?.map((report) => (
+                <li key={report.id}>
+                  <button
+                    type="button"
+                    aria-pressed={cur?.id === report.id}
+                    onClick={() => setSel(report.id)}
+                    className={`h-full w-full rounded-md border p-3 text-left text-sm hover:bg-accent ${cur?.id === report.id ? "border-primary bg-accent" : ""}`}
+                  >
+                    <StatusBadge label={report.kind} tone={report.kind === "주간" ? "good" : "info"} />
+                    <span className="mt-1 block">{report.period_start} ~ {report.period_end}</span>
+                    <span className="text-xs text-muted-foreground">{kst(report.created_at)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
         {c && cur ? <Panel title={`${cur.period_start} ~ ${cur.period_end} 리포트`} accent="gold">
           <p className="whitespace-pre-wrap">{c.summary}</p>
           {c.sections.map((s) => <section key={s.title} className="mt-4"><h3 className="font-bold">{s.title}</h3><p className="mt-1 whitespace-pre-wrap text-sm">{s.body}</p></section>)}
           {c.missing.length > 0 && <div className="mt-4 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"><p className="font-semibold">확인 필요</p><ul className="list-disc pl-5">{c.missing.map((m) => <li key={m}>{m}</li>)}</ul></div>}
           {c.자료기준 && <p className="mt-4 text-xs text-muted-foreground">자료 기준: {c.자료기준.map((u) => `${u.종류} ${u.기간 ?? u.기준일 ?? ""} (업로드 ${u.업로드})`).join(" · ") || "업로드 자료 없음"}</p>}
-        </Panel> : <Panel><p className="text-muted-foreground">리포트를 선택하세요.</p></Panel>}
+        </Panel> : <Panel title="리포트 내용"><p className="text-muted-foreground">리포트를 선택하세요.</p></Panel>}
       </div>
     </div>
   );
