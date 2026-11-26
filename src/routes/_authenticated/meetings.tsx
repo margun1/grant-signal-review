@@ -129,12 +129,12 @@ function MeetingsPage() {
       });
     }
     for (const x of a ?? []) {
-      add(x.deadline!, { label: `마감: ${x.title ?? "공고"}`, type: "deadline" });
+      add(x.deadline!, { label: x.title ?? "공고", type: "deadline" });
     }
     for (const x of g.events) {
       if (!Number.isFinite(Date.parse(x.start)) || !Number.isFinite(Date.parse(x.end))) continue;
       add(kd(x.start), {
-        label: `${x.allDay ? "" : localTime(x.start).slice(11, 16) + " "}구글: ${x.title}`,
+        label: `${x.allDay ? "" : localTime(x.start).slice(11, 16) + " "}${x.title}`,
         type: "google",
         edit: {
           source: "google", id: x.id, title: x.title, allDay: x.allDay,
@@ -225,13 +225,13 @@ function MeetingsPage() {
                   key={index}
                   type="button"
                   className={`${className} hover:underline focus-visible:ring-2 focus-visible:ring-ring`}
-                  aria-label={`${entry.label} 수정`}
+                  aria-label={`${scheduleTypes[entry.type].label} · ${entry.label} 수정`}
                   title={entry.label}
                   onClick={() => openEditor(edit)}
                 >
                   {entry.label}
                 </button>
-              ) : <div key={index} className={className} title={entry.label}>{entry.label}</div>;
+              ) : <div key={index} className={className} title={entry.label}><span className="sr-only">{scheduleTypes[entry.type].label} · </span>{entry.label}</div>;
             })}</>}</div>)}
         </div></div>
         <form className="mt-4 space-y-3" onSubmit={(event) => {
