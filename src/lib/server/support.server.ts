@@ -1,5 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import {
   noticeFromRow,
   recommendSupport,
@@ -51,20 +53,16 @@ function unpack(value: unknown): { rows: Record<string, unknown>[]; count: numbe
   if (Number(r["currentCount"]) === 0) return { rows: [], count: 0 };
   throw new Error("K-Startup 조회 권한이나 응답 형식을 확인해 주세요.");
 }
-export async function loadSupport(
-  key: string,
-  preferences: Preferences,
-  format: "json" | "xml",
-  now = new Date(),
-) {
+async function fetchNotices(key: string, format: "json" | "xml", now = new Date()) {
   const notices: SupportNotice[] = [];
   let complete = false;
+  const signal = AbortSignal.timeout(25000);
   for (let page = 1; page <= 30; page++) {
     let response: Response;
     try {
       response = await fetch(supportUrl(key, format, page), {
         redirect: "manual",
-        signal: AbortSignal.timeout(20000),
+        signal,
       });
     } catch {
       throw new Error("K-Startup 연결이 지연되고 있습니다. 잠시 후 다시 조회해 주세요.");
@@ -93,8 +91,92 @@ export async function loadSupport(
   return {
     fetchedAt: now.toISOString(),
     format,
-    recommendations: recommendSupport(unique, preferences, now),
-    checkedCount: unique.length,
+    notices: unique,
     complete,
   };
+}
+
+type StorageClient = SupabaseClient<Database>;
+const snapshotPath = "support/kstartup-announcements.json";
+const snapshotSchema = z.object({
+  fetchedAt: z.iso.datetime(),
+  complete: z.boolean(),
+  notices: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      content: z.string(),
+      target: z.string(),
+      region: z.string(),
+      tenure: z.string(),
+      field: z.string(),
+      start: z.string(),
+      end: z.string(),
+      recruiting: z.string(),
+      url: z.string().refine((url) => !url || /^https?:\/\//i.test(url)),
+    }),
+  ),
+});
+
+export function supportServiceKey() {
+  return process.env["DATA_GO_KEY"]?.trim();
+}
+
+function requireSupportKey(key: string | undefined) {
+  if (!key)
+    throw new Error("공공데이터포털 K-Startup 활용 승인과 DATA_GO_KEY 설정을 확인해 주세요.");
+  return key;
+}
+
+async function readSnapshot(client: StorageClient) {
+  const { data, error } = await client.storage.from("documents").download(snapshotPath);
+  if (error || !data) return null;
+  const parsed = snapshotSchema.safeParse(
+    await data
+      .text()
+      .then(JSON.parse)
+      .catch(() => null),
+  );
+  return parsed.success ? parsed.data : null;
+}
+
+export async function loadSupport(
+  key: string | undefined,
+  preferences: Preferences,
+  format: "json" | "xml",
+  now = new Date(),
+  client?: StorageClient,
+) {
+  const snapshot = client && format === "json" ? await readSnapshot(client) : null;
+  const data = snapshot ?? (await fetchNotices(requireSupportKey(key), format, now));
+  return {
+    fetchedAt: data.fetchedAt,
+    format,
+    recommendations: recommendSupport(data.notices, preferences, now),
+    checkedCount: data.notices.length,
+    complete: data.complete,
+    scheduled: snapshot !== null,
+  };
+}
+
+export async function refreshSupportSnapshot(admin: StorageClient, now = new Date()) {
+  const hour = (now.getUTCHours() + 9) % 24;
+  if (hour !== 10 && hour !== 14) return "skip";
+  const key = supportServiceKey();
+  if (!key) return "missing-key";
+
+  const existing = await readSnapshot(admin);
+  const startOfHour = Math.floor(now.getTime() / 3600000) * 3600000;
+  if (existing && Date.parse(existing.fetchedAt) >= startOfHour) return "already-refreshed";
+
+  const snapshot = await fetchNotices(key, "json", now);
+  const { error } = await admin.storage
+    .from("documents")
+    .upload(snapshotPath, new Blob([JSON.stringify(snapshot)], { type: "application/json" }), {
+      upsert: true,
+      cacheControl: "0",
+      contentType: "application/json",
+    });
+  if (error) throw new Error("K-Startup 공고를 저장하지 못했습니다.");
+  return "refreshed";
 }

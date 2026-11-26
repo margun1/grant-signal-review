@@ -97,7 +97,7 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const isDashboard = useRouterState({ select: (state) => state.location.pathname === "/dashboard" });
+  const isDashboard = useRouterState({ select: (state) => state.location.pathname.replace(/\/+$/, "") === "/dashboard" });
   const [musicOpened, setMusicOpened] = useState(isDashboard);
 
   useEffect(() => {
@@ -169,7 +169,7 @@ export function AppShell() {
             aria-label="유튜브 음악"
             className={cn(
               "mx-auto mt-6",
-              isDashboard ? "max-w-6xl" : "relative size-[3cm] overflow-hidden rounded-lg bg-muted",
+              isDashboard ? "w-full max-w-6xl" : "relative size-[3cm] overflow-hidden rounded-lg bg-muted",
             )}
           >
             {/* Scale the visible player while keeping the YouTube iframe at a usable viewport. */}

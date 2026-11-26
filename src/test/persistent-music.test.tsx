@@ -39,10 +39,10 @@ it("keeps the same music iframe across navigation after the dashboard opens", ()
   const iframe = screen.getByTitle("테스트 유튜브 플레이어");
   const player = screen.getByRole("complementary", { name: "유튜브 음악" });
 
-  for (const pathname of ["/meetings", "/company", "/dashboard"]) {
+  for (const pathname of ["/meetings", "/company", "/dashboard", "/dashboard/"]) {
     location.pathname = pathname;
     rerender(app());
     expect(screen.getByTitle("테스트 유튜브 플레이어")).toBe(iframe);
-    expect(player.classList.contains("size-[3cm]")).toBe(pathname !== "/dashboard");
+    expect(player.classList.contains("size-[3cm]")).toBe(!pathname.startsWith("/dashboard"));
   }
 });

@@ -38,12 +38,12 @@ export const getSupportRecommendations = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (prefs.error) throw new Error("조건을 읽지 못했습니다.");
-    const key = process.env["DATA_GO_KEY"];
-    if (!key) throw new Error("DATA_GO_KEY 인증키 등록이 필요합니다.");
-    const { loadSupport } = await import("./server/support.server");
+    const { loadSupport, supportServiceKey } = await import("./server/support.server");
     return loadSupport(
-      key,
+      supportServiceKey(),
       preferencesSchema.parse(prefs.data ?? DEFAULT_PREFERENCES),
       data.format,
+      new Date(),
+      context.supabase,
     );
   });

@@ -44,11 +44,29 @@ export type SupportRecommendation = {
   url: string;
   score: number;
 };
+const businessCategories: Record<string, string> = {
+  cmrczn_tab1: "사업화",
+  cmrczn_tab2: "창업교육",
+  cmrczn_tab3: "시설·공간·보육",
+  cmrczn_tab4: "멘토링·컨설팅",
+  cmrczn_tab5: "행사·네트워크",
+  cmrczn_tab6: "기술개발 R&D",
+  cmrczn_tab7: "융자",
+  cmrczn_tab8: "인력",
+  cmrczn_tab9: "글로벌",
+};
+
 export function supportUrl(key: string, format: "json" | "xml", page: number) {
   const url = new URL(KSTARTUP_API);
+  let decodedKey = key;
+  try {
+    decodedKey = decodeURIComponent(key);
+  } catch {
+    // URLSearchParams still encodes raw keys containing a literal percent sign.
+  }
   // Rcrt_prgs_yn is documented, but the live API only filters through its data API condition.
   url.search = new URLSearchParams({
-    ServiceKey: key,
+    ServiceKey: decodedKey,
     page: String(page),
     perPage: "100",
     returnType: format,
@@ -77,6 +95,7 @@ export function noticeFromRow(row: Record<string, unknown>): SupportNotice {
   } catch {
     url = "";
   }
+  const field = plain(r["supt_biz_clsfc"] ?? r["biz_category_cd"]);
   return {
     id: plain(r["pbanc_sn"]),
     title: plain(r["biz_pbanc_nm"]),
@@ -84,7 +103,7 @@ export function noticeFromRow(row: Record<string, unknown>): SupportNotice {
     target: plain(r["aply_trgt_ctnt"]) + " " + plain(r["aply_trgt"]),
     region: plain(r["supt_regin"]),
     tenure: plain(r["biz_enyy"]),
-    field: plain(r["supt_biz_clsfc"]),
+    field: businessCategories[field] ?? field,
     start: plain(r["pbanc_rcpt_bgng_dt"]),
     end: plain(r["pbanc_rcpt_end_dt"]),
     recruiting: plain(r["rcrt_prgs_yn"]),
@@ -151,6 +170,13 @@ export function recommendSupport(
         evidence.push(`업종: 공고에 '${prefs.industry.replace(/업$/, "")}' 명시`);
         score += 4;
       } else missing.push("업종 적합성");
+      if (
+        prefs.industry.includes("제조") &&
+        /시제품|실증|시험.인증|하드웨어|전력\s*모니터링/.test(text)
+      ) {
+        evidence.push("제품 개발: 시제품·실증·시험인증 등 하드웨어 관련 내용 명시");
+        score += 3;
+      }
       const regionTerm = prefs.region.startsWith("경기")
         ? "경기"
         : (prefs.region.split(" ")[0]?.replace(/특별시|광역시|특별자치도|도$/, "") ?? "");

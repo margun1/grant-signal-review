@@ -140,7 +140,12 @@ function SupportPage() {
         </div>
       </form>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-bold">추천 공고 {results.data?.recommendations.length ?? ""}</h2>
+        <div>
+          <h2 className="font-bold">추천 공고 {results.data?.recommendations.length ?? ""}</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            매일 오전 10시 · 오후 2시 갱신 (한국 시간)
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Tabs
             value={format}
@@ -176,7 +181,7 @@ function SupportPage() {
       ) : (
         <>
           <p className="text-xs text-muted-foreground">
-            조회{" "}
+            {results.data?.scheduled ? "정기 갱신" : "실시간 조회"}{" "}
             {results.data?.fetchedAt
               ? new Date(results.data.fetchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
               : "—"}{" "}

@@ -16,5 +16,6 @@ export function useSupportRecommendations(saved: Preferences | undefined, format
     enabled: saved !== undefined,
     retry: false,
     staleTime: 300000,
+    refetchInterval: format === "json" ? 300000 : false,
   });
 }
