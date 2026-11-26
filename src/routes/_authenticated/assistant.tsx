@@ -110,7 +110,7 @@ function BriefingSections({ sources }: { sources: BriefRow["sources"] }) {
   const moreMeetings = (summary?.weekMeetingCount ?? 0) - meetings.length;
 
   return (
-    <div className="mb-4 grid grid-cols-[repeat(3,minmax(12rem,1fr))] gap-3 overflow-x-auto pb-2">
+    <div className="mb-4 grid grid-cols-1 gap-3">
       <BriefingSection
         title="오늘의 할 일"
         empty={summary ? "남은 할 일이 없습니다." : "저장된 할 일 정보가 없습니다."}
