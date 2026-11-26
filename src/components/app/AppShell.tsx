@@ -167,9 +167,15 @@ export function AppShell() {
         {(isDashboard || musicOpened) && (
           <aside
             aria-label="유튜브 음악"
-            className={cn("mx-auto mt-6", isDashboard ? "max-w-6xl" : "max-w-sm")}
+            className={cn(
+              "mx-auto mt-6",
+              isDashboard ? "max-w-6xl" : "relative size-[3cm] overflow-hidden rounded-lg bg-muted",
+            )}
           >
-            <YouTubeIntro />
+            {/* Scale the visible player while keeping the YouTube iframe at a usable viewport. */}
+            <div className={isDashboard ? undefined : "absolute top-1/2 left-1/2 w-[360px] -translate-1/2 scale-[0.31]"}>
+              <YouTubeIntro />
+            </div>
           </aside>
         )}
       </main>

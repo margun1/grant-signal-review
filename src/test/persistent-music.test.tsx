@@ -37,10 +37,12 @@ it("keeps the same music iframe across navigation after the dashboard opens", ()
   location.pathname = "/dashboard";
   rerender(app());
   const iframe = screen.getByTitle("테스트 유튜브 플레이어");
+  const player = screen.getByRole("complementary", { name: "유튜브 음악" });
 
   for (const pathname of ["/meetings", "/company", "/dashboard"]) {
     location.pathname = pathname;
     rerender(app());
     expect(screen.getByTitle("테스트 유튜브 플레이어")).toBe(iframe);
+    expect(player.classList.contains("size-[3cm]")).toBe(pathname !== "/dashboard");
   }
 });
