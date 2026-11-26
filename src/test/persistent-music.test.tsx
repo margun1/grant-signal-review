@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import { AppShell } from "@/components/app/AppShell";
@@ -71,4 +71,21 @@ it("shows the current menu page in the sticky compact header", () => {
     expect(screen.getByRole("banner")).toBe(header);
     expect(screen.getByRole("status")).toHaveTextContent(label);
   }
+});
+
+it("puts every compact-menu link and sign-out inside the scrollable drawer", () => {
+  location.pathname = "/company";
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AppShell />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+  const dialog = screen.getByRole("dialog", { name: "메뉴" });
+  const scrollArea = within(dialog).getByRole("region", { name: "메뉴 목록" });
+
+  expect(dialog).toHaveClass("h-dvh");
+  expect(scrollArea).toHaveClass("h-full", "overflow-y-auto", "touch-pan-y");
+  expect(within(scrollArea).getByRole("link", { name: "연락 설정" })).toBeInTheDocument();
+  expect(within(scrollArea).getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
 });

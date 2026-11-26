@@ -137,7 +137,7 @@ export function AppShell() {
   const items = me.isAdmin ? ALL_NAV : NAV;
   const currentPage = items.find(({ to }) => path === to || path.startsWith(`${to}/`));
   const side = (
-    <div className="flex h-full flex-col gap-6 p-4">
+    <div className="flex min-h-full flex-col gap-6 p-4">
       <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
         <AppBrand />
       </div>
@@ -181,9 +181,16 @@ export function AppShell() {
             </p>
           )}
         </header>
-        <SheetContent side="left" className="w-72 max-w-[90vw] overflow-y-auto bg-sidebar p-0">
+        <SheetContent side="left" className="h-dvh w-72 max-w-[90vw] overflow-hidden bg-sidebar p-0">
           <SheetTitle className="sr-only">메뉴</SheetTitle>
-          {side}
+          <div
+            role="region"
+            aria-label="메뉴 목록"
+            tabIndex={0}
+            className="h-full touch-pan-y overflow-y-auto overscroll-y-contain pb-[env(safe-area-inset-bottom)]"
+          >
+            {side}
+          </div>
         </SheetContent>
       </Sheet>
       <main className="min-w-0 flex-1 p-4 md:p-8">
