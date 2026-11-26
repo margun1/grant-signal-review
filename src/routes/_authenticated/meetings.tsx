@@ -154,10 +154,17 @@ function MeetingsPage() {
       const title = schedule.title.trim();
       if (!title) throw new Error("일정 제목을 입력해 주세요.");
       if (schedule.type === "deadline") {
-        const url = new URL(schedule.url);
-        if (!["https:", "http:"].includes(url.protocol)) throw new Error("공고 원문 주소를 확인해 주세요.");
+        let url = schedule.url.trim();
+        if (url) {
+          if (!URL.canParse(url)) throw new Error("공고 원문 주소를 확인해 주세요.");
+          const parsed = new URL(url);
+          if (!["https:", "http:"].includes(parsed.protocol)) {
+            throw new Error("공고 원문 주소를 확인해 주세요.");
+          }
+          url = parsed.href;
+        }
         const { error } = await supabase.from("announcements").insert({
-          title, url: url.href, deadline: schedule.date,
+          title, url, deadline: schedule.date,
         });
         if (error) throw new Error("지원사업 마감을 추가하지 못했습니다.");
         return;
@@ -269,8 +276,8 @@ function MeetingsPage() {
             </div>
             {draft.type === "deadline" ? (
               <div className="min-w-48 flex-1 space-y-2">
-                <Label htmlFor="schedule-url">공고 원문 URL</Label>
-                <Input id="schedule-url" type="url" required value={draft.url}
+                <Label htmlFor="schedule-url">공고 원문 URL (선택)</Label>
+                <Input id="schedule-url" type="url" value={draft.url}
                   onChange={(event) => setDraft({ ...draft, url: event.target.value })} />
               </div>
             ) : (
