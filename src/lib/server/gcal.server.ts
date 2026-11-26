@@ -59,6 +59,17 @@ export async function updateGoogleEvent(event: { id: string; title: string; star
   });
 }
 
+export async function createGoogleEvent(event: { title: string; start: string; end: string }) {
+  await call("/calendars/primary/events", {
+    method: "POST",
+    body: JSON.stringify({
+      summary: event.title,
+      start: { dateTime: event.start, timeZone: "Asia/Seoul" },
+      end: { dateTime: event.end, timeZone: "Asia/Seoul" },
+    }),
+  });
+}
+
 export async function upsertMeetingEvent(m: { id: string; title?: string | null; start_at: string; end_at: string; name: string | null; org: string | null; topic: string | null; email: string | null }) {
   const id = eventIdFor(m.id);
   const body = { id, summary: `[미팅] ${m.title || m.org || m.name || "외부 미팅"}`, description: `${m.topic ?? ""}\n요청자: ${m.name ?? ""} ${m.email ?? ""}\n(경영비서에서 등록)`, start: { dateTime: m.start_at, timeZone: "Asia/Seoul" }, end: { dateTime: m.end_at, timeZone: "Asia/Seoul" } };

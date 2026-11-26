@@ -28,6 +28,31 @@ const timedEdit = {
   end: z.iso.datetime({ offset: true }),
 };
 
+export const addGoogleCalendarEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((value: unknown) =>
+    z.object(timedEdit)
+      .refine((data) => Date.parse(data.end) > Date.parse(data.start), "종료 시간이 시작보다 늦어야 합니다.")
+      .parse(value))
+  .handler(async ({ data, context }) => {
+    const [staff, admin] = await Promise.all([
+      context.supabase.rpc("is_staff", { _user_id: context.userId }),
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+    ]);
+    if (staff.error || admin.error || !staff.data || !admin.data) {
+      throw new Error("관리자만 Google 캘린더 일정을 추가할 수 있습니다.");
+    }
+    const { createGoogleEvent, recordStatus } = await import("./server/gcal.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try {
+      await createGoogleEvent(data);
+    } catch {
+      await recordStatus(supabaseAdmin, false, "Google 캘린더 일정 추가 실패").catch(() => {});
+      throw new Error("Google 캘린더 일정을 추가하지 못했습니다. 연결과 추가 권한을 확인해 주세요.");
+    }
+    await recordStatus(supabaseAdmin, true).catch(() => {});
+  });
+
 export const updateCalendarMeeting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((value: unknown) =>
