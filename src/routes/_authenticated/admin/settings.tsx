@@ -7,6 +7,7 @@ import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegrationStatusSettings } from "@/components/app/IntegrationStatusSettings";
 import { PageHeader, Panel } from "@/components/app/ui";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
@@ -21,7 +22,6 @@ function Settings() {
   const [email, setEmail] = useState("");
   const [kakao, setKakao] = useState("");
   const [wd, setWd] = useState(1); const [hr, setHr] = useState(9);
-  const status = useQuery({ queryKey: ["integration_status"], queryFn: async () => (await supabase.from("integration_status").select("*")).data ?? [] });
   useEffect(() => { if (q.data) { setEmail(q.data.reply_email ?? ""); setKakao(q.data.kakao_channel_url ?? ""); setWd(q.data.report_weekday); setHr(q.data.report_hour); } }, [q.data]);
   const save = useMutation({
     mutationFn: async () => {
@@ -46,15 +46,7 @@ function Settings() {
           <Button type="submit" disabled={save.isPending}>저장</Button>
         </form>
       </Panel>
-      <Panel title="외부 연동 상태">
-        <ul className="space-y-2 text-sm">
-          {[["google_calendar", "구글 캘린더"]].map(([k, l]) => { const r = (status.data ?? []).find((x) => x.name === k);
-            return <li key={k}><b>{l}</b>: 마지막 성공 {r?.last_success ? new Date(r.last_success).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "없음"}{r?.last_error && r.last_error_at && (!r.last_success || r.last_error_at > r.last_success) && <span className="block text-destructive">최근 오류: {r.last_error}</span>}</li>; })}
-          <li><b>노션</b>: 연결 안 됨 (연결하면 상품 정보·참고 재고를 읽어옵니다)</li>
-          <li><b>카카오톡 채널</b>: {kakao ? "주소 등록됨 — 답변 연동은 채널 권한 확인 후 연결" : "미개설"}</li>
-          <li><b>회신 이메일 발송</b>: 미연결 (발송용 도메인 설정 필요)</li>
-        </ul>
-      </Panel>
+      <IntegrationStatusSettings kakao={q.data?.kakao_channel_url ?? ""} />
     </div>
   );
 }
