@@ -11,6 +11,7 @@ function headers() {
 async function call(path: string, init?: RequestInit) {
   const r = await fetch(`${GATEWAY}${path}`, { ...init, headers: headers() });
   if (!r.ok) { const t = await r.text(); const e = new Error(`구글 캘린더 오류 [${r.status}]: ${t.slice(0, 300)}`) as Error & { status: number }; e.status = r.status; throw e; }
+  if (r.status === 204) return null;
   return r.json();
 }
 
@@ -36,6 +37,20 @@ export async function busyTimes(timeMin: string, timeMax: string): Promise<{ sta
 }
 /** 회의 id로 만든 고정 이벤트 id → 재시도해도 중복 일정이 생기지 않음 */
 export const eventIdFor = (meetingId: string) => `ei${meetingId.replace(/-/g, "")}`;
+export async function deleteGoogleEvent(id: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  try {
+    await call(`/calendars/primary/events/${encodeURIComponent(id)}`, { method: "DELETE" });
+  } catch (error) {
+    const status = (error as { status?: number }).status;
+    if (status !== 404 && status !== 410) {
+      await recordStatus(supabaseAdmin, false, "Google 캘린더 일정 삭제 실패").catch(() => {});
+      throw error;
+    }
+  }
+  await recordStatus(supabaseAdmin, true).catch(() => {});
+}
+
 export async function updateGoogleEvent(event: { id: string; title: string; start: string; end: string; allDay: boolean }) {
   const time = (value: string) => event.allDay ? { date: value } : { dateTime: value, timeZone: "Asia/Seoul" };
   await call(`/calendars/primary/events/${encodeURIComponent(event.id)}`, {

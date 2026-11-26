@@ -50,6 +50,46 @@ export const updateCalendarMeeting = createServerFn({ method: "POST" })
   });
 
 const googleId = z.string().regex(/^[A-Za-z0-9_-]{1,1024}$/).refine((id) => !/^ei[0-9a-f]{32}$/.test(id));
+
+export const deleteCalendarEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((value: unknown) => z.discriminatedUnion("source", [
+    z.object({ source: z.literal("meeting"), id: z.uuid() }),
+    z.object({ source: z.literal("google"), id: googleId }),
+  ]).parse(value))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    if (data.source === "google") {
+      const [staff, admin] = await Promise.all([
+        sb.rpc("is_staff", { _user_id: context.userId }),
+        sb.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+      ]);
+      if (staff.error || admin.error || !staff.data || !admin.data) {
+        throw new Error("관리자만 Google 캘린더 일정을 삭제할 수 있습니다.");
+      }
+      const { deleteGoogleEvent } = await import("./server/gcal.server");
+      await deleteGoogleEvent(data.id).catch(() => {
+        throw new Error("Google 캘린더 일정을 삭제하지 못했습니다.");
+      });
+      return;
+    }
+
+    const result = await sb.from("meetings")
+      .select("status, calendar_event_id, calendar_status")
+      .eq("id", data.id).single();
+    if (result.error || !result.data) throw new Error("일정을 찾지 못했습니다.");
+    const meeting = result.data;
+    if (meeting.status === "취소") return;
+    if (meeting.calendar_event_id || meeting.calendar_status) {
+      const { deleteGoogleEvent, eventIdFor } = await import("./server/gcal.server");
+      await deleteGoogleEvent(eventIdFor(data.id)).catch(() => {
+        throw new Error("연결된 Google 캘린더 일정을 삭제하지 못했습니다. 다시 시도해 주세요.");
+      });
+    }
+    const { error } = await sb.from("meetings").update({ status: "취소" }).eq("id", data.id);
+    if (error) throw new Error("일정을 삭제하지 못했습니다. 다시 시도해 주세요.");
+  });
+
 const googleEdit = z.discriminatedUnion("allDay", [
   z.object({ id: googleId, allDay: z.literal(false), ...timedEdit }),
   z.object({
