@@ -42,10 +42,10 @@ type CalendarEdit = {
 };
 
 const scheduleTypes = {
-  confirmed: { label: "확정 미팅", tone: "bg-primary/15" },
-  internal: { label: "내부 회의", tone: "bg-gold/15" },
-  deadline: { label: "지원사업 마감", tone: "bg-destructive/10" },
-  google: { label: "구글 캘린더", tone: "bg-secondary" },
+  confirmed: { label: "확정 미팅", tone: "bg-lime-200 text-lime-950" },
+  internal: { label: "내부 회의", tone: "bg-yellow-200 text-yellow-950" },
+  deadline: { label: "지원사업 마감", tone: "bg-pink-200 text-pink-950" },
+  google: { label: "구글 캘린더", tone: "bg-sky-200 text-sky-950" },
 };
 type ScheduleType = keyof typeof scheduleTypes;
 const calendarTypes = Object.keys(scheduleTypes) as ScheduleType[];
@@ -249,6 +249,13 @@ function MeetingsPage() {
               </SelectContent>
             </Select>
           </div>
+          <ul aria-label="일정 유형별 색상" className="flex flex-wrap gap-2">
+            {calendarTypes.map((type) => (
+              <li key={type} className={`rounded-md px-2.5 py-1 text-xs font-medium ${scheduleTypes[type].tone}`}>
+                {scheduleTypes[type].label}
+              </li>
+            ))}
+          </ul>
           <fieldset disabled={addSchedule.isPending} className="flex flex-wrap items-end gap-3">
             <div className="min-w-48 flex-1 space-y-2">
               <Label htmlFor="schedule-title">일정 제목</Label>
