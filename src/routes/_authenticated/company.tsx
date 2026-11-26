@@ -27,7 +27,7 @@ function CompanyPage() {
           전기를 보이게 만드는 회사
         </h1>
         <p className="mt-4 leading-relaxed text-muted-foreground">
-          (주)에너인프라는 이미 지어진 집과 건물에서 전기사용량을 바로 볼 수 있게 하는{" "}
+          주식회사 에너인프라는 이미 지어진 집과 건물에서 전기사용량을 바로 볼 수 있게 하는{" "}
           <span className="whitespace-nowrap">장치를 만듭니다.</span>
         </p>
         <blockquote className="mt-6 border-l-2 border-primary pl-4 font-medium leading-relaxed">
@@ -49,7 +49,7 @@ function CompanyPage() {
           회사개요
         </h2>
         <div className="mt-4 space-y-3 leading-relaxed">
-          <p>㈜에너인프라는 2026년 7월 경기도 남양주시에서 설립된 하드웨어 스타트업입니다.</p>
+          <p>주식회사 에너인프라는 2026년 7월 경기도 남양주시에서 설립된 하드웨어 스타트업입니다.</p>
           <p>
             첫 제품 <strong>POWERBOARD</strong>는 분전반 커버를 교체하는 것만으로 전력 사용량을
             실시간으로 보여주는 장치입니다.
