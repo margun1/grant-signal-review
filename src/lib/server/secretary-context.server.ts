@@ -68,7 +68,7 @@ export async function externalToday(
     if (!keys.weather) return { fetchedAt, candidates: [], error: "기록 없음" };
     try {
       const data = await loadSupport(keys.weather, preferences, "json");
-      const candidates = data.recommendations.map((n) => ({
+      const candidates = data.recommendations.slice(0, 5).map((n) => ({
         id: n.id,
         title: n.title,
         url: n.url,

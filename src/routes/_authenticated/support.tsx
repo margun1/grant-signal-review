@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ExternalLink, Save, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -31,16 +31,25 @@ export const Route = createFileRoute("/_authenticated/support")({
   }),
   component: SupportPage,
 });
+const PAGE_SIZE = 5;
+
 function SupportPage() {
   const { data: saved } = useSuspenseQuery(supportPreferencesOptions);
   const [prefs, setPrefs] = useState(saved);
   const [format, setFormat] = useState<"json" | "xml">("json");
+  const [page, setPage] = useState(1);
+  const listTop = useRef<HTMLParagraphElement>(null);
   const qc = useQueryClient();
   const save = useServerFn(saveSupportPreferences);
   const results = useSupportRecommendations(saved, format);
+  const recommendations = results.data?.recommendations ?? [];
+  const pageCount = Math.ceil(recommendations.length / PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(1, pageCount));
+  const firstIndex = (currentPage - 1) * PAGE_SIZE;
   const mutation = useMutation({
     mutationFn: () => save({ data: preferencesSchema.parse(prefs) }),
     onSuccess: () => {
+      setPage(1);
       qc.setQueryData(supportPreferencesOptions.queryKey, prefs);
       void qc.invalidateQueries({ queryKey: ["support-recommendations"] });
       toast.success("조건을 저장했습니다.");
@@ -150,7 +159,10 @@ function SupportPage() {
           <Tabs
             value={format}
             onValueChange={(v) => {
-              if (v === "json" || v === "xml") setFormat(v);
+              if (v === "json" || v === "xml") {
+                setFormat(v);
+                setPage(1);
+              }
             }}
           >
             <TabsList aria-label="데이터 형식">
@@ -180,7 +192,7 @@ function SupportPage() {
         </p>
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">
+          <p ref={listTop} className="text-xs text-muted-foreground">
             {results.data?.scheduled ? "정기 갱신" : "실시간 조회"}{" "}
             {results.data?.fetchedAt
               ? new Date(results.data.fetchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })
@@ -188,11 +200,11 @@ function SupportPage() {
             · {results.data?.checkedCount}개 모집 중 자료 확인
             {results.data?.complete === false ? " · 일부 자료만 조회됨" : ""}
           </p>
-          <ol className="space-y-3">
-            {results.data?.recommendations.map((n, i) => (
+          <ol start={firstIndex + 1} className="space-y-3">
+            {recommendations.slice(firstIndex, firstIndex + PAGE_SIZE).map((n, i) => (
               <li key={n.id || n.url} className="rounded-lg border bg-card p-4 sm:p-5">
                 <div className="flex gap-3">
-                  <span className="text-xl font-bold text-gold">{i + 1}</span>
+                  <span className="text-xl font-bold text-gold">{firstIndex + i + 1}</span>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-bold leading-relaxed">{n.title}</h3>
                     <p className="mt-2 text-sm">{n.reason}</p>
@@ -214,7 +226,30 @@ function SupportPage() {
               </li>
             ))}
           </ol>
-          {results.data?.recommendations.length === 0 && (
+          {pageCount > 1 && (
+            <nav aria-label="추천 공고 페이지" className="flex flex-wrap justify-center gap-2">
+              {Array.from({ length: pageCount }, (_, index) => {
+                const number = index + 1;
+                return (
+                  <Button
+                    key={number}
+                    type="button"
+                    size="sm"
+                    variant={number === currentPage ? "default" : "outline"}
+                    aria-current={number === currentPage ? "page" : undefined}
+                    aria-label={`${number}페이지`}
+                    onClick={() => {
+                      setPage(number);
+                      listTop.current?.scrollIntoView({ block: "start" });
+                    }}
+                  >
+                    {number}
+                  </Button>
+                );
+              })}
+            </nav>
+          )}
+          {recommendations.length === 0 && (
             <p className="py-4 text-muted-foreground">
               현재 조회된 자료에서 조건에 맞는 접수 중 공고가 없습니다.
             </p>

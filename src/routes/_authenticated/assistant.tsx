@@ -104,7 +104,7 @@ function BriefingSections({ sources, today }: { sources: BriefRow["sources"]; to
   const summary = parsed.data?.summary;
   const preferences = useQuery(supportPreferencesOptions);
   const grants = useSupportRecommendations(preferences.data, "json");
-  const recommendations = grants.data?.recommendations ?? [];
+  const recommendations = grants.data?.recommendations.slice(0, 5) ?? [];
   const grantsMessage =
     preferences.isError || grants.isError
       ? "추천 공고를 불러오지 못했습니다."

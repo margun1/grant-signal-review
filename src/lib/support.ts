@@ -154,6 +154,14 @@ const interestWords: Record<(typeof INTERESTS)[number], RegExp> = {
   자금: /자금|융자|사업화|투자|보증/,
   교육: /교육|훈련|강좌/,
 };
+const priorityTopics = [
+  ["에너지 모니터링", /(?:에너지|전력)\s*(?:모니터링|계측|사용량)/],
+  ["에너지 절감", /(?:에너지|전력|전기)\s*(?:절감|효율|절약)|고효율|절전/],
+  ["탄소중립", /탄소\s*중립|온실\s*가스\s*감축|탈탄소/],
+  ["전기·에너지", /전기(?:\s|[·/]|설비|기기|차|화|$)|전력|에너지/],
+  ["환경", /친환경|녹색\s*(?:기술|산업)|기후\s*테크|환경/],
+] as const;
+
 export function recommendSupport(
   notices: SupportNotice[],
   prefs: Preferences,
@@ -166,6 +174,10 @@ export function recommendSupport(
         missing: string[] = [];
       let score = 0;
       const text = `${n.title} ${n.content} ${n.target}`;
+      const topic = priorityTopics.find(([, pattern]) =>
+        pattern.test(`${n.title} ${n.field} ${n.content}`),
+      );
+      if (topic) evidence.push(`우선 분야: ${topic[0]}`);
       if (prefs.industry && text.includes(prefs.industry.replace(/업$/, ""))) {
         evidence.push(`업종: 공고에 '${prefs.industry.replace(/업$/, "")}' 명시`);
         score += 4;
@@ -236,9 +248,13 @@ export function recommendSupport(
           end: n.end,
           url: n.url,
           score,
+          priority: topic !== undefined,
         },
       ];
     })
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
-    .slice(0, 5);
+    .sort(
+      (a, b) =>
+        Number(b.priority) - Number(a.priority) || b.score - a.score || a.id.localeCompare(b.id),
+    )
+    .map(({ priority: _priority, ...recommendation }) => recommendation);
 }

@@ -37,14 +37,33 @@ describe("K-Startup 추천 규칙", () => {
     expect(isReceiving({ ...notice, start: "20261201" }, now)).toBe(false);
     expect(isReceiving({ ...notice, end: "20261122" }, now)).toBe(false);
   });
-  it("추천은 최대 다섯 개", () => {
+  it("조건에 맞는 공고를 개수 제한 없이 반환", () => {
     expect(
       recommendSupport(
         Array.from({ length: 8 }, (_, i) => ({ ...notice, id: String(i) })),
         DEFAULT_PREFERENCES,
         now,
       ),
-    ).toHaveLength(5);
+    ).toHaveLength(8);
+  });
+  it("에너지 우선 분야를 먼저 추천하고 명시된 지역 조건을 적용", () => {
+    const result = recommendSupport(
+      [
+        { ...notice, id: "other" },
+        {
+          ...notice,
+          id: "energy",
+          title: "탄소중립 에너지 모니터링 실증",
+          content: "",
+          target: "",
+        },
+        { ...notice, id: "outside", title: "에너지 절감 지원", region: "부산" },
+      ],
+      { ...DEFAULT_PREFERENCES, interests: ["마케팅"] },
+      now,
+    );
+    expect(result.map((entry) => entry.id)).toEqual(["energy", "other"]);
+    expect(result[0]?.reason).toContain("우선 분야: 에너지 모니터링");
   });
   it("확인되지 않은 연매출과 업력을 확인 필요로 표시", () => {
     const rec = recommendSupport([notice], DEFAULT_PREFERENCES, now)[0];
