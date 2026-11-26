@@ -5,6 +5,7 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PageHeader, Panel, StatusBadge } from "@/components/app/ui";
+import { SampleSalesPanel } from "@/components/app/SampleSalesPanel";
 import { C, RangePicker, UploadPanel, fetchAll, presetRange, type Range } from "@/components/app/data";
 import { bucketKey, costFor, parseCosts, summarizeProfit, won, type PartRow } from "@/lib/biz";
 import { loadCosts, loadSales } from "@/lib/biz-queries";
@@ -38,6 +39,7 @@ function ProfitPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="수익성" desc="매출총이익 = 판매금액 합계 − (판매수량 × 적용 완제품 원가)의 합" />
+      <SampleSalesPanel profitability />
       <UploadPanel title="원가 엑셀 올리기" required="상품명, 완제품 원가 (선택: 원가 변경일) — 부품 비교용은 상품명, 부품명, 부품단가, 사용수량"
         analyze={(d) => { const p = parseCosts(d.rows, d.headers); const isParts = p.parts.length > 0;
           return { count: isParts ? p.parts.length : p.rows.length, errors: p.errors, missing: p.missing, ready: (p.rows.length + p.parts.length) > 0,

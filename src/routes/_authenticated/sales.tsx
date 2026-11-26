@@ -6,6 +6,7 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PageHeader, Panel, kst } from "@/components/app/ui";
+import { SampleSalesPanel } from "@/components/app/SampleSalesPanel";
 import { C, RangePicker, UploadPanel, exportXlsx, fetchAll, presetRange, type Range } from "@/components/app/data";
 import { bucketKey, cnt, parseSales, won, type SaleRow } from "@/lib/biz";
 import { lastUpload, loadSales } from "@/lib/biz-queries";
@@ -38,6 +39,7 @@ function SalesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="매출·상품" desc={up.data ? `최근 반영: ${up.data.file_name} (${up.data.period_start} ~ ${up.data.period_end}, ${kst(up.data.created_at)})` : "아직 반영한 매출 엑셀이 없습니다."} />
+      <SampleSalesPanel />
       <UploadPanel title="매출 엑셀 올리기" required="판매일, 구매자명, 상품명, 수량, 판매금액"
         analyze={(d) => { const p = parseSales(d.rows, d.headers); const ds = p.rows.map((r) => r.sale_date).sort();
           return { count: p.rows.length, errors: p.errors, missing: p.missing, ready: p.rows.length > 0,
