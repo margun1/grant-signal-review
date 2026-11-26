@@ -1,5 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -23,6 +29,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSecretaryBriefing, getSecretaryScreen } from "@/lib/secretary.functions";
 import { briefingSourcesSchema, shortAnswer, type BriefRow } from "@/lib/secretary";
+import { supportPreferencesOptions, useSupportRecommendations } from "@/lib/support.queries";
 import { useMe } from "@/hooks/use-auth";
 
 const screenOptions = queryOptions({
@@ -63,10 +70,12 @@ function BriefingSection({
   title,
   items,
   empty,
+  footer,
 }: {
   title: string;
   items: ReactNode[];
   empty: string;
+  footer?: ReactNode;
 }) {
   return (
     <section className="min-w-0 rounded-xl border bg-card p-4">
@@ -78,6 +87,7 @@ function BriefingSection({
       ) : (
         <p className="text-sm text-muted-foreground">{empty}</p>
       )}
+      {footer}
     </section>
   );
 }
@@ -85,7 +95,15 @@ function BriefingSection({
 function BriefingSections({ sources }: { sources: BriefRow["sources"] }) {
   const parsed = briefingSourcesSchema.safeParse(sources);
   const summary = parsed.data?.summary;
-  const grants = parsed.data?.external?.grants;
+  const preferences = useQuery(supportPreferencesOptions);
+  const grants = useSupportRecommendations(preferences.data, "json");
+  const recommendations = grants.data?.recommendations ?? [];
+  const grantsMessage =
+    preferences.isError || grants.isError
+      ? "추천 공고를 불러오지 못했습니다."
+      : grants.isPending
+        ? "추천 공고를 불러오는 중…"
+        : "현재 조회된 자료에 조건에 맞는 접수 중 공고가 없습니다.";
   const tasks = summary?.todayTasks ?? [];
   const meetings = summary?.weekMeetings ?? [];
   const moreTasks = (summary?.todayTaskCount ?? 0) - tasks.length;
@@ -118,15 +136,18 @@ function BriefingSections({ sources }: { sources: BriefRow["sources"] }) {
       />
       <BriefingSection
         title="이번 주 지원사업"
-        empty={
-          grants && !grants.error
-            ? "추천할 접수 중 공고가 없습니다."
-            : "지원사업 정보를 확인할 수 없습니다."
-        }
-        items={
-          grants?.candidates.map((grant, index) => (
-            <li key={index}>{shortAnswer(grant.title)}</li>
-          )) ?? []
+        empty={grantsMessage}
+        items={recommendations.map((grant) => (
+          <li key={grant.id || grant.url}>
+            <a href={grant.url} target="_blank" rel="noreferrer" className="underline">
+              {grant.title}
+            </a>
+          </li>
+        ))}
+        footer={
+          <Link to="/support" className="mt-3 inline-block text-xs font-semibold underline">
+            지원사업 추천 공고 보기
+          </Link>
         }
       />
     </div>
@@ -208,17 +229,15 @@ function AssistantPage() {
             </Button>
           )}
         </div>
+        <BriefingSections sources={data.brief?.sources ?? null} />
         {data.brief?.content && (
-          <>
-            <BriefingSections sources={data.brief.sources} />
-            <Message from="assistant">
-              <MessageContent>
-                <MessageResponse className="whitespace-pre-line leading-relaxed">
-                  {shortAnswer(data.brief.content)}
-                </MessageResponse>
-              </MessageContent>
-            </Message>
-          </>
+          <Message from="assistant">
+            <MessageContent>
+              <MessageResponse className="whitespace-pre-line leading-relaxed">
+                {shortAnswer(data.brief.content)}
+              </MessageResponse>
+            </MessageContent>
+          </Message>
         )}
         {((mutation.isPending && data.brief?.status !== "ready") ||
           data.brief?.status === "generating") && (

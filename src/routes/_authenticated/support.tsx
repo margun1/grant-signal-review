@@ -1,11 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { ExternalLink, Save, RefreshCw } from "lucide-react";
@@ -16,19 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/app/ui";
-import {
-  getSupportPreferences,
-  getSupportRecommendations,
-  saveSupportPreferences,
-} from "@/lib/support.functions";
+import { saveSupportPreferences } from "@/lib/support.functions";
+import { supportPreferencesOptions, useSupportRecommendations } from "@/lib/support.queries";
 import { INTERESTS, preferencesSchema } from "@/lib/support";
 
-const prefsOptions = queryOptions({
-  queryKey: ["support-preferences"],
-  queryFn: () => getSupportPreferences(),
-});
 export const Route = createFileRoute("/_authenticated/support")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(prefsOptions),
+  loader: ({ context }) => context.queryClient.ensureQueryData(supportPreferencesOptions),
   head: () => ({
     meta: [
       { title: "지원사업 추천 · 에너인프라 경영비서" },
@@ -45,22 +32,16 @@ export const Route = createFileRoute("/_authenticated/support")({
   component: SupportPage,
 });
 function SupportPage() {
-  const { data: saved } = useSuspenseQuery(prefsOptions);
+  const { data: saved } = useSuspenseQuery(supportPreferencesOptions);
   const [prefs, setPrefs] = useState(saved);
   const [format, setFormat] = useState<"json" | "xml">("json");
   const qc = useQueryClient();
   const save = useServerFn(saveSupportPreferences);
-  const fetchRecommendations = useServerFn(getSupportRecommendations);
-  const results = useQuery({
-    queryKey: ["support-recommendations", saved, format],
-    queryFn: () => fetchRecommendations({ data: { format } }),
-    retry: false,
-    staleTime: 300000,
-  });
+  const results = useSupportRecommendations(saved, format);
   const mutation = useMutation({
     mutationFn: () => save({ data: preferencesSchema.parse(prefs) }),
     onSuccess: () => {
-      qc.setQueryData(prefsOptions.queryKey, prefs);
+      qc.setQueryData(supportPreferencesOptions.queryKey, prefs);
       void qc.invalidateQueries({ queryKey: ["support-recommendations"] });
       toast.success("조건을 저장했습니다.");
     },
