@@ -12,9 +12,9 @@ export const getNamyangjuHouseAverage = createServerFn({ method: "POST" })
       _user_id: context.userId,
     });
     if (error || !staff) throw new Error("활성 직원 계정만 전력데이터를 조회할 수 있습니다.");
-    const key = process.env["KEPCO_API_KEY"]?.trim();
+    const key = process.env["DATA_GO_KEY"]?.trim();
     if (!key)
-      throw new Error("Lovable Secrets의 한전 전력데이터 인증키(KEPCO_API_KEY)를 확인해 주세요.");
+      throw new Error("Lovable Secrets의 한전 전력데이터 인증키(DATA_GO_KEY)를 확인해 주세요.");
     const { fetchNamyangjuHouseAverage } = await import("./server/kepco.server");
     return fetchNamyangjuHouseAverage(data.month, key);
   });
