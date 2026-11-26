@@ -14,4 +14,12 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
+
+  it("matches the company home within the authenticated layout", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const routes = router.matchRoutes("/company").map((match) => match.routeId);
+
+    expect(routes.slice(-2)).toEqual(["/_authenticated", "/_authenticated/company"]);
+  });
 });

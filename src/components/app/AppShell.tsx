@@ -28,6 +28,7 @@ import { APP_TITLE } from "@/lib/company";
 import { cn } from "@/lib/utils";
 
 const NAV = [
+  { to: "/company", label: "회사소개", icon: FileText },
   { to: "/assistant", label: "AI 비서", icon: Bot },
   { to: "/dashboard", label: "경영현황", icon: LayoutDashboard },
   { to: "/support", label: "지원사업", icon: FileSearch },

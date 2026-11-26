@@ -29,7 +29,7 @@ function Signup() {
     if (pw !== pw2) { toast.error("비밀번호 확인 값이 일치하지 않습니다."); return; }
     if (pw.length < 8) { toast.error("비밀번호는 8자 이상으로 입력해 주세요."); return; }
     setBusy(true);
-    const { error } = await supabase.auth.signUp({ email, password: pw, options: { emailRedirectTo: window.location.origin + "/dashboard", data: { full_name: name } } });
+    const { error } = await supabase.auth.signUp({ email, password: pw, options: { emailRedirectTo: window.location.origin, data: { full_name: name } } });
     setBusy(false);
     if (error) {
       if (/database|saving new user|초대/i.test(error.message)) toast.error("초대받은 이메일만 가입할 수 있습니다. 사내 관리자에게 초대를 요청해 주세요.");
