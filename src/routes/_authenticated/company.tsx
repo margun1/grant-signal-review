@@ -21,7 +21,7 @@ function CompanyPage() {
             className="ml-auto h-auto w-24 shrink-0 sm:w-40"
           />
         </div>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 whitespace-nowrap text-[clamp(1rem,5vw,1.875rem)] font-bold tracking-tight sm:text-4xl">
           전기를 보이게 만드는 회사
         </h1>
         <p className="mt-4 leading-relaxed text-muted-foreground">
