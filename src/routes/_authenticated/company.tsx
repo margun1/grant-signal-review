@@ -13,8 +13,15 @@ function CompanyPage() {
     <article className="mx-auto max-w-4xl space-y-5">
       <header className="rounded-2xl border bg-card p-6 sm:p-9">
         <div className="flex items-center gap-2 text-sm font-semibold text-gold">
-          <Zap aria-hidden="true" className="size-4" />
-          에너인프라 회사소개
+          <Zap aria-hidden="true" className="size-4 shrink-0" />
+          <span>에너인프라 회사소개</span>
+          <img
+            src="/enerinfra-logo.png"
+            alt=""
+            width={986}
+            height={170}
+            className="ml-auto h-auto w-24 shrink-0 sm:w-40"
+          />
         </div>
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
           전기를 보이게 만드는 회사
