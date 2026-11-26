@@ -22,16 +22,16 @@ function Dashboard() {
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="경영현황" desc={`오늘 ${kstDate(new Date())} (한국 시간)`} />
       <WeatherCard />
-      <YouTubeIntro />
       <Panel title="오늘 처리할 일" accent="primary">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <ShortageCard />
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <TodayCards today={today} />
+          <ShortageCard />
         </div>
       </Panel>
       <Panel title="경영 실적" accent="gold">
         <Performance />
       </Panel>
+      <YouTubeIntro />
     </div>
   );
 }
@@ -48,10 +48,10 @@ function ShortageCard() {
   } });
   const list = q.data ?? [];
   return (
-    <div className="rounded-md border p-4">
-      <div className="mb-2 flex items-center gap-2 font-semibold"><Package className="size-4 text-taupe" aria-hidden />부족 재고</div>
+    <div className="min-w-0 rounded-md border p-3 sm:p-4">
+      <div className="mb-2 flex items-center gap-2 font-semibold"><Package className="size-4 shrink-0 text-taupe" aria-hidden />부족한 재고</div>
       {list.length === 0 ? <p className="text-sm text-muted-foreground">최소 재고보다 부족한 품목이 없습니다.</p> :
-        <ul className="space-y-1 text-sm">{list.slice(0, 5).map((x) => <li key={x.name} className="flex justify-between gap-2"><span className="truncate">{x.name}</span><span className="shrink-0">{cnt(x.cur)} · 권장 {cnt(x.rec)}</span></li>)}</ul>}
+        <ul className="space-y-1 text-sm">{list.slice(0, 5).map((x) => <li key={x.name} className="flex flex-col sm:flex-row sm:justify-between sm:gap-2"><span className="truncate">{x.name}</span><span className="shrink-0">{cnt(x.cur)} · 권장 {cnt(x.rec)}</span></li>)}</ul>}
       {list[0] && <p className="mt-1 text-xs text-muted-foreground">재고 기준일 {list[0].asOf}</p>}
       <Link to="/inventory" className="mt-3 inline-flex text-sm font-semibold underline">재고·발주</Link>
     </div>
@@ -96,13 +96,13 @@ function TodayCards({ today }: { today: string }) {
   const hm = (iso: string) => new Date(iso).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit" });
   return (
     <>
-      <Link to="/inquiries" className="rounded-md border p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><MessageSquare className="size-4 text-taupe" aria-hidden />미답변 고객문의</div><p className="text-2xl font-bold">{d?.inq ?? "-"}건</p></Link>
-      <Link to="/meetings" className="rounded-md border p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><Users className="size-4 text-taupe" aria-hidden />미확정 미팅 요청</div><p className="text-2xl font-bold">{d?.meet ?? "-"}건</p></Link>
-      <div className="rounded-md border p-4"><div className="mb-2 flex items-center gap-2 font-semibold"><ListChecks className="size-4 text-taupe" aria-hidden />오늘 일정·체크리스트</div>
+      <div className="min-w-0 rounded-md border p-3 sm:p-4"><div className="mb-2 flex items-center gap-2 font-semibold"><ListChecks className="size-4 shrink-0 text-taupe" aria-hidden />오늘 일정·체크리스트</div>
         <ul className="space-y-1 text-sm">{(d?.events ?? []).map((e) => <li key={e.id}>{hm(e.start_at)} {e.kind === "외부 미팅" ? `미팅 ${e.org ?? e.name ?? ""}` : e.title}</li>)}
           {(d?.tasks ?? []).slice(0, 5).map((t) => <li key={t.id} className={t.done ? "text-muted-foreground line-through" : ""}>☐ {t.title}</li>)}
           {d && d.events.length + d.tasks.length === 0 && <li className="text-muted-foreground">오늘 일정과 체크리스트가 없습니다.</li>}</ul>
-        <div className="mt-2 flex gap-3 text-sm font-semibold underline"><Link to="/meetings">일정</Link><Link to="/checklist">체크리스트</Link></div></div>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm font-semibold underline"><Link to="/meetings">일정</Link><Link to="/checklist">체크리스트</Link></div></div>
+      <Link to="/meetings" className="min-w-0 rounded-md border p-3 sm:p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><Users className="size-4 shrink-0 text-taupe" aria-hidden />미확정 미팅 요청</div><p className="text-2xl font-bold">{d?.meet ?? "-"}건</p></Link>
+      <Link to="/inquiries" className="min-w-0 rounded-md border p-3 sm:p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><MessageSquare className="size-4 shrink-0 text-taupe" aria-hidden />미답변 고객문의</div><p className="text-2xl font-bold">{d?.inq ?? "-"}건</p></Link>
     </>
   );
 }
