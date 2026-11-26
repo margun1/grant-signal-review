@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   FileSearch,
@@ -25,6 +25,7 @@ import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { YouTubeIntro } from "@/components/app/YouTubeIntro";
 
 function AppBrand() {
   return (
@@ -96,6 +97,12 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const isDashboard = useRouterState({ select: (state) => state.location.pathname === "/dashboard" });
+  const [musicOpened, setMusicOpened] = useState(isDashboard);
+
+  useEffect(() => {
+    if (isDashboard) setMusicOpened(true);
+  }, [isDashboard]);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -157,6 +164,14 @@ export function AppShell() {
       </Sheet>
       <main className="min-w-0 flex-1 p-4 md:p-8">
         <Outlet />
+        {(isDashboard || musicOpened) && (
+          <aside
+            aria-label="유튜브 음악"
+            className={cn("mx-auto mt-6", isDashboard ? "max-w-6xl" : "max-w-sm")}
+          >
+            <YouTubeIntro />
+          </aside>
+        )}
       </main>
     </div>
   );

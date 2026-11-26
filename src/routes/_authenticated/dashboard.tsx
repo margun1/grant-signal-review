@@ -7,7 +7,6 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import { C, RangePicker, fetchAll, presetRange, type Range } from "@/components/app/data";
 import { cnt, recommendOrder, summarizeProfit, won } from "@/lib/biz";
 import { lastUpload, loadCosts, loadSales } from "@/lib/biz-queries";
-import { YouTubeIntro } from "@/components/app/YouTubeIntro";
 import { PageHeader, Panel, kstDate, todayKst } from "@/components/app/ui";
 import { WeatherCard } from "@/components/app/WeatherCard";
 
@@ -31,7 +30,6 @@ function Dashboard() {
       <Panel title="경영 실적" accent="gold">
         <Performance />
       </Panel>
-      <YouTubeIntro />
     </div>
   );
 }
