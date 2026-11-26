@@ -21,6 +21,7 @@ import { Route as AuthenticatedAssistantRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
 import { Route as AuthenticatedCompanyRouteImport } from './routes/_authenticated/company'
+import { Route as AuthenticatedCompetitorsRouteImport } from './routes/_authenticated/competitors'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedInquiriesRouteImport } from './routes/_authenticated/inquiries'
@@ -96,6 +97,12 @@ const AuthenticatedCompanyRoute = AuthenticatedCompanyRouteImport.update({
   path: '/company',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCompetitorsRoute =
+  AuthenticatedCompetitorsRouteImport.update({
+    id: '/competitors',
+    path: '/competitors',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/checklist': typeof AuthenticatedChecklistRoute
   '/company': typeof AuthenticatedCompanyRoute
+  '/competitors': typeof AuthenticatedCompetitorsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/inquiries': typeof AuthenticatedInquiriesRoute
@@ -214,6 +222,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/checklist': typeof AuthenticatedChecklistRoute
   '/company': typeof AuthenticatedCompanyRoute
+  '/competitors': typeof AuthenticatedCompetitorsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/inquiries': typeof AuthenticatedInquiriesRoute
@@ -244,6 +253,7 @@ export interface FileRoutesById {
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/checklist': typeof AuthenticatedChecklistRoute
   '/_authenticated/company': typeof AuthenticatedCompanyRoute
+  '/_authenticated/competitors': typeof AuthenticatedCompetitorsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/inquiries': typeof AuthenticatedInquiriesRoute
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/checklist'
     | '/company'
+    | '/competitors'
     | '/dashboard'
     | '/devices'
     | '/inquiries'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/checklist'
     | '/company'
+    | '/competitors'
     | '/dashboard'
     | '/devices'
     | '/inquiries'
@@ -331,6 +343,7 @@ export interface FileRouteTypes {
     | '/_authenticated/attendance'
     | '/_authenticated/checklist'
     | '/_authenticated/company'
+    | '/_authenticated/competitors'
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
     | '/_authenticated/inquiries'
@@ -448,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCompanyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/competitors': {
+      id: '/_authenticated/competitors'
+      path: '/competitors'
+      fullPath: '/competitors'
+      preLoaderRoute: typeof AuthenticatedCompetitorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -561,6 +581,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedChecklistRoute: typeof AuthenticatedChecklistRoute
   AuthenticatedCompanyRoute: typeof AuthenticatedCompanyRoute
+  AuthenticatedCompetitorsRoute: typeof AuthenticatedCompetitorsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedInquiriesRoute: typeof AuthenticatedInquiriesRoute
@@ -580,6 +601,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedChecklistRoute: AuthenticatedChecklistRoute,
   AuthenticatedCompanyRoute: AuthenticatedCompanyRoute,
+  AuthenticatedCompetitorsRoute: AuthenticatedCompetitorsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedInquiriesRoute: AuthenticatedInquiriesRoute,
