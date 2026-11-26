@@ -26,13 +26,15 @@ function CompanyPage() {
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
           전기를 보이게 만드는 회사
         </h1>
-        <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
-          ㈜에너인프라는 이미 지어진 집과 건물에서 전기사용량을 바로 볼 수 있게 하는 장치를
-          만듭니다.
+        <p className="mt-4 leading-relaxed text-muted-foreground">
+          (주)에너인프라는 이미 지어진 집과 건물에서 전기사용량을 바로 볼 수 있게 하는{" "}
+          <span className="whitespace-nowrap">장치를 만듭니다.</span>
         </p>
         <blockquote className="mt-6 border-l-2 border-primary pl-4 font-medium leading-relaxed">
-          <p>“참으라고 말하지 않습니다. 지금 얼마를 쓰고 있는지 보여줍니다.”</p>
-          <cite className="mt-1 block text-sm not-italic text-muted-foreground">EnerInfra</cite>
+          <p>“참으라고 말하지 않습니다. 지금 얼마를 쓰고 있는지를 보여줍니다.”</p>
+          <cite className="mt-1 block text-center text-sm not-italic text-muted-foreground">
+            - EnerInfra -
+          </cite>
         </blockquote>
         <Link
           to="/assistant"
