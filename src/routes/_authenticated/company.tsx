@@ -6,8 +6,6 @@ export const Route = createFileRoute("/_authenticated/company")({
   component: CompanyPage,
 });
 
-const office = "경기도 남양주시 진접읍 경복대로 425-80, 경복대학교 충효관 4층 6418호";
-
 function CompanyPage() {
   return (
     <article className="mx-auto max-w-4xl space-y-5">
@@ -107,7 +105,9 @@ function CompanyPage() {
             <dd>
               경복대학교 창업보육센터
               <br />
-              {office}
+              경기도 남양주시 진접읍 경복대로 425-80
+              <br />
+              경복대학교 충효관 4층 6418호
             </dd>
           </div>
           <div>
