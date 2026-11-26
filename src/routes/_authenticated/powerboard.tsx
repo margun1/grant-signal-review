@@ -5,7 +5,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/app/ui";
-import { PowerboardElectricity } from "@/components/app/PowerboardElectricity";
+import { RentalElectricityTariffs } from "@/components/app/RentalElectricityTariffs";
 import { filterPilot, pilotCategories, pilotColumns, pilotMonths, pilotSeries, summarizePilot } from "@/lib/powerboard";
 
 export const Route = createFileRoute("/_authenticated/powerboard")({
@@ -43,7 +43,7 @@ function PowerboardPage() {
   }
   return <div className="mx-auto max-w-6xl space-y-6">
     <PageHeader title="POWERBOARD 실증" desc="POWERBOARD_sample.csv · 2026년 6~9월" />
-    <PowerboardElectricity />
+    <RentalElectricityTariffs />
     <div className="border-y border-warning py-4 text-sm">
       <div className="flex items-center gap-2 font-bold text-warning"><Activity className="size-4" />가상 데이터 · 실제 실증 성과 아님</div>
       <p className="mt-2 text-muted-foreground">모의 요금·바우처·계약금액입니다. 실제 매출·수익성·AI 브리핑에는 반영하지 않습니다.</p>
