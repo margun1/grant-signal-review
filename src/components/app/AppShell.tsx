@@ -23,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { YouTubeIntro } from "@/components/app/YouTubeIntro";
 
@@ -58,21 +58,25 @@ const NAV = [
   { to: "/meetings", label: "미팅·일정", icon: CalendarDays },
 ] as const;
 
-function NavLinks({ isAdmin, onNav }: { isAdmin: boolean; onNav?: () => void }) {
-  const path = useRouterState({ select: (s) => s.location.pathname });
-  const items = [
-    ...NAV,
-    ...(isAdmin
-      ? [
-          { to: "/admin/invites", label: "직원 초대 관리", icon: Users } as const,
-          { to: "/admin/settings", label: "연락 설정", icon: Settings } as const,
-        ]
-      : []),
-  ];
+const ADMIN_NAV = [
+  { to: "/admin/invites", label: "직원 초대 관리", icon: Users },
+  { to: "/admin/settings", label: "연락 설정", icon: Settings },
+] as const;
+const ALL_NAV = [...NAV, ...ADMIN_NAV];
+
+function NavLinks({
+  items,
+  activePath,
+  onNav,
+}: {
+  items: readonly (typeof ALL_NAV)[number][];
+  activePath?: string;
+  onNav: () => void;
+}) {
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
       {items.map((it) => {
-        const active = path.startsWith(it.to);
+        const active = activePath === it.to;
         return (
           <Link
             key={it.to}
@@ -98,7 +102,8 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const isDashboard = useRouterState({ select: (state) => state.location.pathname.replace(/\/+$/, "") === "/dashboard" });
+  const path = useRouterState({ select: (state) => state.location.pathname });
+  const isDashboard = path.replace(/\/+$/, "") === "/dashboard";
   const [musicOpened, setMusicOpened] = useState(isDashboard);
 
   useEffect(() => {
@@ -129,12 +134,14 @@ export function AppShell() {
       </div>
     );
 
+  const items = me.isAdmin ? ALL_NAV : NAV;
+  const currentPage = items.find(({ to }) => path === to || path.startsWith(`${to}/`));
   const side = (
     <div className="flex h-full flex-col gap-6 p-4">
       <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
         <AppBrand />
       </div>
-      <NavLinks isAdmin={me.isAdmin} onNav={() => setOpen(false)} />
+      <NavLinks items={items} activePath={currentPage?.to ?? ""} onNav={() => setOpen(false)} />
       <div className="mt-auto border-t pt-4 text-sm">
         <div className="truncate font-medium">{me.profile?.display_name}</div>
         <div className="truncate text-xs text-muted-foreground">{session?.user.email}</div>
@@ -149,16 +156,32 @@ export function AppShell() {
   );
 
   return (
-    <div className="min-h-screen md:flex">
-      <aside className="hidden w-64 shrink-0 border-r bg-sidebar md:block md:sticky md:top-0 md:h-screen">{side}</aside>
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-card px-4 py-3 md:hidden">
-        <AppBrand />
-        <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="메뉴 열기">
-          <Menu />
-        </Button>
-      </header>
+    <div className="min-h-screen xl:pointer-fine:flex">
+      <aside className="hidden w-64 shrink-0 border-r bg-sidebar xl:pointer-fine:sticky xl:pointer-fine:top-0 xl:pointer-fine:block xl:pointer-fine:h-dvh xl:pointer-fine:overflow-y-auto">
+        {side}
+      </aside>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-72 bg-sidebar p-0">
+        <header className="sticky top-0 z-40 border-b bg-card px-4 pt-3 shadow-sm xl:pointer-fine:hidden">
+          <div className="flex items-center justify-between gap-3 pb-3">
+            <AppBrand />
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
+                aria-label="메뉴 열기"
+              >
+                <Menu aria-hidden="true" />
+              </Button>
+            </SheetTrigger>
+          </div>
+          {currentPage && (
+            <p role="status" className="border-t py-2 text-sm font-bold text-card-foreground">
+              {currentPage.label}
+            </p>
+          )}
+        </header>
+        <SheetContent side="left" className="w-72 max-w-[90vw] overflow-y-auto bg-sidebar p-0">
           <SheetTitle className="sr-only">메뉴</SheetTitle>
           {side}
         </SheetContent>

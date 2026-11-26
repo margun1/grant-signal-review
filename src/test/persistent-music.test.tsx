@@ -15,7 +15,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
-  useMe: () => ({ me: { isStaff: true }, loading: false, session: null }),
+  useMe: () => ({ me: { isStaff: true, isAdmin: true }, loading: false, session: null }),
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
@@ -44,5 +44,31 @@ it("keeps the same music iframe across navigation after the dashboard opens", ()
     rerender(app());
     expect(screen.getByTitle("테스트 유튜브 플레이어")).toBe(iframe);
     expect(player.classList.contains("size-[3cm]")).toBe(!pathname.startsWith("/dashboard"));
+  }
+});
+
+it("shows the current menu page in the sticky compact header", () => {
+  location.pathname = "/company";
+  const client = new QueryClient();
+  const app = () => (
+    <QueryClientProvider client={client}>
+      <AppShell />
+    </QueryClientProvider>
+  );
+  const { rerender } = render(app());
+  const header = screen.getByRole("banner");
+  expect(header).toHaveClass("sticky", "top-0", "xl:pointer-fine:hidden");
+  expect(screen.getByRole("button", { name: "메뉴 열기" })).toHaveClass("size-14");
+  expect(screen.getByRole("status")).toHaveTextContent("회사소개");
+  for (const [pathname, label] of [
+    ["/meetings", "미팅·일정"],
+    ["/dashboard/", "경영현황"],
+    ["/admin/invites", "직원 초대 관리"],
+    ["/admin/settings", "연락 설정"],
+  ] as const) {
+    location.pathname = pathname;
+    rerender(app());
+    expect(screen.getByRole("banner")).toBe(header);
+    expect(screen.getByRole("status")).toHaveTextContent(label);
   }
 });
