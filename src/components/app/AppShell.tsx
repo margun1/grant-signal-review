@@ -1,7 +1,25 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LayoutDashboard, FileSearch, Users, LogOut, Menu, ShieldAlert, TrendingUp, Coins, Boxes, Settings, ListChecks, Clock, MessageSquare, Wrench, CalendarDays, Bot, FileText } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileSearch,
+  Users,
+  LogOut,
+  Menu,
+  ShieldAlert,
+  TrendingUp,
+  Coins,
+  Boxes,
+  Settings,
+  ListChecks,
+  Clock,
+  MessageSquare,
+  Wrench,
+  CalendarDays,
+  Bot,
+  FileText,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -27,7 +45,15 @@ const NAV = [
 
 function NavLinks({ isAdmin, onNav }: { isAdmin: boolean; onNav?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const items = [...NAV, ...(isAdmin ? [{ to: "/admin/invites", label: "직원 초대 관리", icon: Users } as const, { to: "/admin/settings", label: "연락 설정", icon: Settings } as const] : [])];
+  const items = [
+    ...NAV,
+    ...(isAdmin
+      ? [
+          { to: "/admin/invites", label: "직원 초대 관리", icon: Users } as const,
+          { to: "/admin/settings", label: "연락 설정", icon: Settings } as const,
+        ]
+      : []),
+  ];
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
       {items.map((it) => {
@@ -72,17 +98,21 @@ export function AppShell() {
         <div className="max-w-md rounded-lg border bg-card p-8 text-center">
           <ShieldAlert className="mx-auto mb-3 size-8 text-destructive" aria-hidden />
           <h1 className="text-lg font-bold">접근 권한이 없습니다</h1>
-          <p className="mt-2 text-sm text-muted-foreground">초대받은 활성 직원 계정만 사용할 수 있습니다. 사내 관리자에게 문의하세요.</p>
-          <Button variant="outline" className="mt-5" onClick={signOut}>로그아웃</Button>
+          <p className="mt-2 text-sm text-muted-foreground">
+            초대받은 활성 직원 계정만 사용할 수 있습니다. 사내 관리자에게 문의하세요.
+          </p>
+          <Button variant="outline" className="mt-5" onClick={signOut}>
+            로그아웃
+          </Button>
         </div>
       </div>
     );
 
   const side = (
     <div className="flex h-full flex-col gap-6 p-4">
-      <div>
-        <div className="text-xs font-semibold text-gold">ENERINFRA</div>
-        <div className="mt-1 text-base font-bold leading-snug">{APP_TITLE}</div>
+      <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+        <div className="text-xs font-semibold tracking-wider text-gold">ENERINFRA</div>
+        <div className="mt-1 text-base font-bold leading-snug text-card-foreground">{APP_TITLE}</div>
       </div>
       <NavLinks isAdmin={me.isAdmin} onNav={() => setOpen(false)} />
       <div className="mt-auto border-t pt-4 text-sm">
@@ -103,7 +133,9 @@ export function AppShell() {
       <aside className="hidden w-64 shrink-0 border-r bg-sidebar md:block md:sticky md:top-0 md:h-screen">{side}</aside>
       <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-card px-4 py-3 md:hidden">
         <span className="text-sm font-bold">{APP_TITLE}</span>
-        <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="메뉴 열기"><Menu /></Button>
+        <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="메뉴 열기">
+          <Menu />
+        </Button>
       </header>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 bg-sidebar p-0">
