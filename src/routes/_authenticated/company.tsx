@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, Zap } from "lucide-react";
+import { EmergencyContactImage } from "@/components/app/EmergencyContactImage";
 
 export const Route = createFileRoute("/_authenticated/company")({
   head: () => ({ meta: [{ title: "회사소개 · 주식회사 에너인프라" }] }),
@@ -110,12 +111,7 @@ function CompanyPage() {
             </dd>
           </div>
         </dl>
-        <a
-          href="https://app.notion.com/p/41cc534e3a3b80f3a9eee3b1cb3380e8?pvs=21"
-          className="mt-5 inline-flex items-center gap-1 text-sm font-semibold underline"
-        >
-          에너인프라 비상연락망 <ArrowUpRight aria-hidden="true" className="size-4" />
-        </a>
+        <EmergencyContactImage />
       </section>
     </article>
   );
