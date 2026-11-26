@@ -36,9 +36,17 @@ export async function busyTimes(timeMin: string, timeMax: string): Promise<{ sta
 }
 /** 회의 id로 만든 고정 이벤트 id → 재시도해도 중복 일정이 생기지 않음 */
 export const eventIdFor = (meetingId: string) => `ei${meetingId.replace(/-/g, "")}`;
-export async function upsertMeetingEvent(m: { id: string; start_at: string; end_at: string; name: string | null; org: string | null; topic: string | null; email: string | null }) {
+export async function updateGoogleEvent(event: { id: string; title: string; start: string; end: string; allDay: boolean }) {
+  const time = (value: string) => event.allDay ? { date: value } : { dateTime: value, timeZone: "Asia/Seoul" };
+  await call(`/calendars/primary/events/${encodeURIComponent(event.id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ summary: event.title, start: time(event.start), end: time(event.end) }),
+  });
+}
+
+export async function upsertMeetingEvent(m: { id: string; title?: string | null; start_at: string; end_at: string; name: string | null; org: string | null; topic: string | null; email: string | null }) {
   const id = eventIdFor(m.id);
-  const body = { id, summary: `[미팅] ${m.org ?? m.name ?? "외부 미팅"}`, description: `${m.topic ?? ""}\n요청자: ${m.name ?? ""} ${m.email ?? ""}\n(경영비서에서 등록)`, start: { dateTime: m.start_at, timeZone: "Asia/Seoul" }, end: { dateTime: m.end_at, timeZone: "Asia/Seoul" } };
+  const body = { id, summary: `[미팅] ${m.title || m.org || m.name || "외부 미팅"}`, description: `${m.topic ?? ""}\n요청자: ${m.name ?? ""} ${m.email ?? ""}\n(경영비서에서 등록)`, start: { dateTime: m.start_at, timeZone: "Asia/Seoul" }, end: { dateTime: m.end_at, timeZone: "Asia/Seoul" } };
   try { await call(`/calendars/primary/events`, { method: "POST", body: JSON.stringify(body) }); }
   catch (e) { if ((e as { status?: number }).status === 409) { await call(`/calendars/primary/events/${id}`, { method: "PUT", body: JSON.stringify(body) }); } else throw e; }
   return id;

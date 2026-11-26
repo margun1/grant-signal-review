@@ -21,3 +21,65 @@ export const syncMeetingToCalendar = createServerFn({ method: "POST" })
     const { pushMeeting } = await import("./server/meeting-sync.server");
     return pushMeeting(context.supabase, data.id);
   });
+
+const timedEdit = {
+  title: z.string().trim().min(1).max(250),
+  start: z.iso.datetime({ offset: true }),
+  end: z.iso.datetime({ offset: true }),
+};
+
+export const updateCalendarMeeting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((value: unknown) =>
+    z.object({ id: z.uuid(), ...timedEdit })
+      .refine((d) => Date.parse(d.end) > Date.parse(d.start), "종료 시간이 시작보다 늦어야 합니다.")
+      .parse(value))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    const { data: meeting, error } = await sb.from("meetings")
+      .update({ title: data.title, start_at: data.start, end_at: data.end })
+      .eq("id", data.id).eq("status", "확정")
+      .select("kind,calendar_event_id,calendar_status").single();
+    if (error || !meeting) throw new Error("확정된 일정을 수정하지 못했습니다.");
+    if (meeting.kind !== "외부 미팅" || (!meeting.calendar_event_id && !meeting.calendar_status)) {
+      return { calendar: null };
+    }
+    const { pushMeeting } = await import("./server/meeting-sync.server");
+    const result = await pushMeeting(sb, data.id).catch(() => ({ ok: false }));
+    return { calendar: result.ok };
+  });
+
+const googleId = z.string().regex(/^[A-Za-z0-9_-]{1,1024}$/).refine((id) => !/^ei[0-9a-f]{32}$/.test(id));
+const googleEdit = z.discriminatedUnion("allDay", [
+  z.object({ id: googleId, allDay: z.literal(false), ...timedEdit }),
+  z.object({
+    id: googleId,
+    allDay: z.literal(true),
+    ...timedEdit,
+    start: z.iso.date(),
+    end: z.iso.date(),
+  }),
+]).refine((d) => Date.parse(d.end) > Date.parse(d.start), "종료 시간이 시작보다 늦어야 합니다.");
+
+export const updateGoogleCalendarEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((value: unknown) => googleEdit.parse(value))
+  .handler(async ({ data, context }) => {
+    const [staff, admin] = await Promise.all([
+      context.supabase.rpc("is_staff", { _user_id: context.userId }),
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+    ]);
+    if (staff.error || admin.error || !staff.data || !admin.data) {
+      throw new Error("관리자만 Google 캘린더 일정을 수정할 수 있습니다.");
+    }
+    const { updateGoogleEvent, recordStatus } = await import("./server/gcal.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try {
+      await updateGoogleEvent(data);
+    } catch {
+      await recordStatus(supabaseAdmin, false, "Google 캘린더 일정 수정 실패").catch(() => {});
+      throw new Error("Google 캘린더 일정을 수정하지 못했습니다. 연결과 수정 권한을 확인해 주세요.");
+    }
+    await recordStatus(supabaseAdmin, true).catch(() => {});
+    return { calendar: true };
+  });

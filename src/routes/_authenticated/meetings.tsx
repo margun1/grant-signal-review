@@ -7,10 +7,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { useMe } from "@/hooks/use-auth";
 import { Label } from "@/components/ui/label";
 import { PageHeader, Panel, StatusBadge, todayKst } from "@/components/app/ui";
 import { confirmMeeting } from "@/lib/booking.functions";
-import { getGoogleEvents, syncMeetingToCalendar } from "@/lib/calendar.functions";
+import { getGoogleEvents, syncMeetingToCalendar, updateCalendarMeeting, updateGoogleCalendarEvent } from "@/lib/calendar.functions";
 
 export const Route = createFileRoute("/_authenticated/meetings")({
   head: () => ({ meta: [{ title: "미팅·일정 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "외부 미팅 예약 확인과 내부 일정 달력" }] }),
@@ -19,20 +21,105 @@ export const Route = createFileRoute("/_authenticated/meetings")({
 const kt = (iso: string) => new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
 const kd = (iso: string) => new Date(new Date(iso).getTime() + 9 * 3600000).toISOString().slice(0, 10);
 
+function localTime(iso: string) {
+  return new Date(Date.parse(iso) + 9 * 3600000).toISOString().slice(0, 19);
+}
+
+function shiftDate(day: string, days: number) {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+type CalendarEdit = {
+  source: "meeting" | "google";
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+};
+
+type CalendarEntry = { label: string; tone: string; edit?: CalendarEdit | undefined };
+
 function MeetingsPage() {
   const qc = useQueryClient(); const confirmFn = useServerFn(confirmMeeting); const gFn = useServerFn(getGoogleEvents); const syncFn = useServerFn(syncMeetingToCalendar); const today = todayKst();
   const [month, setMonth] = useState(today.slice(0, 7));
+  const { me } = useMe();
+  const [editing, setEditing] = useState<CalendarEdit | null>(null);
+  const updateMeeting = useServerFn(updateCalendarMeeting);
+  const updateGoogle = useServerFn(updateGoogleCalendarEvent);
+  const update = useMutation({
+    mutationFn: (edit: CalendarEdit) => {
+      const start = edit.allDay ? edit.start : new Date(`${edit.start}+09:00`).toISOString();
+      const end = edit.allDay ? shiftDate(edit.end, 1) : new Date(`${edit.end}+09:00`).toISOString();
+      if (!edit.title.trim()) throw new Error("일정 제목을 입력해 주세요.");
+      if (Date.parse(end) <= Date.parse(start)) throw new Error("종료 시간을 확인해 주세요.");
+      const data = { id: edit.id, title: edit.title, start, end };
+      if (edit.source === "meeting") return updateMeeting({ data });
+      return edit.allDay
+        ? updateGoogle({ data: { ...data, allDay: true } })
+        : updateGoogle({ data: { ...data, allDay: false } });
+    },
+    onSuccess: (result, edit) => {
+      setEditing(null);
+      setMonth(edit.start.slice(0, 7));
+      if (result.calendar === false) {
+        toast.warning("일정을 저장했습니다. 미팅 표에서 Google 캘린더 등록을 다시 시도해 주세요.");
+      } else {
+        toast.success("일정을 수정했습니다.");
+      }
+      void Promise.all([
+        qc.invalidateQueries({ queryKey: ["cal"] }),
+        qc.invalidateQueries({ queryKey: ["meet-req"] }),
+        qc.invalidateQueries({ queryKey: ["briefing-google-calendar"] }),
+      ]);
+    },
+  });
+  const openEditor = (event: CalendarEdit) => {
+    update.reset();
+    setEditing(event);
+  };
   const reqs = useQuery({ queryKey: ["meet-req"], queryFn: async () => (await supabase.from("meetings").select("*").eq("kind", "외부 미팅").gte("end_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("start_at")).data ?? [] });
   const monthStart = `${month}-01`; const next = new Date(`${monthStart}T00:00:00Z`); next.setUTCMonth(next.getUTCMonth() + 1); const monthEnd = next.toISOString().slice(0, 10);
   const cal = useQuery({ queryKey: ["cal", month], queryFn: async () => {
     const [g, { data: m }, { data: a }] = await Promise.all([
       gFn({ data: { from: new Date(`${monthStart}T00:00:00+09:00`).toISOString(), to: new Date(`${monthEnd}T00:00:00+09:00`).toISOString() } }).catch((e: Error) => ({ ok: false as const, error: e.message, events: [] })),
-      supabase.from("meetings").select("id,kind,title,name,org,start_at,status").neq("status", "취소").gte("start_at", new Date(`${monthStart}T00:00:00+09:00`).toISOString()).lt("start_at", new Date(`${monthEnd}T00:00:00+09:00`).toISOString()),
+      supabase.from("meetings").select("id,kind,title,name,org,start_at,end_at,status").neq("status", "취소").gte("start_at", new Date(`${monthStart}T00:00:00+09:00`).toISOString()).lt("start_at", new Date(`${monthEnd}T00:00:00+09:00`).toISOString()),
       supabase.from("announcements").select("id,title,deadline").gte("deadline", monthStart).lt("deadline", monthEnd).in("status", ["검토 중", "진행"])]);
-    const ev = new Map<string, { label: string; tone: string }[]>();
-    for (const x of m ?? []) { if (x.kind === "외부 미팅" && x.status !== "확정") continue; const d = kd(x.start_at); ev.set(d, [...(ev.get(d) ?? []), { label: `${kt(x.start_at).split(" ").slice(-2).join(" ")} ${x.kind === "외부 미팅" ? `미팅 ${x.org ?? x.name ?? ""}` : x.title ?? "내부 회의"}`, tone: x.kind === "외부 미팅" ? "bg-primary/15" : "bg-gold/15" }]); }
-    for (const x of a ?? []) ev.set(x.deadline!, [...(ev.get(x.deadline!) ?? []), { label: `마감: ${x.title ?? "공고"}`, tone: "bg-destructive/10" }]);
-    for (const x of g.events) { const d = kd(x.start); ev.set(d, [...(ev.get(d) ?? []), { label: `${x.allDay ? "" : kt(x.start).split(" ").slice(-2).join(" ") + " "}구글: ${x.title}`, tone: "bg-secondary" }]); }
+    const ev = new Map<string, CalendarEntry[]>();
+    const add = (day: string, entry: CalendarEntry) => {
+      const entries = ev.get(day) ?? [];
+      entries.push(entry);
+      ev.set(day, entries);
+    };
+    for (const x of m ?? []) {
+      if (x.kind === "외부 미팅" && x.status !== "확정") continue;
+      const title = x.title || (x.kind === "외부 미팅" ? x.org || x.name || "외부 미팅" : "내부 회의");
+      add(kd(x.start_at), {
+        label: `${localTime(x.start_at).slice(11, 16)} ${title}`,
+        tone: x.kind === "외부 미팅" ? "bg-primary/15" : "bg-gold/15",
+        edit: x.status === "확정" ? {
+          source: "meeting", id: x.id, title, allDay: false,
+          start: localTime(x.start_at), end: localTime(x.end_at),
+        } : undefined,
+      });
+    }
+    for (const x of a ?? []) {
+      add(x.deadline!, { label: `마감: ${x.title ?? "공고"}`, tone: "bg-destructive/10" });
+    }
+    for (const x of g.events) {
+      if (!Number.isFinite(Date.parse(x.start)) || !Number.isFinite(Date.parse(x.end))) continue;
+      add(kd(x.start), {
+        label: `${x.allDay ? "" : localTime(x.start).slice(11, 16) + " "}구글: ${x.title}`,
+        tone: "bg-secondary",
+        edit: {
+          source: "google", id: x.id, title: x.title, allDay: x.allDay,
+          start: x.allDay ? kd(x.start) : localTime(x.start),
+          end: x.allDay ? shiftDate(kd(x.end), -1) : localTime(x.end),
+        },
+      });
+    }
     return { ev, gOk: g.ok, gErr: g.ok ? null : g.error }; } });
   const confirm = useMutation({ mutationFn: (id: string) => confirmFn({ data: { id } }), onSuccess: (r) => { if (r.calendar) toast.success("확정하고 구글 캘린더에 등록했습니다."); else toast.warning("확정했지만 구글 캘린더 등록에 실패했습니다. 표에서 다시 시도해 주세요."); qc.invalidateQueries(); }, onError: (e) => toast.error((e as Error).message) });
   const retry = useMutation({ mutationFn: (id: string) => syncFn({ data: { id } }), onSuccess: (r) => { r.ok ? toast.success("구글 캘린더에 등록했습니다.") : toast.error(r.error ?? "등록하지 못했습니다."); qc.invalidateQueries(); } });
@@ -63,7 +150,22 @@ function MeetingsPage() {
         <div className="overflow-x-auto"><div className="grid min-w-[700px] grid-cols-7 gap-px rounded-md border bg-border text-sm">
           {["일", "월", "화", "수", "목", "금", "토"].map((d) => <div key={d} className="bg-secondary p-1 text-center font-semibold">{d}</div>)}
           {cells.map((d, i) => <div key={i} className={`min-h-24 bg-card p-1 ${d === today ? "ring-2 ring-primary ring-inset" : ""}`}>{d && <><div className="text-xs font-semibold">{Number(d.slice(8))}</div>
-            {(cal.data?.ev.get(d) ?? []).map((e, j) => <div key={j} className={`mt-0.5 truncate rounded px-1 text-xs ${e.tone}`} title={e.label}>{e.label}</div>)}</>}</div>)}
+            {(cal.data?.ev.get(d) ?? []).map((entry, index) => {
+              const edit = entry.edit;
+              const className = `mt-0.5 block w-full truncate rounded px-1 text-left text-xs ${entry.tone}`;
+              return edit && (edit.source === "meeting" || me?.isAdmin) ? (
+                <button
+                  key={index}
+                  type="button"
+                  className={`${className} hover:underline focus-visible:ring-2 focus-visible:ring-ring`}
+                  aria-label={`${entry.label} 수정`}
+                  title={entry.label}
+                  onClick={() => openEditor(edit)}
+                >
+                  {entry.label}
+                </button>
+              ) : <div key={index} className={className} title={entry.label}>{entry.label}</div>;
+            })}</>}</div>)}
         </div></div>
         <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); addInternal.mutate(); }}>
           <div className="min-w-48 flex-1 space-y-1.5"><Label htmlFor="it">내부 회의 추가</Label><Input id="it" placeholder="회의 제목" value={im.title} onChange={(e) => setIm({ ...im, title: e.target.value })} /></div>
@@ -73,6 +175,47 @@ function MeetingsPage() {
           <Button type="submit">추가</Button>
         </form>
       </Panel>
+      <Dialog open={editing !== null} onOpenChange={(open) => {
+        if (!open && !update.isPending) setEditing(null);
+      }}>
+        {editing && (
+          <DialogContent>
+            <DialogTitle>일정 수정</DialogTitle>
+            <DialogDescription>
+              {editing.source === "google" ? "Google 캘린더 일정" : "등록된 미팅"} · 한국 시간
+            </DialogDescription>
+            <form className="space-y-4" onSubmit={(event) => {
+              event.preventDefault();
+              update.mutate(editing);
+            }}>
+              <div className="space-y-2">
+                <Label htmlFor="edit-calendar-title">제목</Label>
+                <Input id="edit-calendar-title" required maxLength={250} value={editing.title}
+                  onChange={(event) => setEditing({ ...editing, title: event.target.value })} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-calendar-start">{editing.allDay ? "시작일" : "시작 시간"}</Label>
+                  <Input id="edit-calendar-start" type={editing.allDay ? "date" : "datetime-local"}
+                    step={editing.allDay ? undefined : 1} required value={editing.start}
+                    onChange={(event) => setEditing({ ...editing, start: event.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-calendar-end">{editing.allDay ? "마지막 날" : "종료 시간"}</Label>
+                  <Input id="edit-calendar-end" type={editing.allDay ? "date" : "datetime-local"}
+                    step={editing.allDay ? undefined : 1} required value={editing.end}
+                    onChange={(event) => setEditing({ ...editing, end: event.target.value })} />
+                </div>
+              </div>
+              {update.error && <p role="alert" className="text-sm text-destructive">{update.error.message}</p>}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" disabled={update.isPending} onClick={() => setEditing(null)}>취소</Button>
+                <Button type="submit" disabled={update.isPending}>{update.isPending ? "저장 중…" : "저장"}</Button>
+              </div>
+            </form>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }
