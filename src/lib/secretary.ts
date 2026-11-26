@@ -44,6 +44,15 @@ export const summarySchema = z.object({
 export function kstDay(now = new Date()) {
   return new Date(now.getTime() + 9 * 3600000).toISOString().slice(0, 10);
 }
+export function kstWeekRange(day: string) {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+  const midnight = () =>
+    new Date(`${date.toISOString().slice(0, 10)}T00:00:00+09:00`).toISOString();
+  const from = midnight();
+  date.setUTCDate(date.getUTCDate() + 7);
+  return { from, to: midnight() };
+}
 export function comparison(current: number | null, prior: number | null) {
   if (current === null || prior === null) return { difference: null, percent: null };
   return {

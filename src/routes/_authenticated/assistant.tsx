@@ -28,7 +28,8 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSecretaryBriefing, getSecretaryScreen } from "@/lib/secretary.functions";
-import { briefingSourcesSchema, shortAnswer, type BriefRow } from "@/lib/secretary";
+import { briefingSourcesSchema, kstWeekRange, shortAnswer, type BriefRow } from "@/lib/secretary";
+import { getGoogleEvents } from "@/lib/calendar.functions";
 import { supportPreferencesOptions, useSupportRecommendations } from "@/lib/support.queries";
 import { useMe } from "@/hooks/use-auth";
 
@@ -65,6 +66,12 @@ const meetingTime = new Intl.DateTimeFormat("ko-KR", {
   hour: "2-digit",
   minute: "2-digit",
 });
+const meetingDay = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  month: "numeric",
+  day: "numeric",
+  weekday: "short",
+});
 
 function BriefingSection({
   title,
@@ -92,7 +99,7 @@ function BriefingSection({
   );
 }
 
-function BriefingSections({ sources }: { sources: BriefRow["sources"] }) {
+function BriefingSections({ sources, today }: { sources: BriefRow["sources"]; today: string }) {
   const parsed = briefingSourcesSchema.safeParse(sources);
   const summary = parsed.data?.summary;
   const preferences = useQuery(supportPreferencesOptions);
@@ -106,6 +113,35 @@ function BriefingSections({ sources }: { sources: BriefRow["sources"] }) {
         : "현재 조회된 자료에 조건에 맞는 접수 중 공고가 없습니다.";
   const tasks = summary?.todayTasks ?? [];
   const meetings = summary?.weekMeetings ?? [];
+  const range = kstWeekRange(today);
+  const fetchGoogleEvents = useServerFn(getGoogleEvents);
+  const calendar = useQuery({
+    queryKey: ["briefing-google-calendar", range],
+    queryFn: () => fetchGoogleEvents({ data: range }),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const calendarStatus = calendar.isPending
+    ? "Google 캘린더 일정을 불러오는 중…"
+    : calendar.isError || calendar.data?.ok === false
+      ? "Google 캘린더 일정을 불러오지 못했습니다."
+      : null;
+  const schedule = [
+    ...meetings.map((meeting, index) => ({
+      key: `meeting-${index}`,
+      title: meeting.title || meeting.kind,
+      start: meeting.start_at,
+      allDay: false,
+      google: false,
+    })),
+    ...(calendar.data?.events ?? []).map((event) => ({
+      key: `google-${event.id}`,
+      title: event.title,
+      start: event.start,
+      allDay: event.allDay,
+      google: true,
+    })),
+  ].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   const moreTasks = (summary?.todayTaskCount ?? 0) - tasks.length;
   const moreMeetings = (summary?.weekMeetingCount ?? 0) - meetings.length;
 
@@ -121,18 +157,28 @@ function BriefingSections({ sources }: { sources: BriefRow["sources"] }) {
       />
       <BriefingSection
         title="이번 주 미팅 일정"
-        empty={summary ? "등록된 미팅이 없습니다." : "저장된 미팅 정보가 없습니다."}
+        empty={calendarStatus ?? "표시할 이번 주 일정이 없습니다."}
         items={[
-          ...meetings.map((meeting, index) => (
-            <li key={index}>
-              {shortAnswer(meeting.title || meeting.kind)}
-              <time dateTime={meeting.start_at} className="block text-xs text-muted-foreground">
-                {meetingTime.format(new Date(meeting.start_at))}
+          ...schedule.map((event) => (
+            <li key={event.key}>
+              {shortAnswer(event.title)}
+              <time dateTime={event.start} className="block text-xs text-muted-foreground">
+                {(event.allDay ? meetingDay : meetingTime).format(new Date(event.start))}
+                {event.allDay && " · 종일"}
+                {event.google && " · Google 캘린더"}
               </time>
             </li>
           )),
           ...(moreMeetings > 0 ? [<li key="more">외 {moreMeetings}건</li>] : []),
         ]}
+        footer={
+          calendarStatus &&
+          schedule.length > 0 && (
+            <p role="status" className="mt-2 text-xs text-muted-foreground">
+              {calendarStatus}
+            </p>
+          )
+        }
       />
       <BriefingSection
         title="이번 주 지원사업"
@@ -229,7 +275,7 @@ function AssistantPage() {
             </Button>
           )}
         </div>
-        <BriefingSections sources={data.brief?.sources ?? null} />
+        <BriefingSections sources={data.brief?.sources ?? null} today={data.today} />
         {data.brief?.content && (
           <Message from="assistant">
             <MessageContent>

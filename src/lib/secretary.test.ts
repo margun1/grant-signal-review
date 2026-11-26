@@ -3,12 +3,18 @@ import {
   briefingSourcesSchema,
   comparison,
   kstDay,
+  kstWeekRange,
   shortAnswer,
   todayOnly,
   summarySchema,
 } from "./secretary";
 import { SECRETARY_RULES } from "./company";
 describe("경영비서 규칙", () => {
+  it("이번 주를 한국 시간 월요일부터 다음 월요일 직전까지 조회함", () => {
+    const week = { from: "2026-11-22T15:00:00.000Z", to: "2026-11-29T15:00:00.000Z" };
+    expect(kstWeekRange("2026-11-23")).toEqual(week);
+    expect(kstWeekRange("2026-11-29")).toEqual(week);
+  });
   it("저장된 브리핑에서 할 일, 미팅, 지원사업을 읽음", () => {
     const result = briefingSourcesSchema.parse({
       summary: {
