@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, Zap } from "lucide-react";
-import { EmergencyContactImage } from "@/components/app/EmergencyContactImage";
 
 export const Route = createFileRoute("/_authenticated/company")({
   head: () => ({ meta: [{ title: "회사소개 · 주식회사 에너인프라" }] }),
@@ -111,7 +110,6 @@ function CompanyPage() {
             </dd>
           </div>
         </dl>
-        <EmergencyContactImage />
       </section>
     </article>
   );
