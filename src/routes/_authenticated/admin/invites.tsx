@@ -18,12 +18,21 @@ export const Route = createFileRoute("/_authenticated/admin/invites")({
 
 type Role = "admin" | "manager" | "staff";
 const ROLE_LABEL: Record<Role, string> = { admin: "관리자", manager: "실장", staff: "직원" };
+const INVITE_ROLES = {
+  ceo: { label: "대표이사", role: "admin" },
+  director: { label: "실장", role: "manager" },
+  teamLead: { label: "팀장", role: "staff" },
+  employee: { label: "사원", role: "staff" },
+  studentWorker: { label: "근로학생", role: "staff" },
+} as const satisfies Record<string, { label: string; role: Role }>;
+
+type InviteRole = keyof typeof INVITE_ROLES;
 
 function Invites() {
   const { me } = useMe();
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Role>("staff");
+  const [inviteRole, setInviteRole] = useState<InviteRole>("employee");
   const invites = useQuery({ queryKey: ["invites"], enabled: !!me?.isAdmin, queryFn: async () => (await supabase.from("invitations").select("*").order("created_at", { ascending: false })).data ?? [] });
   const people = useQuery({
     queryKey: ["people"], enabled: !!me?.isAdmin,
@@ -34,7 +43,11 @@ function Invites() {
   });
   const invite = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("invitations").insert({ email: email.trim().toLowerCase(), role, invited_by: me?.profile?.id ?? null });
+      const { error } = await supabase.from("invitations").insert({
+        email: email.trim().toLowerCase(),
+        role: INVITE_ROLES[inviteRole].role,
+        invited_by: me?.profile?.id ?? null,
+      });
       if (error) throw new Error(error.message.includes("duplicate") ? "이미 초대한 이메일입니다." : "초대하지 못했습니다.");
     },
     onSuccess: () => { toast.success("초대했습니다. 직원에게 회원가입 화면에서 이 이메일로 가입하도록 안내해 주세요."); setEmail(""); qc.invalidateQueries({ queryKey: ["invites"] }); },
@@ -64,12 +77,22 @@ function Invites() {
       <Panel title="직원 초대" accent="primary">
         <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); invite.mutate(); }}>
           <div className="min-w-64 flex-1 space-y-1.5"><Label htmlFor="em">직원 이메일</Label><Input id="em" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>역할</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as Role)}><SelectTrigger className="w-32 bg-card"><SelectValue /></SelectTrigger>
-              <SelectContent>{(Object.keys(ROLE_LABEL) as Role[]).map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}</SelectContent></Select>
+          <div className="space-y-1.5">
+            <Label htmlFor="invite-role">역할</Label>
+            <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as InviteRole)}>
+              <SelectTrigger id="invite-role" className="w-36 bg-card"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(INVITE_ROLES).map(([value, option]) => (
+                  <SelectItem key={value} value={value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button type="submit" disabled={invite.isPending}>초대</Button>
         </form>
+        <p className="mt-2 text-xs text-muted-foreground">
+          초대 목록에는 부여된 권한이 표시됩니다. 대표이사는 관리자, 실장은 실장, 팀장·사원·근로학생은 직원 권한으로 등록됩니다.
+        </p>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-secondary text-left"><tr><th className="p-2">이메일</th><th className="p-2">역할</th><th className="p-2">상태</th><th className="p-2">초대일</th><th className="p-2"></th></tr></thead>
