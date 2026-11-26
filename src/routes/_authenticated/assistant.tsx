@@ -3,7 +3,7 @@ import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@ta
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { RefreshCw, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSecretaryBriefing, getSecretaryScreen } from "@/lib/secretary.functions";
-import { shortAnswer } from "@/lib/secretary";
+import { briefingSourcesSchema, shortAnswer, type BriefRow } from "@/lib/secretary";
 import { useMe } from "@/hooks/use-auth";
 
 const screenOptions = queryOptions({
@@ -49,6 +49,90 @@ export const Route = createFileRoute("/_authenticated/assistant")({
   component: AssistantPage,
 });
 const QUICK = ["이번 주 뭘 준비할까?", "지난달과 비교해줘", "비 온 날 매출은?"];
+
+const meetingTime = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  month: "numeric",
+  day: "numeric",
+  weekday: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+function BriefingSection({
+  title,
+  items,
+  empty,
+}: {
+  title: string;
+  items: ReactNode[];
+  empty: string;
+}) {
+  return (
+    <section className="min-w-0 rounded-xl border bg-card p-4">
+      <h3 className="mb-2 text-sm font-bold">{title}</h3>
+      {items.length > 0 ? (
+        <ul className="list-disc space-y-1.5 ps-4 text-sm leading-relaxed wrap-break-word">
+          {items}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      )}
+    </section>
+  );
+}
+
+function BriefingSections({ sources }: { sources: BriefRow["sources"] }) {
+  const parsed = briefingSourcesSchema.safeParse(sources);
+  const summary = parsed.data?.summary;
+  const grants = parsed.data?.external?.grants;
+  const tasks = summary?.todayTasks ?? [];
+  const meetings = summary?.weekMeetings ?? [];
+  const moreTasks = (summary?.todayTaskCount ?? 0) - tasks.length;
+  const moreMeetings = (summary?.weekMeetingCount ?? 0) - meetings.length;
+
+  return (
+    <div className="mb-4 grid gap-3 sm:grid-cols-3">
+      <BriefingSection
+        title="오늘의 할 일"
+        empty={summary ? "남은 할 일이 없습니다." : "저장된 할 일 정보가 없습니다."}
+        items={[
+          ...tasks.map((task, index) => <li key={index}>{shortAnswer(task.title)}</li>),
+          ...(moreTasks > 0 ? [<li key="more">외 {moreTasks}건</li>] : []),
+        ]}
+      />
+      <BriefingSection
+        title="이번 주 미팅 일정"
+        empty={summary ? "등록된 미팅이 없습니다." : "저장된 미팅 정보가 없습니다."}
+        items={[
+          ...meetings.map((meeting, index) => (
+            <li key={index}>
+              {shortAnswer(meeting.title || meeting.kind)}
+              <time dateTime={meeting.start_at} className="block text-xs text-muted-foreground">
+                {meetingTime.format(new Date(meeting.start_at))}
+              </time>
+            </li>
+          )),
+          ...(moreMeetings > 0 ? [<li key="more">외 {moreMeetings}건</li>] : []),
+        ]}
+      />
+      <BriefingSection
+        title="이번 주 지원사업"
+        empty={
+          grants && !grants.error
+            ? "추천할 접수 중 공고가 없습니다."
+            : "지원사업 정보를 확인할 수 없습니다."
+        }
+        items={
+          grants?.candidates.map((grant, index) => (
+            <li key={index}>{shortAnswer(grant.title)}</li>
+          )) ?? []
+        }
+      />
+    </div>
+  );
+}
+
 function AssistantPage() {
   const { data } = useSuspenseQuery(screenOptions);
   const qc = useQueryClient();
@@ -125,13 +209,16 @@ function AssistantPage() {
           )}
         </div>
         {data.brief?.content && (
-          <Message from="assistant">
-            <MessageContent>
-              <MessageResponse className="whitespace-pre-line leading-relaxed">
-                {shortAnswer(data.brief.content)}
-              </MessageResponse>
-            </MessageContent>
-          </Message>
+          <>
+            <BriefingSections sources={data.brief.sources} />
+            <Message from="assistant">
+              <MessageContent>
+                <MessageResponse className="whitespace-pre-line leading-relaxed">
+                  {shortAnswer(data.brief.content)}
+                </MessageResponse>
+              </MessageContent>
+            </Message>
+          </>
         )}
         {((mutation.isPending && data.brief?.status !== "ready") ||
           data.brief?.status === "generating") && (

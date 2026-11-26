@@ -74,3 +74,19 @@ export const briefRowSchema = z.object({
   updated_at: z.string(),
 });
 export type BriefRow = z.infer<typeof briefRowSchema>;
+
+export const briefingSourcesSchema = z.object({
+  summary: summarySchema
+    .pick({ todayTasks: true, todayTaskCount: true, weekMeetings: true, weekMeetingCount: true })
+    .optional()
+    .catch(undefined),
+  external: z
+    .object({
+      grants: z.object({
+        candidates: z.array(z.object({ title: z.string() })),
+        error: z.string().optional(),
+      }),
+    })
+    .optional()
+    .catch(undefined),
+});

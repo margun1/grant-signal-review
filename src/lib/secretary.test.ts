@@ -1,7 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { comparison, kstDay, shortAnswer, todayOnly, summarySchema } from "./secretary";
+import {
+  briefingSourcesSchema,
+  comparison,
+  kstDay,
+  shortAnswer,
+  todayOnly,
+  summarySchema,
+} from "./secretary";
 import { SECRETARY_RULES } from "./company";
 describe("경영비서 규칙", () => {
+  it("저장된 브리핑에서 할 일, 미팅, 지원사업을 읽음", () => {
+    const result = briefingSourcesSchema.parse({
+      summary: {
+        todayTasks: [{ title: "견적 검토", due_date: "2026-11-26" }],
+        todayTaskCount: 1,
+        weekMeetings: [
+          { title: "주간 회의", kind: "미팅", start_at: "2026-11-26T01:00:00Z", status: "확정" },
+        ],
+        weekMeetingCount: 1,
+      },
+      external: { grants: { candidates: [{ title: "시제품 제작 지원", id: "123" }] } },
+    });
+    expect(result.summary?.todayTasks[0].title).toBe("견적 검토");
+    expect(result.summary?.weekMeetings[0].title).toBe("주간 회의");
+    expect(result.external?.grants.candidates).toEqual([{ title: "시제품 제작 지원" }]);
+  });
+
+  it("이전 브리핑에 상세 자료가 없어도 읽을 수 있음", () => {
+    expect(briefingSourcesSchema.parse({})).toEqual({});
+  });
+
   it("한국 날짜의 자정에 하루가 바뀜", () => {
     expect(kstDay(new Date("2026-11-22T14:59:59Z"))).toBe("2026-11-22");
     expect(kstDay(new Date("2026-11-22T15:00:00Z"))).toBe("2026-11-23");
