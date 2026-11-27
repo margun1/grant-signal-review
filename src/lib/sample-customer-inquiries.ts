@@ -3,7 +3,7 @@ import sampleDocument from "../../docs/sample-customer-inquiries.md?raw";
 const [inquiries = "", replies = ""] = sampleDocument.split(/^## /m).slice(1);
 const sampleRows = (section: string) =>
   section.split("\n").filter((line) => line.startsWith("| CS-"))
-    .map((line) => line.slice(2, -2).split(" | "));
+    .map((line) => line.slice(2, -2).split(" | ") as [string, string, string, string, string, string, string, string, string]);
 const replyById = new Map(sampleRows(replies).map(([id, reply]) => [id, reply]));
 const optional = (value: string) => value === "—" ? null : value;
 

@@ -50,7 +50,7 @@ export async function correctStoredChecklistTitles() {
         if (updateError) throw updateError;
       }
       if (rows.length < 100) break;
-      previousId = rows[rows.length - 1].id;
+      previousId = rows[rows.length - 1]!.id;
     }
   }
 }

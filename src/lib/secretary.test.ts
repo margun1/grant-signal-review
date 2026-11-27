@@ -27,8 +27,8 @@ describe("경영비서 규칙", () => {
       },
       external: { grants: { candidates: [{ title: "시제품 제작 지원", id: "123" }] } },
     });
-    expect(result.summary?.todayTasks[0].title).toBe("견적 검토");
-    expect(result.summary?.weekMeetings[0].title).toBe("주간 회의");
+    expect(result.summary?.todayTasks[0]?.title).toBe("견적 검토");
+    expect(result.summary?.weekMeetings[0]?.title).toBe("주간 회의");
     expect(result.external?.grants.candidates).toEqual([{ title: "시제품 제작 지원" }]);
   });
 

@@ -27,11 +27,11 @@ it("filters the sample parts by classification and name and restores all rows wh
   expect(screen.getByRole("status")).toHaveTextContent("전체 255개 중 255개 표시");
 
   fireEvent.change(search, { target: { value: "없는 부품" } });
-  const category = screen.getByRole("button", { name: "기체", exact: true });
+  const category = screen.getByRole("button", { name: /^기체$/ });
   fireEvent.click(category);
   expect(category).toHaveAttribute("aria-pressed", "true");
   expect(search).toHaveValue("");
-  expect(screen.queryByRole("button", { name: "프레임 키트", exact: true })).toBeNull();
+  expect(screen.queryByRole("button", { name: /^프레임 키트$/ })).toBeNull();
   expect(screen.getAllByRole("rowheader", { name: "프레임 키트" })).toHaveLength(5);
   expect(screen.queryByText("DEMO-051-05")).toBeNull();
   fireEvent.change(search, { target: { value: "프레임키트" } });

@@ -28,7 +28,7 @@ function RegionalStatistics({ title, columns, rows, unit, detail }: {
   const [province, setProvince] = useState("전체");
   const provinces = [...new Set(rows.map(([region]) => region))];
   const visible = rows.filter(([region]) => province === "전체" || province === region);
-  const totals = columns.map((_, index) => visible.reduce((sum, row) => sum + row[index + 2], 0));
+  const totals = columns.map((_, index) => visible.reduce((sum, row) => sum + Number(row[index + 2] ?? 0), 0));
 
   return (
     <Panel title={title}>
@@ -49,7 +49,7 @@ function RegionalStatistics({ title, columns, rows, unit, detail }: {
         {columns.map((column, index) => (
           <div key={column}>
             <dt className="text-sm text-muted-foreground">{column} 합계</dt>
-            <dd className="font-semibold tabular-nums">{formatNumber.format(totals[index])}{unit}</dd>
+            <dd className="font-semibold tabular-nums">{formatNumber.format(totals[index] ?? 0)}{unit}</dd>
           </div>
         ))}
       </dl>

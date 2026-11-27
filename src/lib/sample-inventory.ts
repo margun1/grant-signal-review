@@ -15,14 +15,14 @@ export const sampleInventoryItems = products.map(({ name, kind, min_stock, targe
 
 export const sampleInventorySnaps = snapshotDates.flatMap((as_of, index) =>
   products.map(({ name, kind, quantities }) => ({
-    item: name, kind, quantity: quantities[index], as_of,
+    item: name, kind, quantity: quantities[index] ?? 0, as_of,
   })),
 );
 
 export const samplePurchaseOrders = [
-  { id: "sample-po-01", item: products[3].name, quantity: 10, status: "발주 전", ordered_at: null, received_at: null, memo: "교육 일정 대비", created_at: "2026-11-27T11:00:00+09:00" },
-  { id: "sample-po-02", item: products[0].name, quantity: 15, status: "발주 완료", ordered_at: "2026-11-26", received_at: null, memo: "실증 설치분", created_at: "2026-11-26T15:00:00+09:00" },
-  { id: "sample-po-03", item: products[4].name, quantity: 12, status: "입고 완료", ordered_at: "2026-11-24", received_at: "2026-11-27", memo: "수업용 예비 부품", created_at: "2026-11-24T10:00:00+09:00" },
-  { id: "sample-po-04", item: products[1].name, quantity: 20, status: "발주 완료", ordered_at: "2026-11-23", received_at: null, memo: "센서 교체용", created_at: "2026-11-23T14:00:00+09:00" },
-  { id: "sample-po-05", item: products[2].name, quantity: 15, status: "입고 완료", ordered_at: "2026-11-18", received_at: "2026-11-25", memo: "통신 모듈 보충", created_at: "2026-11-18T11:00:00+09:00" },
+  { id: "sample-po-01", item: products[3]!.name, quantity: 10, status: "발주 전", ordered_at: null, received_at: null, memo: "교육 일정 대비", created_at: "2026-11-27T11:00:00+09:00" },
+  { id: "sample-po-02", item: products[0]!.name, quantity: 15, status: "발주 완료", ordered_at: "2026-11-26", received_at: null, memo: "실증 설치분", created_at: "2026-11-26T15:00:00+09:00" },
+  { id: "sample-po-03", item: products[4]!.name, quantity: 12, status: "입고 완료", ordered_at: "2026-11-24", received_at: "2026-11-27", memo: "수업용 예비 부품", created_at: "2026-11-24T10:00:00+09:00" },
+  { id: "sample-po-04", item: products[1]!.name, quantity: 20, status: "발주 완료", ordered_at: "2026-11-23", received_at: null, memo: "센서 교체용", created_at: "2026-11-23T14:00:00+09:00" },
+  { id: "sample-po-05", item: products[2]!.name, quantity: 15, status: "입고 완료", ordered_at: "2026-11-18", received_at: "2026-11-25", memo: "통신 모듈 보충", created_at: "2026-11-18T11:00:00+09:00" },
 ];

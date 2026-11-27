@@ -86,6 +86,7 @@ function findNavItem(items: readonly NavItem[], path: string): NavItem | undefin
     if (child) return child;
     if (path === item.to || path.startsWith(`${item.to}/`)) return item;
   }
+  return undefined;
 }
 
 function NavGroup({ label, activeChild, link, children }: {

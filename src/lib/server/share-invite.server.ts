@@ -16,7 +16,7 @@ export function createStaffShareToken(now = Date.now()) {
 
 export function isValidStaffShareToken(token: string, now = Date.now()) {
   if (!/^\d{10}\.[A-Za-z0-9_-]{32}\.[A-Za-z0-9_-]{43}$/.test(token)) return false;
-  const [expires, nonce, encodedSignature] = token.split(".");
+  const [expires = "", nonce = "", encodedSignature = ""] = token.split(".");
   if (Number(expires) <= Math.floor(now / 1000)) return false;
   return timingSafeEqual(Buffer.from(encodedSignature, "base64url"), signature(`${expires}.${nonce}`));
 }

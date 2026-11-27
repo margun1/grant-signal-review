@@ -40,6 +40,7 @@ function readSampleEdits(id: string): SampleEdits | undefined {
   } catch {
     // Use the original sample when browser storage is unavailable.
   }
+  return undefined;
 }
 const tone = (s: string) => (s === "답변 완료" ? "good" : s === "처리 중" ? "warn" : "bad") as "good" | "warn" | "bad";
 
