@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { won } from "@/lib/biz";
-import { sampleDroneParts, sampleDronePartsTotal } from "@/lib/sample-drone-parts";
+import { sampleDroneParts } from "@/lib/sample-drone-parts";
 
 export const Route = createFileRoute("/_authenticated/drone")({
   head: () => ({ meta: [{ title: "드론 · 에너인프라 경영비서" }] }),
@@ -18,20 +18,21 @@ function DronePage() {
   const results = useRef<HTMLParagraphElement>(null);
   const keywords = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const compactQuery = keywords.join("");
-  const parts = sampleDroneParts.filter(([, category, name]) => {
-    const text = `${category} ${name}`.toLowerCase().replace(/\s+/g, "");
+  const parts = sampleDroneParts.filter((part) => {
+    const text = part.join(" ").toLowerCase().replace(/\s+/g, "");
     return text.includes(compactQuery) || keywords.every((keyword) => text.includes(keyword));
   });
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader title="드론" desc="교육용 카메라 드론 1대 기준 부품 명세서" />
+      <PageHeader title="드론" desc="드론 조립용 가상 부품 카탈로그" />
       <Panel title="부품 목록 및 가상 단가" accent="gold">
         <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
           <strong>가상 데이터 · 실제 제품 사양 및 구매 단가 아님</strong>
           <p className="mt-1">
-            전체 {sampleDroneParts.length}개 품목 · 1대분 자재비 {won(sampleDronePartsTotal)} ·
-            부가세, 조립 인건비, 검사비 및 배송비 제외
+            51개 부품 유형 · {sampleDroneParts.length}개 가상 모델. 규격·재고·보관 위치는
+            시연용이며, 모델 조합의 호환성은 확인되지 않았습니다. 재고 금액은 모델별 재고 ×
+            단가입니다.
           </p>
         </div>
 
@@ -53,7 +54,7 @@ function DronePage() {
               <Input
                 id="drone-parts-search"
                 type="search"
-                placeholder="부품명 또는 분류 (예: 모터, 카메라, ESC)"
+                placeholder="부품명, 모델명, 번호, 규격 등 (예: 프레임키트)"
                 className="pl-9"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
@@ -70,49 +71,77 @@ function DronePage() {
           <p className="mt-3 text-sm text-muted-foreground">검색어와 일치하는 부품이 없습니다.</p>
         ) : (
           <div
-            className="mt-3 overflow-x-auto rounded-md border"
+            className="mt-3 max-h-[65dvh] overflow-auto rounded-md border"
             tabIndex={0}
             aria-label="드론 부품 표"
           >
-            <table className="w-full whitespace-nowrap text-sm">
-              <thead className="bg-secondary text-left">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-secondary text-left">
                 <tr>
-                  <th scope="col" className="p-2">
-                    번호
-                  </th>
-                  <th scope="col" className="p-2">
-                    분류
-                  </th>
-                  <th scope="col" className="p-2">
-                    부품명
-                  </th>
-                  <th scope="col" className="p-2 text-right">
-                    1대당 수량
-                  </th>
-                  <th scope="col" className="p-2 text-right">
-                    단가
-                  </th>
-                  <th scope="col" className="p-2 text-right">
-                    소계
-                  </th>
+                  {[
+                    "부품 번호",
+                    "카테고리",
+                    "부품명",
+                    "가상 모델명",
+                    "필요 구분",
+                    "가상 규격",
+                    "조립 참고 수량",
+                    "단위",
+                    "가상 재고",
+                    "가상 단가",
+                    "재고 금액",
+                    "호환 확인 사항",
+                    "가상 보관 위치",
+                    "원본 유형 번호",
+                  ].map((label) => (
+                    <th key={label} scope="col" className="whitespace-nowrap p-2">
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {parts.map(([id, category, name, unit, quantity, unitPrice]) => (
-                  <tr key={id} className="border-t">
-                    <td className="p-2">{id}</td>
-                    <td className="p-2">{category}</td>
-                    <th scope="row" className="p-2 text-left font-medium">
-                      {name}
-                    </th>
-                    <td className="p-2 text-right">
-                      {quantity}
-                      {unit}
-                    </td>
-                    <td className="p-2 text-right">{won(unitPrice)}</td>
-                    <td className="p-2 text-right">{won(quantity * unitPrice)}</td>
-                  </tr>
-                ))}
+                {parts.map(
+                  ([
+                    id,
+                    category,
+                    name,
+                    model,
+                    requirement,
+                    specification,
+                    quantity,
+                    unit,
+                    stock,
+                    unitPrice,
+                    stockValue,
+                    compatibility,
+                    ,
+                    ,
+                    location,
+                    partType,
+                  ]) => (
+                    <tr key={id} className="border-t bg-card align-top">
+                      <td className="whitespace-nowrap p-2">{id}</td>
+                      <td className="whitespace-nowrap p-2">{category}</td>
+                      <th scope="row" className="min-w-36 p-2 text-left font-medium">
+                        {name}
+                      </th>
+                      <td className="whitespace-nowrap p-2">{model}</td>
+                      <td className="whitespace-nowrap p-2">{requirement}</td>
+                      <td className="min-w-52 p-2">{specification}</td>
+                      <td className="whitespace-nowrap p-2">{quantity}</td>
+                      <td className="whitespace-nowrap p-2">{unit}</td>
+                      <td className="whitespace-nowrap p-2 text-right">
+                        {stock.toLocaleString("ko-KR")}
+                      </td>
+                      <td className="whitespace-nowrap p-2 text-right">{won(unitPrice)}</td>
+                      <td className="whitespace-nowrap p-2 text-right">{won(stockValue)}</td>
+                      <td className="min-w-48 p-2">{compatibility}</td>
+                      <td className="whitespace-nowrap p-2">{location}</td>
+                      <td className="whitespace-nowrap p-2">{partType}</td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
