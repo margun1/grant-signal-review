@@ -100,7 +100,7 @@ function TodayCards({ today }: { today: string }) {
           {d && d.events.length + d.tasks.length === 0 && <li className="text-muted-foreground">오늘 일정과 체크리스트가 없습니다.</li>}</ul>
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm font-semibold underline"><Link to="/meetings">일정</Link><Link to="/checklist">체크리스트</Link></div></div>
       <Link to="/meetings" className="min-w-0 rounded-md border p-3 sm:p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><Users className="size-4 shrink-0 text-taupe" aria-hidden />미확정 미팅 요청</div><p className="text-2xl font-bold">{d?.meet ?? "-"}건</p></Link>
-      <Link to="/inquiries" className="min-w-0 rounded-md border p-3 sm:p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><MessageSquare className="size-4 shrink-0 text-taupe" aria-hidden />미답변 고객문의</div><p className="text-2xl font-bold">{d?.inq ?? "-"}건</p></Link>
+      <Link to="/inquiries" className="min-w-0 rounded-md border p-3 sm:p-4 hover:bg-accent"><div className="mb-2 flex items-center gap-2 font-semibold"><MessageSquare className="size-4 shrink-0 text-taupe" aria-hidden />미답변 문의하기</div><p className="text-2xl font-bold">{d?.inq ?? "-"}건</p></Link>
     </>
   );
 }
