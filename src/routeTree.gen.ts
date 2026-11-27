@@ -24,6 +24,7 @@ import { Route as AuthenticatedCompanyRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCompetitorsRouteImport } from './routes/_authenticated/competitors'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
+import { Route as AuthenticatedDroneRouteImport } from './routes/_authenticated/drone'
 import { Route as AuthenticatedInquiriesRouteImport } from './routes/_authenticated/inquiries'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticated/meetings'
@@ -113,6 +114,11 @@ const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
   path: '/devices',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDroneRoute = AuthenticatedDroneRouteImport.update({
+  id: '/drone',
+  path: '/drone',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInquiriesRoute = AuthenticatedInquiriesRouteImport.update({
   id: '/inquiries',
   path: '/inquiries',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/competitors': typeof AuthenticatedCompetitorsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
+  '/drone': typeof AuthenticatedDroneRoute
   '/inquiries': typeof AuthenticatedInquiriesRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/competitors': typeof AuthenticatedCompetitorsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
+  '/drone': typeof AuthenticatedDroneRoute
   '/inquiries': typeof AuthenticatedInquiriesRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   '/_authenticated/competitors': typeof AuthenticatedCompetitorsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
+  '/_authenticated/drone': typeof AuthenticatedDroneRoute
   '/_authenticated/inquiries': typeof AuthenticatedInquiriesRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/meetings': typeof AuthenticatedMeetingsRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/competitors'
     | '/dashboard'
     | '/devices'
+    | '/drone'
     | '/inquiries'
     | '/inventory'
     | '/meetings'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/competitors'
     | '/dashboard'
     | '/devices'
+    | '/drone'
     | '/inquiries'
     | '/inventory'
     | '/meetings'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/_authenticated/competitors'
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
+    | '/_authenticated/drone'
     | '/_authenticated/inquiries'
     | '/_authenticated/inventory'
     | '/_authenticated/meetings'
@@ -482,6 +494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDevicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/drone': {
+      id: '/_authenticated/drone'
+      path: '/drone'
+      fullPath: '/drone'
+      preLoaderRoute: typeof AuthenticatedDroneRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/inquiries': {
       id: '/_authenticated/inquiries'
       path: '/inquiries'
@@ -584,6 +603,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCompetitorsRoute: typeof AuthenticatedCompetitorsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
+  AuthenticatedDroneRoute: typeof AuthenticatedDroneRoute
   AuthenticatedInquiriesRoute: typeof AuthenticatedInquiriesRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
   AuthenticatedMeetingsRoute: typeof AuthenticatedMeetingsRoute
@@ -604,6 +624,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCompetitorsRoute: AuthenticatedCompetitorsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
+  AuthenticatedDroneRoute: AuthenticatedDroneRoute,
   AuthenticatedInquiriesRoute: AuthenticatedInquiriesRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
   AuthenticatedMeetingsRoute: AuthenticatedMeetingsRoute,
