@@ -190,9 +190,9 @@ export function AppShell() {
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="max-w-md rounded-lg border bg-card p-8 text-center">
           <ShieldAlert className="mx-auto mb-3 size-8 text-destructive" aria-hidden />
-          <h1 className="text-lg font-bold">접근 권한이 없습니다</h1>
+          <h1 className="text-lg font-bold">관리자 승인 대기 중입니다</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            초대받은 활성 직원 계정만 사용할 수 있습니다. 사내 관리자에게 문의하세요.
+            가입은 완료되었습니다. 관리자가 직원 권한을 승인하면 사내 메뉴를 이용할 수 있습니다.
           </p>
           <Button variant="outline" className="mt-5" onClick={signOut}>
             로그아웃

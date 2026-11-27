@@ -12,9 +12,9 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [
     { title: "회원가입 · 주식회사 에너인프라의 경영비서" },
-    { name: "description", content: "이메일 초대 또는 공유 링크로 경영비서에 가입합니다." },
+    { name: "description", content: "누구나 이메일로 경영비서에 가입할 수 있습니다. 사내 자료는 관리자 승인 후 이용할 수 있습니다." },
     { property: "og:title", content: "회원가입 · 주식회사 에너인프라의 경영비서" },
-    { property: "og:description", content: "이메일 초대 또는 공유 링크로 경영비서에 가입합니다." },
+    { property: "og:description", content: "누구나 이메일로 경영비서에 가입할 수 있습니다. 사내 자료는 관리자 승인 후 이용할 수 있습니다." },
   ] }),
   component: Signup,
 });
@@ -46,7 +46,7 @@ function Signup() {
     const { error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password: pw, options: { emailRedirectTo: window.location.origin, data: { full_name: name } } });
     setBusy(false);
     if (error) {
-      if (/database|saving new user|초대/i.test(error.message)) toast.error("가입을 진행할 수 없습니다. 관리자에게 유효한 초대 또는 공유 가입 링크를 요청해 주세요.");
+      if (/already|registered/i.test(error.message)) toast.error("이미 가입된 이메일입니다. 로그인해 주세요.");
       else if (/rate|security purposes/i.test(error.message)) toast.error("요청이 너무 잦습니다. 잠시 뒤 다시 시도해 주세요.");
       else toast.error("가입을 완료하지 못했습니다. 입력 내용을 확인해 주세요.");
       return;
@@ -60,12 +60,12 @@ function Signup() {
       ) : (
         <>
           <p className="mb-4 text-sm text-muted-foreground">
-            {inviteToken ? "공유 링크로 가입할 이메일을 입력해 주세요." : "초대받은 이메일이나 관리자가 공유한 링크로 가입할 수 있습니다."}
+            {inviteToken ? "공유 링크로 가입할 이메일을 입력해 주세요." : "누구나 가입할 수 있습니다. 가입 후 관리자가 승인하면 사내 메뉴를 이용할 수 있습니다."}
           </p>
           {!inviteToken && <><GoogleButton label="Google로 가입하기" /><Divider /></>}
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1.5"><Label htmlFor="name">이름</Label><Input id="name" required value={name} onChange={(e) => setName(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label htmlFor="email">{inviteToken ? "이메일" : "초대받은 이메일"}</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label htmlFor="email">이메일</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             <div className="space-y-1.5"><Label htmlFor="pw">비밀번호</Label><Input id="pw" type="password" autoComplete="new-password" required value={pw} onChange={(e) => setPw(e.target.value)} /></div>
             <div className="space-y-1.5"><Label htmlFor="pw2">비밀번호 확인</Label><Input id="pw2" type="password" autoComplete="new-password" required value={pw2} onChange={(e) => setPw2(e.target.value)} /></div>
             <Button type="submit" className="w-full" disabled={busy}>{busy ? "처리 중…" : "가입하기"}</Button>

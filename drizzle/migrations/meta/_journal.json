@@ -71,6 +71,13 @@
       "when": 1795397643724,
       "tag": "0009_support_business_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795791219372,
+      "tag": "0010_open_public_signup",
+      "breakpoints": true
     }
   ]
 }

@@ -290,20 +290,20 @@ function Invites() {
       </AlertDialog>
       <Panel title="직원 역할·계정 상태">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-secondary text-left"><tr><th className="p-2">이름</th><th className="p-2">이메일</th><th className="p-2">관리자</th><th className="p-2">실장</th><th className="p-2">활성</th></tr></thead>
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-secondary text-left"><tr><th className="p-2">이름</th><th className="p-2">이메일</th><th className="p-2">직원 승인</th><th className="p-2">관리자</th><th className="p-2">실장</th><th className="p-2">활성</th></tr></thead>
             <tbody>{(people.data ?? []).map((p) => (
               <tr key={p.id} className="border-t">
                 <td className="p-2">{p.display_name}</td><td className="p-2">{p.email}</td>
-                {(["admin", "manager"] as Role[]).map((r) => (
-                  <td key={r} className="p-2"><Switch aria-label={`${ROLE_LABEL[r]} 역할`} checked={p.roles.includes(r)} disabled={p.id === me.profile?.id && r === "admin"} onCheckedChange={(on) => toggleRole.mutate({ uid: p.id, role: r, on })} /></td>
+                {(["staff", "admin", "manager"] as Role[]).map((r) => (
+                  <td key={r} className="p-2"><Switch aria-label={`${ROLE_LABEL[r]} 역할`} checked={p.roles.includes(r)} disabled={p.id === me.profile?.id && r !== "manager"} onCheckedChange={(on) => toggleRole.mutate({ uid: p.id, role: r, on })} /></td>
                 ))}
                 <td className="p-2"><Switch aria-label="계정 활성" checked={p.active} disabled={p.id === me.profile?.id} onCheckedChange={(on) => toggleActive.mutate({ uid: p.id, active: on })} /></td>
               </tr>
             ))}</tbody>
           </table>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">직원 역할은 관리자·실장 스위치를 모두 끈 상태입니다. 비활성 계정은 사내 화면과 자료에 접근할 수 없습니다.</p>
+        <p className="mt-3 text-xs text-muted-foreground">공개 가입자는 직원 승인 스위치를 켜야 사내 화면을 이용할 수 있습니다. 비활성 계정은 사내 화면과 자료에 접근할 수 없습니다.</p>
       </Panel>
     </div>
   );

@@ -29,7 +29,7 @@ export function AuthShell({ title, children, links }: { title: string; children:
 export function GoogleButton({ label = "Google로 계속하기" }: { label?: string }) {
   async function go() {
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (r.error) toast.error("Google 로그인에 실패했습니다. 초대받은 이메일의 Google 계정인지 확인해 주세요.");
+    if (r.error) toast.error("Google 로그인에 실패했습니다. 잠시 뒤 다시 시도해 주세요.");
   }
   return (
     <button type="button" onClick={go} className="flex h-10 w-full items-center justify-center gap-2.5 rounded-md border border-google-border bg-google-bg px-3 text-sm font-medium text-google-text hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
