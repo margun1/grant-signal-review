@@ -11,7 +11,7 @@ import { IntegrationStatusSettings } from "@/components/app/IntegrationStatusSet
 import { PageHeader, Panel } from "@/components/app/ui";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
-  head: () => ({ meta: [{ title: "연락 설정 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "회신 이메일과 카카오톡 채널 설정" }] }),
+  head: () => ({ meta: [{ title: "설정 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "회신 이메일과 카카오톡 채널 설정" }] }),
   component: Settings,
 });
 
@@ -34,7 +34,7 @@ function Settings() {
   if (!me?.isAdmin) return <p>관리자만 볼 수 있는 화면입니다.</p>;
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="연락 설정" desc="고객 회신 이메일과 카카오톡 채널은 언제든 이곳에서 바꿀 수 있습니다." />
+      <PageHeader title="설정" desc="고객 회신 이메일과 카카오톡 채널은 언제든 이곳에서 바꿀 수 있습니다." />
       <Panel title="연락 수단" accent="primary">
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
           <div className="space-y-1.5"><Label htmlFor="re">고객문의 회신 이메일</Label><Input id="re" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>

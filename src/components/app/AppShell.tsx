@@ -56,8 +56,10 @@ const NAV = [
 ] as const;
 
 const ADMIN_NAV = [
+  { to: "/admin/settings", label: "설정", icon: Settings },
+] as const;
+const settingsPages = [
   { to: "/admin/invites", label: "직원 초대 관리", icon: Users },
-  { to: "/admin/settings", label: "연락 설정", icon: Settings },
 ] as const;
 const ALL_NAV = [...NAV, ...ADMIN_NAV];
 const assistantPages = [{ to: "/reports", label: "AI 리포트", icon: FileText }] as const;
@@ -68,11 +70,12 @@ const dashboardPages = [
   { to: "/profit", label: "수익성", icon: Coins },
   { to: "/checklist", label: "체크리스트", icon: ListChecks },
 ] as const;
-type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages)[number];
+type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages | typeof settingsPages)[number];
 const navGroups = new Map<NavItem["to"], readonly NavItem[]>([
   ["/products", productPages],
   ["/assistant", assistantPages],
   ["/dashboard", dashboardPages],
+  ["/admin/settings", settingsPages],
 ]);
 
 function NavGroup({ label, activeChild, link, children }: {
@@ -187,7 +190,7 @@ export function AppShell() {
     );
 
   const items = me.isAdmin ? ALL_NAV : NAV;
-  const currentPage = [...items, ...[...navGroups.values()].flat()].find(({ to }) => path === to || path.startsWith(`${to}/`));
+  const currentPage = items.flatMap((item) => [item, ...(navGroups.get(item.to) ?? [])]).find(({ to }) => path === to || path.startsWith(`${to}/`));
   const side = (
     <div className="flex min-h-full flex-col gap-6 p-4">
       <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">

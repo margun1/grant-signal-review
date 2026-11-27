@@ -64,7 +64,7 @@ it("shows the current menu page in the sticky compact header", () => {
     ["/meetings", "미팅·일정"],
     ["/dashboard/", "경영현황"],
     ["/admin/invites", "직원 초대 관리"],
-    ["/admin/settings", "연락 설정"],
+    ["/admin/settings", "설정"],
   ] as const) {
     location.pathname = pathname;
     rerender(app());
@@ -86,7 +86,13 @@ it("puts every compact-menu link and sign-out inside the scrollable drawer", () 
 
   expect(dialog).toHaveClass("h-dvh");
   expect(scrollArea).toHaveClass("h-full", "overflow-y-auto", "touch-pan-y");
-  expect(within(scrollArea).getByRole("link", { name: "연락 설정" })).toBeInTheDocument();
+  expect(within(scrollArea).getByRole("link", { name: "설정" })).toBeInTheDocument();
+  expect(within(scrollArea).queryByRole("link", { name: "직원 초대 관리" })).toBeNull();
+  fireEvent.click(within(scrollArea).getByRole("button", { name: "설정 하위 메뉴" }));
+  expect(within(scrollArea).getByRole("link", { name: "직원 초대 관리" })).toHaveAttribute(
+    "href",
+    "/admin/invites",
+  );
   expect(within(scrollArea).getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
 });
 
