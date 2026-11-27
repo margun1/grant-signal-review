@@ -125,7 +125,7 @@ function ChecklistPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title="체크리스트" desc="반복 항목은 지정한 날 처음 화면을 열 때 한 번만 만들어집니다." />
       <Panel title="할 일" accent="primary" action={<label className="flex items-center gap-2 text-sm"><Checkbox checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />완료 항목도 보기</label>}>
-        <Label htmlFor="checklist-task-select" className="mb-1.5 block">할 일</Label>
+        <Label htmlFor="checklist-task-select" className="mb-1.5 block">항목</Label>
         <Select value={task?.id ?? ""} onValueChange={(value) => value === "add" ? setTaskDialogOpen(true) : setTaskId(value)}>
           <SelectTrigger id="checklist-task-select" className="w-full bg-card text-left" aria-label="할 일 선택">
             <SelectValue placeholder="할 일을 선택하세요" />
