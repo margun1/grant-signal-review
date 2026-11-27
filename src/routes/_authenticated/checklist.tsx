@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,6 +41,8 @@ function ChecklistPage() {
 
     void prepareChecklist();
   }, [today, qc]);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const [taskId, setTaskId] = useState("");
   const [templateId, setTemplateId] = useState("");
@@ -50,7 +54,7 @@ function ChecklistPage() {
   const [t, setT] = useState({ title: "", assignee: null as string | null, due: today });
   const add = useMutation({ mutationFn: async () => { if (!t.title.trim()) throw new Error("할 일을 입력해 주세요.");
     const { error } = await supabase.from("tasks").insert({ title: t.title.trim(), assignee: t.assignee, due_date: t.due || null }); if (error) throw new Error("추가하지 못했습니다."); },
-    onSuccess: () => { setT({ ...t, title: "" }); qc.invalidateQueries({ queryKey: ["tasks"] }); }, onError: (e) => toast.error((e as Error).message) });
+    onSuccess: () => { setT({ ...t, title: "" }); setTaskDialogOpen(false); qc.invalidateQueries({ queryKey: ["tasks"] }); }, onError: (e) => toast.error((e as Error).message) });
   const toggle = useMutation({ mutationFn: async (v: { id: string; done: boolean }) => { await supabase.from("tasks").update({ done: v.done, done_at: v.done ? new Date().toISOString() : null }).eq("id", v.id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }) });
   const setAssignee = useMutation({ mutationFn: async (v: { id: string; a: string | null }) => { await supabase.from("tasks").update({ assignee: v.a }).eq("id", v.id); }, onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }) });
@@ -58,7 +62,7 @@ function ChecklistPage() {
   const addTpl = useMutation({ mutationFn: async () => { if (!r.title.trim()) throw new Error("항목을 입력해 주세요.");
     const { error } = await supabase.from("checklist_templates").insert({ title: r.title.trim(), frequency: r.freq, weekday: r.freq === "매주" ? Number(r.wd) : null, assignee: r.assignee });
     if (error) throw new Error("추가하지 못했습니다."); await supabase.rpc("generate_checklist", { _date: today }); },
-    onSuccess: () => { setR({ ...r, title: "" }); qc.invalidateQueries(); }, onError: (e) => toast.error((e as Error).message) });
+    onSuccess: () => { setR({ ...r, title: "" }); setTemplateDialogOpen(false); qc.invalidateQueries(); }, onError: (e) => toast.error((e as Error).message) });
   const toggleTpl = useMutation({ mutationFn: async (v: { id: string; active: boolean }) => { await supabase.from("checklist_templates").update({ active: v.active }).eq("id", v.id); }, onSuccess: () => qc.invalidateQueries({ queryKey: ["tpls"] }) });
 
   const taskRows = tasks.data ?? [];
@@ -94,12 +98,22 @@ function ChecklistPage() {
             <AssigneeSelect value={task.assignee} onChange={(a) => setAssignee.mutate({ id: task.id, a })} className="w-36 h-8" />
           </div>
         )}
-        <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); add.mutate(); }}>
-          <div className="min-w-56 flex-1 space-y-1.5"><Label htmlFor="tt">새 할 일</Label><Input id="tt" value={t.title} onChange={(e) => setT({ ...t, title: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>담당자</Label><AssigneeSelect value={t.assignee} onChange={(a) => setT({ ...t, assignee: a })} /></div>
-          <div className="space-y-1.5"><Label htmlFor="td">기한</Label><Input id="td" type="date" className="bg-card" value={t.due} onChange={(e) => setT({ ...t, due: e.target.value })} /></div>
-          <Button type="submit">추가</Button>
-        </form>
+        <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="icon" className="mt-3" aria-label="할 일 추가">
+              <Plus aria-hidden="true" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent aria-describedby={undefined} className="max-h-[85dvh] overflow-y-auto">
+            <DialogTitle>할 일 추가</DialogTitle>
+            <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); add.mutate(); }}>
+              <div className="min-w-56 flex-1 space-y-1.5"><Label htmlFor="tt">새 할 일</Label><Input id="tt" value={t.title} onChange={(e) => setT({ ...t, title: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label>담당자</Label><AssigneeSelect value={t.assignee} onChange={(a) => setT({ ...t, assignee: a })} /></div>
+              <div className="space-y-1.5"><Label htmlFor="td">기한</Label><Input id="td" type="date" className="bg-card" value={t.due} onChange={(e) => setT({ ...t, due: e.target.value })} /></div>
+              <Button type="submit" disabled={add.isPending}>추가</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </Panel>
       <Panel title="반복 체크리스트 설정">
         <Label htmlFor="checklist-template-select" className="mb-1.5 block">항목</Label>
@@ -122,13 +136,23 @@ function ChecklistPage() {
             </Button>
           </div>
         )}
-        <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); addTpl.mutate(); }}>
-          <div className="min-w-56 flex-1 space-y-1.5"><Label htmlFor="rt">새 항목</Label><Input id="rt" value={r.title} onChange={(e) => setR({ ...r, title: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>주기</Label><Select value={r.freq} onValueChange={(v) => setR({ ...r, freq: v })}><SelectTrigger className="w-24 bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="매일">매일</SelectItem><SelectItem value="매주">매주</SelectItem></SelectContent></Select></div>
-          {r.freq === "매주" && <div className="space-y-1.5"><Label>요일</Label><Select value={r.wd} onValueChange={(v) => setR({ ...r, wd: v })}><SelectTrigger className="w-20 bg-card"><SelectValue /></SelectTrigger><SelectContent>{DOW.map((d, i) => <SelectItem key={d} value={String(i)}>{d}</SelectItem>)}</SelectContent></Select></div>}
-          <div className="space-y-1.5"><Label>담당자</Label><AssigneeSelect value={r.assignee} onChange={(a) => setR({ ...r, assignee: a })} /></div>
-          <Button type="submit">반복 항목 추가</Button>
-        </form>
+        <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="icon" className="mt-3" aria-label="반복 항목 추가">
+              <Plus aria-hidden="true" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent aria-describedby={undefined} className="max-h-[85dvh] overflow-y-auto">
+            <DialogTitle>반복 항목 추가</DialogTitle>
+            <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); addTpl.mutate(); }}>
+              <div className="min-w-56 flex-1 space-y-1.5"><Label htmlFor="rt">새 항목</Label><Input id="rt" value={r.title} onChange={(e) => setR({ ...r, title: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label>주기</Label><Select value={r.freq} onValueChange={(v) => setR({ ...r, freq: v })}><SelectTrigger className="w-24 bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="매일">매일</SelectItem><SelectItem value="매주">매주</SelectItem></SelectContent></Select></div>
+              {r.freq === "매주" && <div className="space-y-1.5"><Label>요일</Label><Select value={r.wd} onValueChange={(v) => setR({ ...r, wd: v })}><SelectTrigger className="w-20 bg-card"><SelectValue /></SelectTrigger><SelectContent>{DOW.map((d, i) => <SelectItem key={d} value={String(i)}>{d}</SelectItem>)}</SelectContent></Select></div>}
+              <div className="space-y-1.5"><Label>담당자</Label><AssigneeSelect value={r.assignee} onChange={(a) => setR({ ...r, assignee: a })} /></div>
+              <Button type="submit" disabled={addTpl.isPending}>반복 항목 추가</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </Panel>
     </div>
   );
