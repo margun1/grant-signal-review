@@ -12,6 +12,7 @@ import { useMe } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { PageHeader, Panel, StatusBadge, todayKst } from "@/components/app/ui";
+import { kstWeekRange } from "@/lib/secretary";
 import { confirmMeeting } from "@/lib/booking.functions";
 import { addGoogleCalendarEvent, deleteCalendarEvent, getGoogleEvents, syncMeetingToCalendar, updateCalendarMeeting, updateGoogleCalendarEvent } from "@/lib/calendar.functions";
 
@@ -48,6 +49,13 @@ const scheduleTypes = {
   google: { label: "구글 캘린더", tone: "bg-sky-200 text-sky-950" },
 };
 type ScheduleType = keyof typeof scheduleTypes;
+const weeklySections = [
+  ["internal", "이번주 내부회의일정"],
+  ["confirmed", "이번주 확정미팅일정"],
+  ["deadline", "이번주 지원사업마감일정"],
+  ["google", "이번주 구글캘린더 일정"],
+] as const;
+
 const calendarTypes = Object.keys(scheduleTypes) as ScheduleType[];
 const scheduleEmojis = [
   ["🤝", "미팅"],
@@ -154,18 +162,23 @@ function MeetingsPage() {
   };
   const reqs = useQuery({ queryKey: ["meet-req"], queryFn: async () => (await supabase.from("meetings").select("*").eq("kind", "외부 미팅").gte("end_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("start_at")).data ?? [] });
   const monthStart = `${month}-01`; const next = new Date(`${monthStart}T00:00:00Z`); next.setUTCMonth(next.getUTCMonth() + 1); const monthEnd = next.toISOString().slice(0, 10);
-  const cal = useQuery({ queryKey: ["cal", month], queryFn: async () => {
-    const [g, { data: m }, { data: a }] = await Promise.all([
-      gFn({ data: { from: new Date(`${monthStart}T00:00:00+09:00`).toISOString(), to: new Date(`${monthEnd}T00:00:00+09:00`).toISOString() } }).catch((e: Error) => ({ ok: false as const, error: e.message, events: [] })),
-      supabase.from("meetings").select("id,kind,title,name,org,start_at,end_at,status").neq("status", "취소").gte("start_at", new Date(`${monthStart}T00:00:00+09:00`).toISOString()).lt("start_at", new Date(`${monthEnd}T00:00:00+09:00`).toISOString()),
-      supabase.from("announcements").select("id,title,deadline").gte("deadline", monthStart).lt("deadline", monthEnd).in("status", ["검토 중", "진행"])]);
+  async function loadCalendar(start: string, end: string) {
+    const from = new Date(`${start}T00:00:00+09:00`).toISOString();
+    const to = new Date(`${end}T00:00:00+09:00`).toISOString();
+    const [google, meetings, announcements] = await Promise.all([
+      gFn({ data: { from, to } }).catch(() => ({ ok: false as const, events: [] })),
+      supabase.from("meetings").select("id,kind,title,name,org,start_at,end_at,status")
+        .neq("status", "취소").gte("start_at", from).lt("start_at", to).order("start_at"),
+      supabase.from("announcements").select("id,title,deadline")
+        .gte("deadline", start).lt("deadline", end).in("status", ["검토 중", "진행"]),
+    ]);
     const ev = new Map<string, CalendarEntry[]>();
     const add = (day: string, entry: CalendarEntry) => {
       const entries = ev.get(day) ?? [];
       entries.push(entry);
       ev.set(day, entries);
     };
-    for (const x of m ?? []) {
+    for (const x of meetings.data ?? []) {
       if (x.kind === "외부 미팅" && x.status !== "확정") continue;
       const title = x.title || (x.kind === "외부 미팅" ? x.org || x.name || "외부 미팅" : "내부 회의");
       add(kd(x.start_at), {
@@ -177,10 +190,10 @@ function MeetingsPage() {
         } : undefined,
       });
     }
-    for (const x of a ?? []) {
+    for (const x of announcements.data ?? []) {
       add(x.deadline!, { label: x.title ?? "공고", type: "deadline" });
     }
-    for (const x of g.events) {
+    for (const x of google.events) {
       if (!Number.isFinite(Date.parse(x.start)) || !Number.isFinite(Date.parse(x.end))) continue;
       add(kd(x.start), {
         label: `${x.allDay ? "" : localTime(x.start).slice(11, 16) + " "}${x.title}`,
@@ -192,7 +205,30 @@ function MeetingsPage() {
         },
       });
     }
-    return { ev, gOk: g.ok, gErr: g.ok ? null : g.error }; } });
+    return {
+      ev,
+      gOk: google.ok,
+      meetingsOk: !meetings.error,
+      deadlinesOk: !announcements.error,
+    };
+  }
+
+  const cal = useQuery({ queryKey: ["cal", month], queryFn: () => loadCalendar(monthStart, monthEnd) });
+  const weekRange = kstWeekRange(today);
+  const weekStart = kd(weekRange.from);
+  const weekEnd = kd(weekRange.to);
+  const monthCoversWeek = monthStart <= weekStart && monthEnd >= weekEnd;
+  const weekly = useQuery({
+    queryKey: ["cal", "week", weekStart],
+    queryFn: () => loadCalendar(weekStart, weekEnd),
+    enabled: !monthCoversWeek,
+  });
+  const week = monthCoversWeek ? cal : weekly;
+  const weekEntries = [...(week.data?.ev.entries() ?? [])]
+    .filter(([day]) => day >= weekStart && day < weekEnd)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .flatMap(([day, entries]) => entries.map((entry) => ({ day, ...entry })));
+
   const confirm = useMutation({ mutationFn: (id: string) => confirmFn({ data: { id } }), onSuccess: (r) => { if (r.calendar) toast.success("확정하고 구글 캘린더에 등록했습니다."); else toast.warning("확정했지만 구글 캘린더 등록에 실패했습니다. 표에서 다시 시도해 주세요."); qc.invalidateQueries(); }, onError: (e) => toast.error((e as Error).message) });
   const retry = useMutation({ mutationFn: (id: string) => syncFn({ data: { id } }), onSuccess: (r) => { r.ok ? toast.success("구글 캘린더에 등록했습니다.") : toast.error(r.error ?? "등록하지 못했습니다."); qc.invalidateQueries(); } });
   const cancel = useMutation({ mutationFn: async (id: string) => { await supabase.from("meetings").update({ status: "취소" }).eq("id", id); }, onSuccess: () => qc.invalidateQueries() });
@@ -347,6 +383,43 @@ function MeetingsPage() {
             <Button type="submit">{addSchedule.isPending ? "추가 중…" : "추가"}</Button>
           </fieldset>
         </form>
+      </Panel>
+      <Panel title="이번주 일정" accent="gold">
+        <p className="mb-4 text-sm text-muted-foreground">
+          {weekStart} ~ {shiftDate(weekEnd, -1)} · 한국 시간
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {weeklySections.map(([type, title]) => {
+            const entries = weekEntries.filter((entry) => entry.type === type);
+            const available = type === "google" ? week.data?.gOk
+              : type === "deadline" ? week.data?.deadlinesOk : week.data?.meetingsOk;
+            return (
+              <section key={type} className="min-w-0 rounded-lg border p-4">
+                <h3 className={`rounded-md px-3 py-2 text-sm font-semibold ${scheduleTypes[type].tone}`}>
+                  {title}
+                </h3>
+                {week.isPending ? (
+                  <p className="mt-3 text-sm text-muted-foreground">일정을 불러오는 중…</p>
+                ) : !available ? (
+                  <p className="mt-3 text-sm text-destructive">일정을 불러오지 못했습니다.</p>
+                ) : entries.length === 0 ? (
+                  <p className="mt-3 text-sm text-muted-foreground">등록된 일정이 없습니다.</p>
+                ) : (
+                  <ul className="mt-2 divide-y text-sm">
+                    {entries.map((entry, index) => (
+                      <li key={index} className="flex flex-wrap gap-x-3 gap-y-1 py-2">
+                        <time dateTime={entry.day} className="shrink-0 text-muted-foreground">
+                          {entry.day.slice(5).replace("-", "/")}
+                        </time>
+                        <span className="min-w-0 wrap-break-word">{entry.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
       </Panel>
       <Dialog open={editing !== null} onOpenChange={(open) => {
         if (!open && !saving) setEditing(null);
