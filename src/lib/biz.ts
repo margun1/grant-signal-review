@@ -133,6 +133,12 @@ export function summarizeProfit(sales: Pick<SaleRow, "sale_date" | "product" | "
   return { revenue, costedRevenue, cogs, gross, margin: costedRevenue ? gross / costedRevenue : null, missingCount, missingRevenue, missingProducts: [...miss] };
 }
 
-export function bucketKey(date: string, by: "day" | "month") { return by === "month" ? date.slice(0, 7) : date; }
+export function bucketKey(date: string, by: "day" | "week" | "month") {
+  if (by === "month") return date.slice(0, 7);
+  if (by === "day") return date;
+  const monday = new Date(`${date}T00:00:00Z`);
+  monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  return monday.toISOString().slice(0, 10);
+}
 export const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
 export const cnt = (n: number) => `${n.toLocaleString("ko-KR")}개`;

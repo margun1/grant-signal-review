@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PageHeader, Panel, StatusBadge } from "@/components/app/ui";
@@ -15,18 +15,88 @@ export const Route = createFileRoute("/_authenticated/profit")({
   component: ProfitPage,
 });
 
+const periods = [
+  ["day", "일별"],
+  ["week", "주간별"],
+  ["month", "월별"],
+] as const;
+const chartStyles = [
+  ["bar", "막대그래프"],
+  ["line", "꺾은선 그래프"],
+] as const;
+
+type ProfitPoint = {
+  period: string;
+  revenue: number;
+  gross: number | null;
+  margin: number | null;
+};
+
+function ProfitChart({
+  data,
+  style,
+  percentage = false,
+}: {
+  data: ProfitPoint[];
+  style: "bar" | "line";
+  percentage?: boolean;
+}) {
+  const Chart = style === "bar" ? BarChart : LineChart;
+  const metrics = percentage
+    ? [{ key: "margin", label: "매출총이익률", color: C.orange }]
+    : [
+        { key: "revenue", label: "매출", color: C.orange },
+        { key: "gross", label: "매출총이익", color: C.gold },
+      ];
+  return (
+    <div className="h-64 min-w-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <Chart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="period" minTickGap={14} />
+          <YAxis tickFormatter={(value: number) => percentage
+            ? `${value}%`
+            : `${(value / 10000).toLocaleString("ko-KR")}만`} />
+          <Tooltip formatter={(value) => typeof value === "number"
+            ? percentage ? `${value}%` : won(value)
+            : "기록 없음"} />
+          <Legend />
+          {metrics.map(({ key, label, color }) => style === "bar"
+            ? <Bar key={key} dataKey={key} name={label} fill={color} />
+            : <Line key={key} dataKey={key} name={label} stroke={color} strokeWidth={2} dot={{ r: 3 }} connectNulls={false} />)}
+        </Chart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function ProfitPage() {
   const qc = useQueryClient();
   const [range, setRange] = useState<Range>(presetRange(30));
-  const [by, setBy] = useState<"day" | "month">("day");
+  const [by, setBy] = useState<(typeof periods)[number][0]>("day");
+  const [chartStyle, setChartStyle] = useState<(typeof chartStyles)[number][0]>("bar");
   const sales = useQuery({ queryKey: ["sales", range], queryFn: () => loadSales(range) });
   const costs = useQuery({ queryKey: ["costs"], queryFn: loadCosts });
   const parts = useQuery({ queryKey: ["parts"], queryFn: () => fetchAll<PartRow>((a, b) => supabase.from("part_costs").select("product,part,unit_price,qty").range(a, b)) });
   const s = sales.data ?? []; const c = costs.data ?? [];
   const sum = useMemo(() => summarizeProfit(s, c), [s, c]);
   const series = useMemo(() => {
-    const g = new Map<string, typeof s>(); for (const x of s) { const k = bucketKey(x.sale_date, by); g.set(k, [...(g.get(k) ?? []), x]); }
-    return [...g].map(([k, v]) => { const r = summarizeProfit(v, c); return { k, 매출총이익: r.gross, 이익률: r.margin === null ? null : Math.round(r.margin * 1000) / 10 }; });
+    const groups = new Map<string, typeof s>();
+    for (const sale of s) {
+      const key = bucketKey(sale.sale_date, by);
+      const group = groups.get(key) ?? [];
+      group.push(sale);
+      groups.set(key, group);
+    }
+    return [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([period, group]) => {
+      const result = summarizeProfit(group, c);
+      return {
+        period,
+        revenue: result.revenue,
+        gross: result.missingCount === group.length ? null : result.gross,
+        margin: result.margin === null ? null : Math.round(result.margin * 1000) / 10,
+      };
+    });
   }, [s, c, by]);
   const byProduct = useMemo(() => {
     const names = [...new Set(s.map((x) => x.product))];
@@ -40,6 +110,40 @@ function ProfitPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="수익성" desc="매출총이익 = 판매금액 합계 − (판매수량 × 적용 완제품 원가)의 합" />
       <SampleSalesPanel profitability />
+      <Panel title="수익성 그래프" accent="primary">
+        <RangePicker value={range} onChange={setRange} />
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+          <div role="group" aria-label="그래프 집계 단위" className="flex flex-wrap gap-2">
+            {periods.map(([value, label]) => (
+              <Button key={value} type="button" size="sm" variant={by === value ? "default" : "outline"}
+                aria-pressed={by === value} onClick={() => setBy(value)}>{label}</Button>
+            ))}
+          </div>
+          <div role="group" aria-label="그래프 유형" className="flex flex-wrap gap-2">
+            {chartStyles.map(([value, label]) => (
+              <Button key={value} type="button" size="sm" variant={chartStyle === value ? "default" : "outline"}
+                aria-pressed={chartStyle === value} onClick={() => setChartStyle(value)}>{label}</Button>
+            ))}
+          </div>
+        </div>
+        {by === "week" && <p className="mt-2 text-xs text-muted-foreground">월요일~일요일 기준 · 가로축은 주 시작일입니다.</p>}
+        {sales.isPending || costs.isPending ? (
+          <p role="status" className="mt-4 text-sm text-muted-foreground">매출과 원가 자료를 불러오는 중…</p>
+        ) : sales.isError || costs.isError ? (
+          <p role="alert" className="mt-4 text-sm text-destructive">매출 또는 원가 자료를 불러오지 못했습니다.</p>
+        ) : series.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">선택한 기간에 등록된 실제 매출이 없습니다.</p>
+        ) : (
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <ProfitChart data={series} style={chartStyle} />
+            {series.some((point) => point.margin !== null) ? (
+              <ProfitChart data={series} style={chartStyle} percentage />
+            ) : (
+              <p className="text-sm text-muted-foreground">선택한 기간에 이익률을 계산할 수 있는 매출과 원가 자료가 없습니다.</p>
+            )}
+          </div>
+        )}
+      </Panel>
       <UploadPanel title="원가 엑셀 올리기" required="상품명, 완제품 원가 (선택: 원가 변경일) — 부품 비교용은 상품명, 부품명, 부품단가, 사용수량"
         analyze={(d) => { const p = parseCosts(d.rows, d.headers); const isParts = p.parts.length > 0;
           return { count: isParts ? p.parts.length : p.rows.length, errors: p.errors, missing: p.missing, ready: (p.rows.length + p.parts.length) > 0,
@@ -50,18 +154,12 @@ function ProfitPage() {
           if (error) throw new Error("원가를 반영하지 못했습니다."); qc.invalidateQueries(); const r = data as { inserted: number; replaced: number };
           return `기존 ${r.replaced}건을 교체하고 ${r.inserted}건을 반영했습니다.`; }} />
       <Panel title="기간별 매출총이익" accent="gold">
-        <RangePicker value={range} onChange={setRange} />
-        <div className="mt-3 flex gap-2"><Button size="sm" variant={by === "day" ? "default" : "outline"} onClick={() => setBy("day")}>일별</Button><Button size="sm" variant={by === "month" ? "default" : "outline"} onClick={() => setBy("month")}>월별</Button></div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-md border p-3"><p className="text-sm text-muted-foreground">매출</p><p className="text-xl font-bold">{won(sum.revenue)}</p></div>
           <div className="rounded-md border border-t-4 border-t-gold p-3"><p className="text-sm text-muted-foreground">매출총이익</p><p className="text-xl font-bold">{won(sum.gross)}</p></div>
           <div className="rounded-md border p-3"><p className="text-sm text-muted-foreground">매출총이익률</p><p className="text-xl font-bold">{sum.margin === null ? "확인 필요" : `${(sum.margin * 100).toFixed(1)}%`}</p></div>
         </div>
         {sum.missingCount > 0 && <p className="mt-3 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">원가 확인 필요: {sum.missingCount}건 ({won(sum.missingRevenue)}) — {sum.missingProducts.join(", ")}. 매출총이익은 원가가 있는 매출 {won(sum.costedRevenue)} 범위에서만 계산했습니다.</p>}
-        {series.length > 0 && <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="h-64"><ResponsiveContainer><LineChart data={series}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="k" /><YAxis tickFormatter={(v) => `${(v / 10000).toLocaleString()}만`} /><Tooltip formatter={(v: number) => won(v)} /><Legend /><Line dataKey="매출총이익" name="매출총이익(원)" stroke={C.gold} strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer></div>
-          <div className="h-64"><ResponsiveContainer><LineChart data={series}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="k" /><YAxis unit="%" /><Tooltip formatter={(v: number) => `${v}%`} /><Legend /><Line dataKey="이익률" name="매출총이익률(%)" stroke={C.orange} strokeWidth={2} dot={{ r: 4 }} connectNulls={false} /></LineChart></ResponsiveContainer></div>
-        </div>}
       </Panel>
       <Panel title="상품별 수익성">
         <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm"><thead className="bg-secondary text-left"><tr><th className="p-2">상품명</th><th className="p-2 text-right">매출</th><th className="p-2 text-right">적용 원가</th><th className="p-2 text-right">매출총이익</th><th className="p-2 text-right">부품비 합계(비교)</th><th className="p-2">비고</th></tr></thead>

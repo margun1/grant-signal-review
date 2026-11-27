@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { recommendOrder, summarizeProfit, costFor, parseSales } from "./biz";
+import { bucketKey, recommendOrder, summarizeProfit, costFor, parseSales } from "./biz";
 
 describe("재고·수익성 규칙", () => {
   it("목표 30, 현재 8, 미입고 10이면 12개 권장", () => { expect(recommendOrder(30, 8, 10)).toBe(12); });
@@ -15,6 +15,11 @@ describe("재고·수익성 규칙", () => {
       { sale_date: "2026-01-02", product: "B", quantity: 1, amount: 500 },
     ], [{ product: "A", unit_cost: 300, effective_date: null }]);
     expect(r.gross).toBe(400); expect(r.revenue).toBe(1500); expect(r.missingCount).toBe(1); expect(r.missingProducts).toEqual(["B"]);
+  });
+  it("주간 집계는 월요일부터 일요일까지 같은 그룹", () => {
+    expect(bucketKey("2026-11-23", "week")).toBe("2026-11-23");
+    expect(bucketKey("2026-11-29", "week")).toBe("2026-11-23");
+    expect(bucketKey("2027-01-01", "week")).toBe("2026-12-28");
   });
   it("같은 값의 판매 건을 합치지 않음", () => {
     const row = { 판매일: "2026-01-02", 구매자명: "x", 상품명: "A", 수량: 1, 판매금액: 100 };
