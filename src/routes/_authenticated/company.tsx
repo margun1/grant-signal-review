@@ -64,13 +64,13 @@ function CompanyPage() {
         <div className="mt-5 flex flex-wrap gap-3">
           <a
             href="https://enerinfra.github.io/?lang=ko"
-            className="inline-flex items-center gap-1 rounded-md border px-3 py-2 text-sm font-semibold hover:bg-muted"
+            className="inline-flex items-center gap-1 rounded-md border border-[#F0C5A4] bg-[#FCE6D5] text-[#542E17] hover:bg-[#F8D5BA] px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             POWERBOARD 제품 소개 <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
           <a
             href="https://enerinfra.github.io/meet/?lang=ko"
-            className="inline-flex items-center gap-1 rounded-md border px-3 py-2 text-sm font-semibold hover:bg-muted"
+            className="inline-flex items-center gap-1 rounded-md border border-[#CCD9E9] bg-[#E8EFF8] text-[#153367] hover:bg-[#DBE6F5] px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             EnerInfra — POWERBOARD <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
