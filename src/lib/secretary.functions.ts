@@ -75,7 +75,7 @@ export const ensureSecretaryBriefing = createServerFn({ method: "POST" })
       _force: data.force,
       _request_key: data.requestKey,
     });
-    if (claim.error) throw new Error("사장님 관리자 계정만 오늘의 브리핑을 만들 수 있습니다.");
+    if (claim.error) throw new Error("대표님 관리자 계정만 오늘의 브리핑을 만들 수 있습니다.");
     const parsed = z.object({ claimed: z.boolean(), row: briefRowSchema }).parse(claim.data);
     if (!parsed.claimed) return parsed.row;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

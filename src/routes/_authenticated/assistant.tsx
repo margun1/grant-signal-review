@@ -297,10 +297,13 @@ function AssistantPage() {
         <BriefingSections sources={data.brief?.sources ?? null} today={data.today} />
         {data.brief?.content && (
           <Message from="assistant">
-            <MessageContent>
-              <MessageResponse className="whitespace-pre-line leading-relaxed">
-                {shortAnswer(data.brief.content)}
-              </MessageResponse>
+            <MessageContent className="gap-[1lh] text-[12pt] leading-relaxed">
+              {shortAnswer(data.brief.content)
+                .replaceAll("사장님", "대표님")
+                .split("\n")
+                .map((line, index) => (
+                  <MessageResponse key={index}>{line}</MessageResponse>
+                ))}
             </MessageContent>
           </Message>
         )}
@@ -314,7 +317,7 @@ function AssistantPage() {
           </p>
         )}
         {!data.isAdmin && !data.brief && (
-          <p className="text-sm text-muted-foreground">사장님 브리핑은 관리자 계정에 저장됩니다.</p>
+          <p className="text-sm text-muted-foreground">대표님 브리핑은 관리자 계정에 저장됩니다.</p>
         )}
         {data.brief?.content && (
           <p className="mt-3 text-xs text-muted-foreground">
@@ -398,14 +401,16 @@ function SecretaryConversation({
                 {m.parts.map((p, i) =>
                   p.type === "text" ? (
                     <MessageResponse className="whitespace-pre-line leading-relaxed" key={i}>
-                      {m.role === "assistant" ? shortAnswer(p.text) : p.text}
+                      {m.role === "assistant"
+                        ? shortAnswer(p.text).replaceAll("사장님", "대표님")
+                        : p.text}
                     </MessageResponse>
                   ) : null,
                 )}
               </MessageContent>
             </Message>
           ))}
-          {busy && <Shimmer>사장님께 보고를 준비하고 있습니다…</Shimmer>}
+          {busy && <Shimmer>대표님께 보고를 준비하고 있습니다…</Shimmer>}
         </ConversationContent>
         <ConversationScrollButton aria-label="최근 대화로 이동" />
       </Conversation>
@@ -433,7 +438,7 @@ function SecretaryConversation({
           <PromptInputTextarea
             ref={textarea}
             aria-label="비서에게 질문"
-            placeholder="사장님, 무엇을 확인해 드릴까요?"
+            placeholder="대표님, 무엇을 확인해 드릴까요?"
             maxLength={4000}
             value={input}
             onChange={(e) => setInput(e.target.value)}
