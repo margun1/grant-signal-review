@@ -287,6 +287,43 @@ function MeetingsPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="미팅·일정" desc={`외부 예약 페이지: ${bookUrl}`} />
+      <Panel title="이번주 일정" accent="gold">
+        <p className="mb-4 text-sm text-muted-foreground">
+          {weekStart} ~ {shiftDate(weekEnd, -1)} · 한국 시간
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {weeklySections.map(([type, title]) => {
+            const entries = weekEntries.filter((entry) => entry.type === type);
+            const available = type === "google" ? week.data?.gOk
+              : type === "deadline" ? week.data?.deadlinesOk : week.data?.meetingsOk;
+            return (
+              <section key={type} className="min-w-0 rounded-lg border p-4">
+                <h3 className={`rounded-md px-3 py-2 text-sm font-semibold ${scheduleTypes[type].tone}`}>
+                  {title}
+                </h3>
+                {week.isPending ? (
+                  <p className="mt-3 text-sm text-muted-foreground">일정을 불러오는 중…</p>
+                ) : !available ? (
+                  <p className="mt-3 text-sm text-destructive">일정을 불러오지 못했습니다.</p>
+                ) : entries.length === 0 ? (
+                  <p className="mt-3 text-sm text-muted-foreground">등록된 일정이 없습니다.</p>
+                ) : (
+                  <ul className="mt-2 divide-y text-sm">
+                    {entries.map((entry, index) => (
+                      <li key={index} className="flex flex-wrap gap-x-3 gap-y-1 py-2">
+                        <time dateTime={entry.day} className="shrink-0 text-muted-foreground">
+                          {entry.day.slice(5).replace("-", "/")}
+                        </time>
+                        <span className="min-w-0 wrap-break-word">{entry.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </Panel>
       <Panel title="외부 미팅 요청" accent="primary">
         <div className="overflow-x-auto"><table className="w-full min-w-[700px] text-sm"><thead className="bg-secondary text-left"><tr><th className="p-2">일시</th><th className="p-2">요청자</th><th className="p-2">연락처</th><th className="p-2">내용</th><th className="p-2">상태</th><th className="p-2"></th></tr></thead>
           <tbody>{(reqs.data ?? []).map((m) => <tr key={m.id} className="border-t align-top"><td className="p-2 whitespace-nowrap">{kt(m.start_at)}</td><td className="p-2">{m.name ?? m.title}{m.org ? ` · ${m.org}` : ""}</td><td className="p-2">{m.email}<br />{m.phone}</td><td className="p-2">{m.topic}</td>
@@ -383,43 +420,6 @@ function MeetingsPage() {
             <Button type="submit">{addSchedule.isPending ? "추가 중…" : "추가"}</Button>
           </fieldset>
         </form>
-      </Panel>
-      <Panel title="이번주 일정" accent="gold">
-        <p className="mb-4 text-sm text-muted-foreground">
-          {weekStart} ~ {shiftDate(weekEnd, -1)} · 한국 시간
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {weeklySections.map(([type, title]) => {
-            const entries = weekEntries.filter((entry) => entry.type === type);
-            const available = type === "google" ? week.data?.gOk
-              : type === "deadline" ? week.data?.deadlinesOk : week.data?.meetingsOk;
-            return (
-              <section key={type} className="min-w-0 rounded-lg border p-4">
-                <h3 className={`rounded-md px-3 py-2 text-sm font-semibold ${scheduleTypes[type].tone}`}>
-                  {title}
-                </h3>
-                {week.isPending ? (
-                  <p className="mt-3 text-sm text-muted-foreground">일정을 불러오는 중…</p>
-                ) : !available ? (
-                  <p className="mt-3 text-sm text-destructive">일정을 불러오지 못했습니다.</p>
-                ) : entries.length === 0 ? (
-                  <p className="mt-3 text-sm text-muted-foreground">등록된 일정이 없습니다.</p>
-                ) : (
-                  <ul className="mt-2 divide-y text-sm">
-                    {entries.map((entry, index) => (
-                      <li key={index} className="flex flex-wrap gap-x-3 gap-y-1 py-2">
-                        <time dateTime={entry.day} className="shrink-0 text-muted-foreground">
-                          {entry.day.slice(5).replace("-", "/")}
-                        </time>
-                        <span className="min-w-0 wrap-break-word">{entry.label}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            );
-          })}
-        </div>
       </Panel>
       <Dialog open={editing !== null} onOpenChange={(open) => {
         if (!open && !saving) setEditing(null);
