@@ -124,6 +124,9 @@ it("expands the product links in the compact navigation", () => {
   expect(menu.getByRole("link", { name: "POWERBOARD" })).toHaveAttribute("href", "/powerboard");
   expect(menu.getByRole("link", { name: "드론" })).toHaveAttribute("href", "/drone");
   expect(menu.getByRole("link", { name: "경쟁제품" })).toHaveAttribute("href", "/competitors");
+  expect(menu.queryByRole("link", { name: "POWERBOARD 부품찾기" })).toBeNull();
+  fireEvent.click(menu.getByRole("button", { name: "POWERBOARD 하위 메뉴" }));
+  expect(menu.getByRole("link", { name: "POWERBOARD 부품찾기" })).toHaveAttribute("href", "/powerboard/parts");
 
   fireEvent.click(toggle);
   expect(toggle).toHaveAttribute("aria-expanded", "false");

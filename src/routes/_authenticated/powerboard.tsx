@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Download, Activity } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts";
@@ -41,7 +41,8 @@ function PowerboardPage() {
     const a = document.createElement("a"); a.href = url; a.download = "POWERBOARD_가상실증.csv"; a.click(); URL.revokeObjectURL(url);
   }
   return <div className="mx-auto max-w-6xl space-y-6">
-    <PageHeader title="POWERBOARD" desc="POWERBOARD_sample.csv · 2026년 6~9월" />
+    <PageHeader title="POWERBOARD" desc="POWERBOARD_sample.csv · 2026년 6~9월"
+      action={<Button asChild variant="outline"><Link to="/powerboard/parts">POWERBOARD 부품찾기</Link></Button>} />
     <div className="border-y border-warning py-4 text-sm">
       <div className="flex items-center gap-2 font-bold text-warning"><Activity className="size-4" />가상 데이터 · 실제 실증 성과 아님</div>
       <p className="mt-2 text-muted-foreground">모의 요금·바우처·계약금액입니다. 실제 매출·수익성·AI 브리핑에는 반영하지 않습니다.</p>

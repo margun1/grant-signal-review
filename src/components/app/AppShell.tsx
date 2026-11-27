@@ -68,13 +68,23 @@ const dashboardPages = [
   { to: "/profit", label: "수익성", icon: Coins },
   { to: "/checklist", label: "체크리스트", icon: ListChecks },
 ] as const;
-type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages | typeof settingsPages)[number];
+const powerboardPages = [{ to: "/powerboard/parts", label: "POWERBOARD 부품찾기", icon: FileSearch }] as const;
+type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages | typeof settingsPages | typeof powerboardPages)[number];
 const navGroups = new Map<NavItem["to"], readonly NavItem[]>([
   ["/products", productPages],
+  ["/powerboard", powerboardPages],
   ["/assistant", assistantPages],
   ["/dashboard", dashboardPages],
   ["/admin/settings", settingsPages],
 ]);
+
+function findNavItem(items: readonly NavItem[], path: string): NavItem | undefined {
+  for (const item of items) {
+    const child = findNavItem(navGroups.get(item.to) ?? [], path);
+    if (child) return child;
+    if (path === item.to || path.startsWith(`${item.to}/`)) return item;
+  }
+}
 
 function NavGroup({ label, activeChild, link, children }: {
   label: string;
@@ -134,18 +144,20 @@ function NavLinks({
     );
   }
 
+  function renderItem(item: NavItem): ReactNode {
+    const children = navGroups.get(item.to);
+    if (!children) return renderLink(item);
+    return (
+      <NavGroup key={item.to} label={item.label} link={renderLink(item)}
+        activeChild={activePath && findNavItem(children, activePath) ? activePath : undefined}>
+        {children.map(renderItem)}
+      </NavGroup>
+    );
+  }
+
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
-      {items.map((item) => {
-        const children = navGroups.get(item.to);
-        if (!children) return renderLink(item);
-        return (
-          <NavGroup key={item.to} label={item.label} link={renderLink(item)}
-            activeChild={children.find(({ to }) => to === activePath)?.to}>
-            {children.map(renderLink)}
-          </NavGroup>
-        );
-      })}
+      {items.map(renderItem)}
     </nav>
   );
 }
@@ -188,7 +200,7 @@ export function AppShell() {
     );
 
   const items = me.isAdmin ? ALL_NAV : NAV;
-  const currentPage = items.flatMap((item) => [item, ...(navGroups.get(item.to) ?? [])]).find(({ to }) => path === to || path.startsWith(`${to}/`));
+  const currentPage = findNavItem(items, path);
   const side = (
     <div className="flex min-h-full flex-col gap-6 p-4">
       <AppBrand

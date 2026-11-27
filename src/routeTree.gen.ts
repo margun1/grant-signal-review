@@ -36,6 +36,7 @@ import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedAdminInvitesRouteImport } from './routes/_authenticated/admin/invites'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
+import { Route as AuthenticatedPowerboardPartsRouteImport } from './routes/_authenticated/powerboard_.parts'
 import { Route as ApiPublicInquiryRouteImport } from './routes/api/public/inquiry'
 import { Route as ApiPublicJobsHourlyRouteImport } from './routes/api/public/jobs/hourly'
 import { Route as ApiPublicSecretaryChatRouteImport } from './routes/api/public/secretary/chat'
@@ -177,6 +178,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/admin/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPowerboardPartsRoute =
+  AuthenticatedPowerboardPartsRouteImport.update({
+    id: '/powerboard_/parts',
+    path: '/powerboard/parts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicInquiryRoute = ApiPublicInquiryRouteImport.update({
   id: '/api/public/inquiry',
   path: '/api/public/inquiry',
@@ -220,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/powerboard/parts': typeof AuthenticatedPowerboardPartsRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
   '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
@@ -251,6 +259,7 @@ export interface FileRoutesByTo {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/powerboard/parts': typeof AuthenticatedPowerboardPartsRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
   '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
@@ -284,6 +293,7 @@ export interface FileRoutesById {
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/powerboard_/parts': typeof AuthenticatedPowerboardPartsRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
   '/api/public/secretary/chat': typeof ApiPublicSecretaryChatRoute
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/invites'
     | '/admin/settings'
+    | '/powerboard/parts'
     | '/api/public/inquiry'
     | '/api/public/jobs/hourly'
     | '/api/public/secretary/chat'
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/invites'
     | '/admin/settings'
+    | '/powerboard/parts'
     | '/api/public/inquiry'
     | '/api/public/jobs/hourly'
     | '/api/public/secretary/chat'
@@ -380,6 +392,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support'
     | '/_authenticated/admin/invites'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/powerboard_/parts'
     | '/api/public/inquiry'
     | '/api/public/jobs/hourly'
     | '/api/public/secretary/chat'
@@ -590,6 +603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/powerboard_/parts': {
+      id: '/_authenticated/powerboard_/parts'
+      path: '/powerboard/parts'
+      fullPath: '/powerboard/parts'
+      preLoaderRoute: typeof AuthenticatedPowerboardPartsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/inquiry': {
       id: '/api/public/inquiry'
       path: '/api/public/inquiry'
@@ -634,6 +654,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedAdminInvitesRoute: typeof AuthenticatedAdminInvitesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedPowerboardPartsRoute: typeof AuthenticatedPowerboardPartsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -656,6 +677,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedAdminInvitesRoute: AuthenticatedAdminInvitesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedPowerboardPartsRoute: AuthenticatedPowerboardPartsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
