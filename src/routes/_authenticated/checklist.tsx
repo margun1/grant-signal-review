@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PageHeader, Panel, StatusBadge, todayKst } from "@/components/app/ui";
 import { AssigneeSelect } from "@/components/app/AssigneeSelect";
 import { useStaff } from "@/hooks/use-staff";
+import { registerCompanyChecklist } from "@/lib/company-checklist";
 
 export const Route = createFileRoute("/_authenticated/checklist")({
   head: () => ({ meta: [{ title: "체크리스트 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "반복 체크리스트와 할 일" }] }),
@@ -20,7 +21,24 @@ const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
 function ChecklistPage() {
   const qc = useQueryClient(); const today = todayKst(); const { nameOf } = useStaff();
-  useEffect(() => { supabase.rpc("generate_checklist", { _date: today }).then(() => qc.invalidateQueries({ queryKey: ["tasks"] })); }, [today, qc]);
+  useEffect(() => {
+    async function prepareChecklist() {
+      try {
+        await registerCompanyChecklist(today);
+      } catch {
+        toast.error("기본 체크리스트를 등록하지 못했습니다.");
+      }
+
+      const { error } = await supabase.rpc("generate_checklist", { _date: today });
+      if (error) toast.error("오늘의 반복 할 일을 만들지 못했습니다.");
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["tasks"] }),
+        qc.invalidateQueries({ queryKey: ["tpls"] }),
+      ]);
+    }
+
+    void prepareChecklist();
+  }, [today, qc]);
   const [showDone, setShowDone] = useState(false);
   const tasks = useQuery({ queryKey: ["tasks", showDone], queryFn: async () => {
     let q = supabase.from("tasks").select("*").order("due_date", { ascending: true, nullsFirst: false }).order("created_at");
