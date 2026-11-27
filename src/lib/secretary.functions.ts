@@ -6,6 +6,34 @@ import { briefRowSchema, kstDay, shortAnswer } from "./secretary";
 import { SECRETARY_RULES } from "./company";
 import { DEFAULT_PREFERENCES, preferencesSchema } from "./support";
 
+export const getTodayBriefingTasks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const today = kstDay();
+    const { error: generationError } = await context.supabase.rpc("generate_checklist", {
+      _date: today,
+    });
+    if (generationError) throw new Error("오늘의 반복 체크리스트를 불러오지 못했습니다.");
+
+    const { data, count, error } = await context.supabase
+      .from("tasks")
+      .select("id,title,template_id", { count: "exact" })
+      .eq("due_date", today)
+      .eq("done", false)
+      .order("created_at")
+      .order("id")
+      .limit(50);
+    if (error) throw new Error("오늘의 할 일을 불러오지 못했습니다.");
+    return {
+      tasks: (data ?? []).map(({ id, title, template_id }) => ({
+        id,
+        title,
+        recurring: template_id !== null,
+      })),
+      count,
+    };
+  });
+
 export const getSecretaryScreen = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -108,15 +136,13 @@ export const ensureSecretaryBriefing = createServerFn({ method: "POST" })
           ? error.message
           : safe.message;
       if (safe.status === 402 || safe.status === 403) {
-        const { error: saveError } = await supabaseAdmin
-          .from("secretary_ai_access")
-          .upsert({
-            scope: "secretary",
-            status: safe.status,
-            reason: safe.reason,
-            message: safe.message,
-            updated_at: new Date().toISOString(),
-          });
+        const { error: saveError } = await supabaseAdmin.from("secretary_ai_access").upsert({
+          scope: "secretary",
+          status: safe.status,
+          reason: safe.reason,
+          message: safe.message,
+          updated_at: new Date().toISOString(),
+        });
         if (saveError)
           failure = "AI 사용 제한 상태를 저장하지 못했습니다. 자동 생성은 중지되었습니다.";
       }

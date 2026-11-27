@@ -78,7 +78,7 @@ export async function makeBriefing(request: Request, key: string, instructions: 
       {
         role: "user",
         content:
-          "오늘의 브리핑을 작성해 주세요. 할 일(최대 2~3개, 각각 근거 숫자), 어제 매출·이번 주 비교, 오늘·내일 날씨, 새로운 지원사업 후보를 빠짐없이 다루되 총 다섯 줄 이내입니다.",
+          "오늘의 브리핑을 총 다섯 줄 이내로 작성해 주세요. 첫 줄에는 오늘 체크리스트의 미완료 건수(summary.todayTaskCount)와 대표 항목(summary.todayTasks, 오늘 생성된 반복 체크리스트 포함)을 알려 주세요. 이어서 할 일 제안(최대 2~3개, 각각 근거 숫자), 어제 매출·이번 주 비교, 오늘·내일 날씨와 새로운 지원사업 후보를 요약해 주세요.",
       },
     ],
     output: Output.object({ schema: z.object({ lines: z.array(z.string()).min(1).max(5) }) }),

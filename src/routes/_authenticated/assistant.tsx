@@ -27,7 +27,11 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureSecretaryBriefing, getSecretaryScreen } from "@/lib/secretary.functions";
+import {
+  ensureSecretaryBriefing,
+  getSecretaryScreen,
+  getTodayBriefingTasks,
+} from "@/lib/secretary.functions";
 import { briefingSourcesSchema, kstWeekRange, shortAnswer, type BriefRow } from "@/lib/secretary";
 import { getGoogleEvents } from "@/lib/calendar.functions";
 import { supportPreferencesOptions, useSupportRecommendations } from "@/lib/support.queries";
@@ -111,7 +115,13 @@ function BriefingSections({ sources, today }: { sources: BriefRow["sources"]; to
       : grants.isPending
         ? "추천 공고를 불러오는 중…"
         : "현재 조회된 자료에 조건에 맞는 접수 중 공고가 없습니다.";
-  const tasks = summary?.todayTasks ?? [];
+  const fetchTasks = useServerFn(getTodayBriefingTasks);
+  const checklist = useQuery({
+    queryKey: ["tasks", "briefing", today],
+    queryFn: () => fetchTasks(),
+    retry: false,
+  });
+  const tasks = checklist.data?.tasks ?? [];
   const meetings = summary?.weekMeetings ?? [];
   const range = kstWeekRange(today);
   const fetchGoogleEvents = useServerFn(getGoogleEvents);
@@ -142,16 +152,25 @@ function BriefingSections({ sources, today }: { sources: BriefRow["sources"]; to
       google: true,
     })),
   ].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
-  const moreTasks = (summary?.todayTaskCount ?? 0) - tasks.length;
+  const moreTasks = (checklist.data?.count ?? tasks.length) - tasks.length;
   const moreMeetings = (summary?.weekMeetingCount ?? 0) - meetings.length;
 
   return (
     <div className="mb-4 grid grid-cols-1 gap-3">
       <BriefingSection
         title="오늘의 할 일"
-        empty={summary ? "남은 할 일이 없습니다." : "저장된 할 일 정보가 없습니다."}
+        empty={
+          checklist.isPending
+            ? "오늘의 체크리스트를 불러오는 중…"
+            : (checklist.error?.message ?? "남은 할 일이 없습니다.")
+        }
         items={[
-          ...tasks.map((task, index) => <li key={index}>{shortAnswer(task.title)}</li>),
+          ...tasks.map((task) => (
+            <li key={task.id}>
+              {shortAnswer(task.title)}
+              {task.recurring && <span className="ml-2 text-xs text-muted-foreground">반복</span>}
+            </li>
+          )),
           ...(moreTasks > 0 ? [<li key="more">외 {moreTasks}건</li>] : []),
         ]}
       />
