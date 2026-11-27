@@ -13,16 +13,16 @@ export const Route = createFileRoute("/_authenticated/drone")({
   component: DronePage,
 });
 
-const partNames = [...new Set(sampleDroneParts.map(([, , name]) => name))];
+const partCategories = [...new Set(sampleDroneParts.map(([, category]) => category))];
 
 function DronePage() {
   const [query, setQuery] = useState("");
-  const [selectedPart, setSelectedPart] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const results = useRef<HTMLParagraphElement>(null);
   const keywords = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const compactQuery = keywords.join("");
   const parts = sampleDroneParts.filter((part) => {
-    if (selectedPart !== null && part[2] !== selectedPart) return false;
+    if (selectedCategory !== null && part[1] !== selectedCategory) return false;
     const text = part.join(" ").toLowerCase().replace(/\s+/g, "");
     return text.includes(compactQuery) || keywords.every((keyword) => text.includes(keyword));
   });
@@ -41,22 +41,22 @@ function DronePage() {
         </div>
 
         <fieldset className="mt-4">
-          <legend className="mb-2 text-sm font-semibold">부품명으로 보기</legend>
-          <div className="flex max-h-56 flex-wrap content-start gap-2 overflow-y-auto rounded-md border p-2">
-            {[null, ...partNames].map((name) => (
+          <legend className="mb-2 text-sm font-semibold">카테고리별 보기</legend>
+          <div className="flex flex-wrap gap-2 rounded-md border p-2">
+            {[null, ...partCategories].map((category) => (
               <Button
-                key={name ?? "all"}
+                key={category ?? "all"}
                 type="button"
                 size="sm"
-                variant={selectedPart === name ? "default" : "outline"}
-                aria-pressed={selectedPart === name}
+                variant={selectedCategory === category ? "default" : "outline"}
+                aria-pressed={selectedCategory === category}
                 className="h-auto min-h-8 whitespace-normal text-left"
                 onClick={() => {
-                  setSelectedPart(name);
+                  setSelectedCategory(category);
                   setQuery("");
                 }}
               >
-                {name ?? "전체"}
+                {category ?? "전체"}
               </Button>
             ))}
           </div>
