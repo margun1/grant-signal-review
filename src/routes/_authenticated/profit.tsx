@@ -9,6 +9,7 @@ import { SampleSalesPanel } from "@/components/app/SampleSalesPanel";
 import { C, RangePicker, UploadPanel, fetchAll, presetRange, type Range } from "@/components/app/data";
 import { bucketKey, costFor, parseCosts, summarizeProfit, won, type PartRow } from "@/lib/biz";
 import { loadCosts, loadSales } from "@/lib/biz-queries";
+import { sampleSales } from "@/lib/sample-sales";
 
 export const Route = createFileRoute("/_authenticated/profit")({
   head: () => ({ meta: [{ title: "수익성 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "원가 엑셀 업로드와 상품별 매출총이익" }] }),
@@ -25,6 +26,12 @@ const chartStyles = [
   ["line", "꺾은선 그래프"],
 ] as const;
 
+const sampleRange = { start: "2026-06-01", end: "2026-11-30" };
+const chartSources = [
+  ["sample", "가상 매출"],
+  ["actual", "실제 매출·수익성"],
+] as const;
+
 type ProfitPoint = {
   period: string;
   revenue: number;
@@ -35,19 +42,22 @@ type ProfitPoint = {
 function ProfitChart({
   data,
   style,
-  percentage = false,
+  mode,
 }: {
   data: ProfitPoint[];
   style: "bar" | "line";
-  percentage?: boolean;
+  mode: "sample" | "amount" | "percentage";
 }) {
   const Chart = style === "bar" ? BarChart : LineChart;
+  const percentage = mode === "percentage";
   const metrics = percentage
     ? [{ key: "margin", label: "매출총이익률", color: C.orange }]
-    : [
-        { key: "revenue", label: "매출", color: C.orange },
-        { key: "gross", label: "매출총이익", color: C.gold },
-      ];
+    : mode === "sample"
+      ? [{ key: "revenue", label: "가상 매출", color: C.orange }]
+      : [
+          { key: "revenue", label: "매출", color: C.orange },
+          { key: "gross", label: "매출총이익", color: C.gold },
+        ];
   return (
     <div className="h-64 min-w-0">
       <ResponsiveContainer width="100%" height="100%">
@@ -73,6 +83,8 @@ function ProfitChart({
 function ProfitPage() {
   const qc = useQueryClient();
   const [range, setRange] = useState<Range>(presetRange(30));
+  const [source, setSource] = useState<(typeof chartSources)[number][0]>("sample");
+  const [sampleDates, setSampleDates] = useState<Range>(sampleRange);
   const [by, setBy] = useState<(typeof periods)[number][0]>("day");
   const [chartStyle, setChartStyle] = useState<(typeof chartStyles)[number][0]>("bar");
   const sales = useQuery({ queryKey: ["sales", range], queryFn: () => loadSales(range) });
@@ -98,6 +110,15 @@ function ProfitPage() {
       };
     });
   }, [s, c, by]);
+  const sampleSeries = useMemo(() => {
+    const groups = new Map<string, number>();
+    for (const [date, , , quantity, unitPrice] of sampleSales) {
+      if (date < sampleDates.start || date > sampleDates.end) continue;
+      const period = bucketKey(date, by);
+      groups.set(period, (groups.get(period) ?? 0) + quantity * unitPrice);
+    }
+    return [...groups].map(([period, revenue]) => ({ period, revenue, gross: null, margin: null }));
+  }, [sampleDates, by]);
   const byProduct = useMemo(() => {
     const names = [...new Set(s.map((x) => x.product))];
     return names.map((n) => { const v = s.filter((x) => x.product === n); const r = summarizeProfit(v, c);
@@ -111,7 +132,25 @@ function ProfitPage() {
       <PageHeader title="수익성" desc="매출총이익 = 판매금액 합계 − (판매수량 × 적용 완제품 원가)의 합" />
       <SampleSalesPanel profitability />
       <Panel title="수익성 그래프" accent="primary">
-        <RangePicker value={range} onChange={setRange} />
+        <div role="group" aria-label="그래프 데이터" className="mb-4 flex flex-wrap gap-2">
+          {chartSources.map(([value, label]) => (
+            <Button key={value} type="button" size="sm" variant={source === value ? "default" : "outline"}
+              aria-pressed={source === value} onClick={() => setSource(value)}>{label}</Button>
+          ))}
+        </div>
+        {source === "sample" ? (
+          <>
+            <div className="flex flex-wrap items-end gap-2">
+              <RangePicker value={sampleDates} onChange={setSampleDates} presets={[]} />
+              <Button type="button" variant="outline" size="sm" onClick={() => setSampleDates(sampleRange)}>
+                가상 기간 전체
+              </Button>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">가상 데이터 · 원가가 없어 가상 매출만 표시합니다.</p>
+          </>
+        ) : (
+          <RangePicker value={range} onChange={setRange} />
+        )}
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
           <div role="group" aria-label="그래프 집계 단위" className="flex flex-wrap gap-2">
             {periods.map(([value, label]) => (
@@ -127,7 +166,13 @@ function ProfitPage() {
           </div>
         </div>
         {by === "week" && <p className="mt-2 text-xs text-muted-foreground">월요일~일요일 기준 · 가로축은 주 시작일입니다.</p>}
-        {sales.isPending || costs.isPending ? (
+        {source === "sample" ? (
+          <div className="mt-4">
+            {sampleSeries.length > 0 ? <ProfitChart data={sampleSeries} style={chartStyle} mode="sample" /> : (
+              <p className="text-sm text-muted-foreground">선택한 기간에 가상 매출이 없습니다.</p>
+            )}
+          </div>
+        ) : sales.isPending || costs.isPending ? (
           <p role="status" className="mt-4 text-sm text-muted-foreground">매출과 원가 자료를 불러오는 중…</p>
         ) : sales.isError || costs.isError ? (
           <p role="alert" className="mt-4 text-sm text-destructive">매출 또는 원가 자료를 불러오지 못했습니다.</p>
@@ -135,9 +180,9 @@ function ProfitPage() {
           <p className="mt-4 text-sm text-muted-foreground">선택한 기간에 등록된 실제 매출이 없습니다.</p>
         ) : (
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <ProfitChart data={series} style={chartStyle} />
+            <ProfitChart data={series} style={chartStyle} mode="amount" />
             {series.some((point) => point.margin !== null) ? (
-              <ProfitChart data={series} style={chartStyle} percentage />
+              <ProfitChart data={series} style={chartStyle} mode="percentage" />
             ) : (
               <p className="text-sm text-muted-foreground">선택한 기간에 이익률을 계산할 수 있는 매출과 원가 자료가 없습니다.</p>
             )}
