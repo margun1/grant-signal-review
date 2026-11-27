@@ -9,7 +9,7 @@ import { SampleSalesPanel } from "@/components/app/SampleSalesPanel";
 import { C, RangePicker, UploadPanel, fetchAll, presetRange, type Range } from "@/components/app/data";
 import { bucketKey, costFor, parseCosts, summarizeProfit, won, type PartRow } from "@/lib/biz";
 import { loadCosts, loadSales } from "@/lib/biz-queries";
-import { sampleSales } from "@/lib/sample-sales";
+import { sampleSales, sampleSalesRange } from "@/lib/sample-sales";
 
 export const Route = createFileRoute("/_authenticated/profit")({
   head: () => ({ meta: [{ title: "수익성 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "원가 엑셀 업로드와 상품별 매출총이익" }] }),
@@ -26,7 +26,6 @@ const chartStyles = [
   ["line", "꺾은선 그래프"],
 ] as const;
 
-const sampleRange = { start: "2026-06-01", end: "2026-11-30" };
 const chartSources = [
   ["sample", "가상 매출"],
   ["actual", "실제 매출·수익성"],
@@ -84,7 +83,7 @@ function ProfitPage() {
   const qc = useQueryClient();
   const [range, setRange] = useState<Range>(presetRange(30));
   const [source, setSource] = useState<(typeof chartSources)[number][0]>("sample");
-  const [sampleDates, setSampleDates] = useState<Range>(sampleRange);
+  const [sampleDates, setSampleDates] = useState<Range>(sampleSalesRange);
   const [by, setBy] = useState<(typeof periods)[number][0]>("day");
   const [chartStyle, setChartStyle] = useState<(typeof chartStyles)[number][0]>("bar");
   const sales = useQuery({ queryKey: ["sales", range], queryFn: () => loadSales(range) });
@@ -142,7 +141,7 @@ function ProfitPage() {
           <>
             <div className="flex flex-wrap items-end gap-2">
               <RangePicker value={sampleDates} onChange={setSampleDates} presets={[]} />
-              <Button type="button" variant="outline" size="sm" onClick={() => setSampleDates(sampleRange)}>
+              <Button type="button" variant="outline" size="sm" onClick={() => setSampleDates(sampleSalesRange)}>
                 가상 기간 전체
               </Button>
             </div>

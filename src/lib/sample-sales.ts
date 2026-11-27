@@ -26,6 +26,8 @@ export const sampleSales = [
   ["2026-11-22", "가상 공공기관", "드론", 3, 850000],
 ] as const;
 
+export const sampleSalesRange = { start: "2026-06-01", end: "2026-11-30" };
+
 export const sampleProducts = ["POWERBOARD", "드론"] as const;
 type SampleSale = (typeof sampleSales)[number];
 
