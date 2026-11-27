@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { createStaffShareInvite } from "@/lib/share-invite.functions";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +65,17 @@ function InviteRoleOptions() {
 function Invites() {
   const { me } = useMe();
   const qc = useQueryClient();
+  const createShareInvite = useServerFn(createStaffShareInvite);
+  const [shareUrl, setShareUrl] = useState("");
+  const share = useMutation({
+    mutationFn: () => createShareInvite(),
+    onSuccess: ({ token }) => {
+      const url = new URL("/signup", window.location.origin);
+      url.hash = new URLSearchParams({ invite: token }).toString();
+      setShareUrl(url.href);
+    },
+    onError: () => toast.error("공유 가입 링크를 만들지 못했습니다."),
+  });
   const [inviteToDelete, setInviteToDelete] = useState<{ id: string; email: string } | null>(null);
   const [inviteLabels, setInviteLabels] = useState(readInviteLabels);
   const [email, setEmail] = useState("");
@@ -191,7 +204,27 @@ function Invites() {
   if (!me?.isAdmin) return <p>관리자만 볼 수 있는 화면입니다.</p>;
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader title="직원 초대 관리" desc="초대한 이메일만 가입할 수 있습니다. 이메일·Google 가입 모두 같은 초대를 사용합니다." />
+      <PageHeader title="직원 초대 관리" desc="개별 이메일 초대 또는 공유 가입 링크를 사용할 수 있습니다." />
+      <Panel title="공유 가입 링크">
+        <p className="mb-3 text-sm text-muted-foreground">링크를 받은 사람은 24시간 동안 본인 이메일로 가입해 직원 권한을 받을 수 있습니다.</p>
+        <Button type="button" variant="outline" disabled={share.isPending} onClick={() => share.mutate()}>
+          공유 링크 만들기
+        </Button>
+        {shareUrl && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Input className="min-w-0 flex-1" aria-label="공유 가입 링크" readOnly value={shareUrl}
+              onFocus={(event) => event.currentTarget.select()} />
+            <Button type="button" onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success("공유 가입 링크를 복사했습니다.");
+              } catch {
+                toast.error("링크를 선택해 직접 복사해 주세요.");
+              }
+            }}>링크 복사</Button>
+          </div>
+        )}
+      </Panel>
       <Panel title="직원 초대" accent="primary">
         <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); invite.mutate(); }}>
           <div className="min-w-64 flex-1 space-y-1.5"><Label htmlFor="em">직원 이메일</Label><Input id="em" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
