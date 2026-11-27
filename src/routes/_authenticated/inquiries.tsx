@@ -20,6 +20,26 @@ export const Route = createFileRoute("/_authenticated/inquiries")({
   component: InquiriesPage,
 });
 const ST = ["미답변", "처리 중", "답변 완료"] as const;
+type SampleEdits = Pick<Inq, "content" | "status" | "assignee" | "reply_draft">;
+
+const sampleStorageKey = (id: string) => `enerinfra:sample-inquiry:v1:${id}`;
+
+function readSampleEdits(id: string): SampleEdits | undefined {
+  try {
+    const edits = JSON.parse(window.localStorage.getItem(sampleStorageKey(id)) ?? "null");
+    if (
+      edits && typeof edits.content === "string" && edits.content.trim() &&
+      ST.some((status) => status === edits.status) &&
+      (edits.assignee === null || typeof edits.assignee === "string") &&
+      (edits.reply_draft === null || typeof edits.reply_draft === "string")
+    ) {
+      const { content, status, assignee, reply_draft } = edits;
+      return { content, status, assignee, reply_draft };
+    }
+  } catch {
+    // Use the original sample when browser storage is unavailable.
+  }
+}
 const tone = (s: string) => (s === "답변 완료" ? "good" : s === "처리 중" ? "warn" : "bad") as "good" | "warn" | "bad";
 
 function InquiriesPage() {
@@ -32,9 +52,37 @@ function InquiriesPage() {
     const { error } = await supabase.from("inquiries").insert({ channel: n.channel, content: n.content.trim(), email: n.email.trim() || null }); if (error) throw new Error("등록하지 못했습니다."); },
     onSuccess: () => { setN({ ...n, content: "", email: "" }); qc.invalidateQueries({ queryKey: ["inq"] }); }, onError: (e) => toast.error((e as Error).message) });
   const [showSamples, setShowSamples] = useState(true);
+  const [sampleEdits, setSampleEdits] = useState<Record<string, SampleEdits>>({});
+
+  useEffect(() => {
+    const saved: Record<string, SampleEdits> = {};
+    for (const { id } of sampleCustomerInquiries) {
+      const edits = readSampleEdits(id);
+      if (edits) saved[id] = edits;
+    }
+    setSampleEdits(saved);
+  }, []);
+
+  function saveSample(id: string, edits: SampleEdits) {
+    try {
+      window.localStorage.setItem(sampleStorageKey(id), JSON.stringify(edits));
+    } catch {
+      toast.error("브라우저에 저장하지 못했습니다.");
+      return false;
+    }
+    setSampleEdits((previous) => ({ ...previous, [id]: edits }));
+    toast.success("가상 문의를 저장했습니다.");
+    return true;
+  }
+
+  const samples = showSamples
+    ? sampleCustomerInquiries
+        .map((q) => ({ ...q, ...sampleEdits[q.id] }))
+        .filter((q) => filter === "전체" || q.status === filter)
+    : [];
   const rows = [
     ...(list.data ?? []).map((inquiry) => ({ ...inquiry, sample: false as const })),
-    ...(showSamples ? sampleCustomerInquiries.filter((q) => filter === "전체" || q.status === filter) : []),
+    ...samples,
   ].sort((a, b) => Date.parse(b.received_at) - Date.parse(a.received_at));
   const cur = rows.find((x) => x.id === sel);
   return (
@@ -60,7 +108,7 @@ function InquiriesPage() {
           </form>
         </Panel>
         {cur ? (
-          cur.sample ? <SampleDetail q={cur} /> : <Detail key={cur.id} q={cur} />
+          cur.sample ? <SampleDetail key={cur.id} q={cur} onSave={saveSample} /> : <Detail key={cur.id} q={cur} />
         ) : (
           <Panel><p className="py-10 text-center text-muted-foreground">목록에서 문의를 선택하세요.</p></Panel>
         )}
@@ -85,9 +133,67 @@ function InquirySummary({ q }: { q: Inq }) {
   );
 }
 
-function SampleDetail({ q }: { q: Inq }) {
+function SampleDetail({ q, onSave }: { q: Inq; onSave: (id: string, edits: SampleEdits) => boolean }) {
+  const [draft, setDraft] = useState<SampleEdits | null>(null);
+  if (draft) {
+    return (
+      <Panel title="가상 문의 수정" accent="primary">
+        <form className="space-y-4" onSubmit={(event) => {
+          event.preventDefault();
+          const content = draft.content.trim();
+          if (!content) return;
+          if (onSave(q.id, {
+            content,
+            status: draft.status,
+            assignee: draft.assignee?.trim() || null,
+            reply_draft: draft.reply_draft?.trim() || null,
+          })) setDraft(null);
+        }}>
+          <div className="space-y-1">
+            <Label htmlFor="sample-inquiry-content">문의 내용</Label>
+            <Textarea id="sample-inquiry-content" required rows={4} value={draft.content}
+              onChange={(event) => setDraft({ ...draft, content: event.target.value })} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="sample-inquiry-status">처리 상태</Label>
+              <Select value={draft.status} onValueChange={(status) => setDraft({ ...draft, status })}>
+                <SelectTrigger id="sample-inquiry-status"><SelectValue /></SelectTrigger>
+                <SelectContent>{ST.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="sample-inquiry-assignee">담당자</Label>
+              <Input id="sample-inquiry-assignee" value={draft.assignee ?? ""}
+                onChange={(event) => setDraft({ ...draft, assignee: event.target.value })} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="sample-inquiry-reply">답변 예시</Label>
+            <Textarea id="sample-inquiry-reply" rows={4} value={draft.reply_draft ?? ""}
+              onChange={(event) => setDraft({ ...draft, reply_draft: event.target.value })} />
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={!draft.content.trim()}>저장</Button>
+            <Button type="button" variant="outline" onClick={() => setDraft(null)}>취소</Button>
+          </div>
+        </form>
+      </Panel>
+    );
+  }
+
   return (
-    <Panel title="가상 문의 상세" accent="primary" action={<StatusBadge label={q.status} tone={tone(q.status)} />}>
+    <Panel title="가상 문의 상세" accent="primary" action={
+      <div className="flex items-center gap-2">
+        <StatusBadge label={q.status} tone={tone(q.status)} />
+        <Button type="button" size="sm" variant="outline" onClick={() => setDraft({
+          content: q.content,
+          status: q.status,
+          assignee: q.assignee,
+          reply_draft: q.reply_draft,
+        })}>수정</Button>
+      </div>
+    }>
       <InquirySummary q={q} />
       <p className="mt-3 text-sm">담당자 <span className="ml-2">{q.assignee ?? "미지정"}</span></p>
       <div className="mt-4 space-y-1">
