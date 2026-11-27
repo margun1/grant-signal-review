@@ -2,12 +2,6 @@ import { Boxes, FileSearch, TrendingUp } from "lucide-react";
 
 export const productPages = [
   {
-    to: "/inventory",
-    label: "재고·발주",
-    icon: Boxes,
-    description: "상품 재고와 발주 현황",
-  },
-  {
     to: "/powerboard",
     label: "POWERBOARD",
     icon: TrendingUp,

@@ -48,8 +48,6 @@ const NAV = [
   { to: "/assistant", label: "AI 비서", icon: Bot },
   { to: "/dashboard", label: "경영현황", icon: LayoutDashboard },
   { to: "/support", label: "지원사업", icon: FileSearch },
-  { to: "/sales", label: "매출·상품", icon: TrendingUp },
-  { to: "/profit", label: "수익성", icon: Coins },
   { to: "/products", label: "우리회사제품", icon: Boxes },
   { to: "/checklist", label: "체크리스트", icon: ListChecks },
   { to: "/attendance", label: "출·퇴근 관리", icon: Clock },
@@ -64,6 +62,18 @@ const ADMIN_NAV = [
 ] as const;
 const ALL_NAV = [...NAV, ...ADMIN_NAV];
 const assistantPages = [{ to: "/reports", label: "AI 리포트", icon: FileText }] as const;
+
+const dashboardPages = [
+  { to: "/sales", label: "매출·상품", icon: TrendingUp },
+  { to: "/inventory", label: "재고·발주", icon: Boxes },
+  { to: "/profit", label: "수익성", icon: Coins },
+] as const;
+type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages)[number];
+const navGroups = new Map<NavItem["to"], readonly NavItem[]>([
+  ["/products", productPages],
+  ["/assistant", assistantPages],
+  ["/dashboard", dashboardPages],
+]);
 
 function NavGroup({ label, activeChild, link, children }: {
   label: string;
@@ -104,7 +114,7 @@ function NavLinks({
   activePath?: string;
   onNav: () => void;
 }) {
-  function renderLink(item: (typeof ALL_NAV)[number] | (typeof productPages)[number] | (typeof assistantPages)[number]) {
+  function renderLink(item: NavItem) {
     const active = activePath === item.to;
     return (
       <Link
@@ -126,8 +136,7 @@ function NavLinks({
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
       {items.map((item) => {
-        const children = item.to === "/products" ? productPages
-          : item.to === "/assistant" ? assistantPages : null;
+        const children = navGroups.get(item.to);
         if (!children) return renderLink(item);
         return (
           <NavGroup key={item.to} label={item.label} link={renderLink(item)}
@@ -178,7 +187,7 @@ export function AppShell() {
     );
 
   const items = me.isAdmin ? ALL_NAV : NAV;
-  const currentPage = [...items, ...productPages, ...assistantPages].find(({ to }) => path === to || path.startsWith(`${to}/`));
+  const currentPage = [...items, ...[...navGroups.values()].flat()].find(({ to }) => path === to || path.startsWith(`${to}/`));
   const side = (
     <div className="flex min-h-full flex-col gap-6 p-4">
       <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">

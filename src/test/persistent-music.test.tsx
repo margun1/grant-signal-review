@@ -90,7 +90,7 @@ it("puts every compact-menu link and sign-out inside the scrollable drawer", () 
   expect(within(scrollArea).getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
 });
 
-it("expands product links with inventory first in the compact navigation", () => {
+it("expands the product links in the compact navigation", () => {
   location.pathname = "/company";
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -108,13 +108,12 @@ it("expands product links with inventory first in the compact navigation", () =>
   expect(toggle).toHaveAttribute("aria-expanded", "true");
   const links = menu.getAllByRole("link").map((link) => link.getAttribute("href"));
   const productIndex = links.indexOf("/products");
-  expect(links.slice(productIndex + 1, productIndex + 5)).toEqual([
-    "/inventory", "/powerboard", "/drone", "/competitors",
-  ]);
-  expect(menu.getByRole("link", { name: "POWERBOARD" })).toHaveAttribute(
-    "href",
+  expect(links.slice(productIndex + 1, productIndex + 4)).toEqual([
     "/powerboard",
-  );
+    "/drone",
+    "/competitors",
+  ]);
+  expect(menu.getByRole("link", { name: "POWERBOARD" })).toHaveAttribute("href", "/powerboard");
   expect(menu.getByRole("link", { name: "드론" })).toHaveAttribute("href", "/drone");
   expect(menu.getByRole("link", { name: "경쟁제품" })).toHaveAttribute("href", "/competitors");
 
@@ -144,4 +143,25 @@ it("opens AI report under the AI secretary without opening the products group", 
 
   fireEvent.click(toggle);
   expect(menu.queryByRole("link", { name: "AI 리포트" })).toBeNull();
+});
+
+it("expands sales, inventory and profitability in order under the dashboard", () => {
+  location.pathname = "/company";
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AppShell />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+  const menu = within(screen.getByRole("dialog", { name: "메뉴" }));
+  expect(menu.queryByRole("link", { name: "매출·상품" })).toBeNull();
+  const toggle = menu.getByRole("button", { name: "경영현황 하위 메뉴" });
+  fireEvent.click(toggle);
+  const links = menu.getAllByRole("link").map((link) => link.getAttribute("href"));
+  const dashboardIndex = links.indexOf("/dashboard");
+  expect(links.slice(dashboardIndex + 1, dashboardIndex + 4)).toEqual([
+    "/sales",
+    "/inventory",
+    "/profit",
+  ]);
 });
