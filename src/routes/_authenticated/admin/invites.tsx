@@ -29,6 +29,18 @@ const INVITE_ROLES = {
 } as const satisfies Record<string, { label: string; role: Role | null }>;
 
 type InviteRole = keyof typeof INVITE_ROLES;
+const inviteRoleOptions = Object.entries(INVITE_ROLES);
+const labelForRole: Record<Role, InviteRole> = {
+  admin: "ceo",
+  manager: "director",
+  staff: "employee",
+};
+
+function InviteRoleOptions() {
+  return inviteRoleOptions.map(([value, { label }]) => (
+    <SelectItem key={value} value={value}>{label}</SelectItem>
+  ));
+}
 
 function Invites() {
   const { me } = useMe();
@@ -46,7 +58,7 @@ function Invites() {
   const invite = useMutation({
     mutationFn: async () => {
       const role = INVITE_ROLES[inviteRole].role;
-      if (!role) throw new Error("게스트 초대에는 별도 권한 설정이 필요합니다.");
+      if (!role) throw new Error("게스트를 저장하려면 Lovable에서 별도 게스트 권한을 설정해야 합니다.");
       const { error } = await supabase.from("invitations").insert({
         email: email.trim().toLowerCase(),
         role,
@@ -58,7 +70,9 @@ function Invites() {
     onError: (e) => toast.error((e as Error).message),
   });
   const changeInviteRole = useMutation({
-    mutationFn: async ({ id, role }: { id: string; role: Role }) => {
+    mutationFn: async ({ id, choice }: { id: string; choice: InviteRole }) => {
+      const role = INVITE_ROLES[choice].role;
+      if (!role) throw new Error("게스트를 저장하려면 Lovable에서 별도 게스트 권한을 설정해야 합니다.");
       const { data: invitation, error } = await supabase.from("invitations")
         .select("id,email,accepted_at,role").eq("id", id).single();
       if (error || !invitation) throw new Error("초대 정보를 다시 불러오지 못했습니다.");
@@ -131,27 +145,25 @@ function Invites() {
             <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as InviteRole)}>
               <SelectTrigger id="invite-role" className="w-36 bg-card"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.entries(INVITE_ROLES).map(([value, option]) => (
-                  <SelectItem key={value} value={value} disabled={option.role === null}>{option.label}</SelectItem>
-                ))}
+                <InviteRoleOptions />
               </SelectContent>
             </Select>
           </div>
           <Button type="submit" disabled={invite.isPending}>초대</Button>
         </form>
         <p className="mt-2 text-xs text-muted-foreground">
-          초대 목록에는 부여된 권한이 표시됩니다. 대표이사는 관리자, 실장은 실장, 팀장·사원·근로학생은 직원 권한으로 등록됩니다. 게스트 초대에는 별도 권한 설정이 필요합니다.
+          대표이사는 관리자 권한, 실장은 실장 권한으로 등록됩니다. 팀장·사원·근로학생은 같은 직원 권한이며 목록에서 사원으로 표시됩니다. 게스트를 저장하려면 Lovable에서 별도 게스트 권한을 설정해야 합니다.
         </p>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-secondary text-left"><tr><th className="p-2">이메일</th><th className="p-2">역할</th><th className="p-2">상태</th><th className="p-2">초대일</th><th className="p-2"></th></tr></thead>
             <tbody>{(invites.data ?? []).map((i) => (
               <tr key={i.id} className="border-t"><td className="p-2">{i.email}</td><td className="p-2">
-                <Select value={i.role} disabled={changeInviteRole.isPending}
-                  onValueChange={(value) => changeInviteRole.mutate({ id: i.id, role: value as Role })}>
+                <Select value={labelForRole[i.role]} disabled={changeInviteRole.isPending}
+                  onValueChange={(value) => changeInviteRole.mutate({ id: i.id, choice: value as InviteRole })}>
                   <SelectTrigger aria-label={`${i.email} 역할`} className="h-8 w-28 bg-card"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {ROLES.map((role) => <SelectItem key={role} value={role}>{ROLE_LABEL[role]}</SelectItem>)}
+                    <InviteRoleOptions />
                   </SelectContent>
                 </Select>
               </td>
