@@ -50,7 +50,7 @@ function DronePage() {
                 size="sm"
                 variant={selectedCategory === category ? "default" : "outline"}
                 aria-pressed={selectedCategory === category}
-                className="h-auto min-h-8 whitespace-normal text-left"
+                className="h-auto min-h-11 whitespace-normal px-4 text-left text-sm"
                 onClick={() => {
                   setSelectedCategory(category);
                   setQuery("");
