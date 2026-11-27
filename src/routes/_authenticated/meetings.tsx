@@ -49,6 +49,18 @@ const scheduleTypes = {
 };
 type ScheduleType = keyof typeof scheduleTypes;
 const calendarTypes = Object.keys(scheduleTypes) as ScheduleType[];
+const scheduleEmojis = [
+  ["🤝", "미팅"],
+  ["📋", "업무"],
+  ["📌", "중요"],
+  ["⏰", "마감"],
+  ["📞", "전화"],
+  ["💻", "화상회의"],
+  ["🚗", "이동"],
+  ["🏫", "교육"],
+  ["🎉", "행사"],
+  ["☕", "휴식"],
+] as const;
 type CalendarEntry = { label: string; type: ScheduleType; edit?: CalendarEdit | undefined };
 
 function MeetingsPage() {
@@ -147,12 +159,14 @@ function MeetingsPage() {
   const confirm = useMutation({ mutationFn: (id: string) => confirmFn({ data: { id } }), onSuccess: (r) => { if (r.calendar) toast.success("확정하고 구글 캘린더에 등록했습니다."); else toast.warning("확정했지만 구글 캘린더 등록에 실패했습니다. 표에서 다시 시도해 주세요."); qc.invalidateQueries(); }, onError: (e) => toast.error((e as Error).message) });
   const retry = useMutation({ mutationFn: (id: string) => syncFn({ data: { id } }), onSuccess: (r) => { r.ok ? toast.success("구글 캘린더에 등록했습니다.") : toast.error(r.error ?? "등록하지 못했습니다."); qc.invalidateQueries(); } });
   const cancel = useMutation({ mutationFn: async (id: string) => { await supabase.from("meetings").update({ status: "취소" }).eq("id", id); }, onSuccess: () => qc.invalidateQueries() });
-  const [draft, setDraft] = useState({ type: "internal" as ScheduleType, title: "", date: today, from: "10:00", to: "11:00", url: "" });
+  const [draft, setDraft] = useState({ type: "internal" as ScheduleType, title: "", emoji: "none", date: today, from: "10:00", to: "11:00", url: "" });
   const createGoogle = useServerFn(addGoogleCalendarEvent);
   const addSchedule = useMutation({
     mutationFn: async (schedule: typeof draft) => {
-      const title = schedule.title.trim();
-      if (!title) throw new Error("일정 제목을 입력해 주세요.");
+      const text = schedule.title.trim();
+      if (!text) throw new Error("일정 제목을 입력해 주세요.");
+      const title = schedule.emoji === "none" ? text : `${schedule.emoji} ${text}`;
+      if (title.length > 250) throw new Error("이모티콘을 포함한 일정 제목은 250자 이하여야 합니다.");
       if (schedule.type === "deadline") {
         let url = schedule.url.trim();
         if (url) {
@@ -188,7 +202,7 @@ function MeetingsPage() {
     },
     onSuccess: (_, schedule) => {
       setMonth(schedule.date.slice(0, 7));
-      setDraft((current) => ({ ...current, title: "", url: "" }));
+      setDraft((current) => ({ ...current, title: "", emoji: "none", url: "" }));
       void refreshCalendar();
       toast.success("일정을 추가했습니다.");
     },
@@ -264,6 +278,21 @@ function MeetingsPage() {
             ))}
           </ul>
           <fieldset disabled={addSchedule.isPending} className="flex flex-wrap items-end gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="schedule-emoji">이모티콘</Label>
+              <Select value={draft.emoji} disabled={addSchedule.isPending}
+                onValueChange={(emoji) => setDraft({ ...draft, emoji })}>
+                <SelectTrigger id="schedule-emoji" className="w-32 bg-card">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">없음</SelectItem>
+                  {scheduleEmojis.map(([emoji, label]) => (
+                    <SelectItem key={emoji} value={emoji}>{emoji} {label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="min-w-48 flex-1 space-y-2">
               <Label htmlFor="schedule-title">일정 제목</Label>
               <Input id="schedule-title" required maxLength={250} value={draft.title}
