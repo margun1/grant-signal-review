@@ -95,8 +95,6 @@ function ChecklistPage() {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [showDone, setShowDone] = useState(false);
-  const [taskId, setTaskId] = useState("");
-  const [templateId, setTemplateId] = useState("");
   const tasks = useQuery({ queryKey: ["tasks", showDone], queryFn: async () => {
     let q = supabase.from("tasks").select("*").order("due_date", { ascending: true, nullsFirst: false }).order("created_at");
     if (!showDone) q = q.eq("done", false);
@@ -118,38 +116,31 @@ function ChecklistPage() {
 
   const taskRows = tasks.data ?? [];
   const templateRows = tpls.data ?? [];
-  const task = taskRows.find(({ id }) => id === taskId);
-  const template = templateRows.find(({ id }) => id === templateId);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title="체크리스트" desc="반복 항목은 지정한 날 처음 화면을 열 때 한 번만 만들어집니다." />
       <Panel title="할 일" accent="primary" action={<label className="flex items-center gap-2 text-sm"><Checkbox checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />완료 항목도 보기</label>}>
-        <Label htmlFor="checklist-task-select" className="mb-1.5 block">항목</Label>
-        <Select value={task?.id ?? ""} onValueChange={(value) => value === "add" ? setTaskDialogOpen(true) : setTaskId(value)}>
-          <SelectTrigger id="checklist-task-select" className="w-full bg-card text-left" aria-label="할 일 선택">
-            <SelectValue placeholder="할 일을 선택하세요" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            {taskRows.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                {item.title}{item.done ? " · 완료" : ""}
-              </SelectItem>
-            ))}
-            <SelectItem value="add" className="mt-1 border-t font-semibold text-primary"><Plus aria-hidden="true" className="mr-2 inline size-4" />할 일 추가</SelectItem>
-          </SelectContent>
-        </Select>
-        {task && (
-          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border p-3">
-            <p className="basis-full break-words text-sm font-semibold">{task.title}</p>
-            <label className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-              <Checkbox checked={task.done} onCheckedChange={(value) => toggle.mutate({ id: task.id, done: !!value })} />
-              {task.done ? "완료됨" : "완료로 표시"}
-            </label>
-            {task.template_id && <span className="text-xs text-muted-foreground">반복</span>}
-            <AssigneeSelect value={task.assignee} onChange={(a) => setAssignee.mutate({ id: task.id, a })} className="w-36 h-8" />
-          </div>
-        )}
+        <ul className="divide-y" aria-label="할 일 항목">
+          {taskRows.map((task) => (
+            <li key={task.id} className="flex flex-wrap items-center gap-3 py-2">
+              <label className="flex min-w-0 flex-1 items-center gap-3 text-sm">
+                <Checkbox className="shrink-0" checked={task.done} aria-label={`${task.title} 완료`}
+                  onCheckedChange={(value) => toggle.mutate({ id: task.id, done: value === true })} />
+                <span className={task.done ? "break-words text-muted-foreground line-through" : "break-words"}>
+                  {task.title}
+                  {task.template_id && <span className="ml-2 text-xs text-muted-foreground">반복</span>}
+                </span>
+              </label>
+              <AssigneeSelect value={task.assignee} onChange={(a) => setAssignee.mutate({ id: task.id, a })}
+                label={`${task.title} 담당자`} className="ml-auto h-8 w-36" />
+            </li>
+          ))}
+          {!taskRows.length && <li className="py-2 text-sm text-muted-foreground">{tasks.isPending ? "불러오는 중…" : "할 일이 없습니다."}</li>}
+        </ul>
+        <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setTaskDialogOpen(true)}>
+          <Plus aria-hidden="true" />할 일 추가
+        </Button>
         <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
           <DialogContent aria-describedby={undefined} className="max-h-[85dvh] overflow-y-auto">
             <DialogTitle>할 일 추가</DialogTitle>
@@ -165,28 +156,26 @@ function ChecklistPage() {
         </Dialog>
       </Panel>
       <Panel title="반복 체크리스트 설정">
-        <Label htmlFor="checklist-template-select" className="mb-1.5 block">항목</Label>
-        <Select value={template?.id ?? ""} onValueChange={(value) => value === "add" ? setTemplateDialogOpen(true) : setTemplateId(value)}>
-          <SelectTrigger id="checklist-template-select" className="w-full bg-card text-left" aria-label="반복 체크리스트 항목 선택">
-            <SelectValue placeholder="반복 항목을 선택하세요" />
-          </SelectTrigger>
-          <SelectContent position="popper">
-            {templateRows.map((item) => (
-              <SelectItem key={item.id} value={item.id}>{item.title}{item.active ? "" : " · 중지됨"}</SelectItem>
-            ))}
-            <SelectItem value="add" className="mt-1 border-t font-semibold text-primary"><Plus aria-hidden="true" className="mr-2 inline size-4" />반복 항목 추가</SelectItem>
-          </SelectContent>
-        </Select>
-        {template && (
-          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border p-3 text-sm">
-            <p className="basis-full break-words text-sm font-semibold">{template.title}</p>
-            <span>{template.frequency}{template.frequency === "매주" && template.weekday !== null ? ` ${DOW[template.weekday]}요일` : ""}</span>
-            <span className="min-w-0 flex-1 truncate">{nameOf(template.assignee)}</span>
-            <Button size="sm" variant="outline" onClick={() => toggleTpl.mutate({ id: template.id, active: !template.active })}>
-              {template.active ? "중지" : "다시 사용"}
-            </Button>
-          </div>
-        )}
+        <ul className="divide-y" aria-label="반복 체크리스트 항목">
+          {templateRows.map((template) => (
+            <li key={template.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
+              <label className="flex min-w-0 flex-1 items-center gap-3">
+                <Checkbox className="shrink-0" checked={template.active} aria-label={`${template.title} 반복 사용`}
+                  onCheckedChange={(value) => toggleTpl.mutate({ id: template.id, active: value === true })} />
+                <span className={template.active ? "break-words" : "break-words text-muted-foreground"}>{template.title}</span>
+              </label>
+              <span className="text-muted-foreground">
+                {template.frequency}{template.frequency === "매주" && template.weekday !== null ? ` ${DOW[template.weekday]}요일` : ""}
+                {!template.active && " · 중지됨"}
+              </span>
+              <span className="max-w-32 truncate">{nameOf(template.assignee)}</span>
+            </li>
+          ))}
+          {!templateRows.length && <li className="py-2 text-sm text-muted-foreground">{tpls.isPending ? "불러오는 중…" : "반복 항목이 없습니다."}</li>}
+        </ul>
+        <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setTemplateDialogOpen(true)}>
+          <Plus aria-hidden="true" />반복 항목 추가
+        </Button>
         <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
           <DialogContent aria-describedby={undefined} className="max-h-[85dvh] overflow-y-auto">
             <DialogTitle>반복 항목 추가</DialogTitle>
