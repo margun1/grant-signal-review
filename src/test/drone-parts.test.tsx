@@ -15,6 +15,12 @@ it("filters the sample parts by classification and name and restores all rows wh
   expect(screen.getByRole("status")).toHaveTextContent("전체 40개 중 1개 표시");
   expect(screen.getByRole("rowheader", { name: "4채널 모터 제어기(ESC)" })).toBeInTheDocument();
 
+  fireEvent.change(search, { target: { value: "상 부프레임" } });
+  fireEvent.click(screen.getByRole("button", { name: "검색" }));
+  expect(screen.getByRole("status")).toHaveFocus();
+  expect(screen.getByRole("status")).toHaveTextContent("전체 40개 중 1개 표시");
+  expect(screen.getByRole("rowheader", { name: "상부 프레임" })).toBeInTheDocument();
+
   fireEvent.change(search, { target: { value: "없는 부품" } });
   expect(screen.getByText("검색어와 일치하는 부품이 없습니다.")).toBeInTheDocument();
 

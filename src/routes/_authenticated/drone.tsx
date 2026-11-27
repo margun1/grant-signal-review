@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { PageHeader, Panel } from "@/components/app/ui";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { won } from "@/lib/biz";
@@ -14,10 +15,12 @@ export const Route = createFileRoute("/_authenticated/drone")({
 
 function DronePage() {
   const [query, setQuery] = useState("");
+  const results = useRef<HTMLParagraphElement>(null);
   const keywords = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const compactQuery = keywords.join("");
   const parts = sampleDroneParts.filter(([, category, name]) => {
-    const text = `${category} ${name}`.toLowerCase();
-    return keywords.every((keyword) => text.includes(keyword));
+    const text = `${category} ${name}`.toLowerCase().replace(/\s+/g, "");
+    return text.includes(compactQuery) || keywords.every((keyword) => text.includes(keyword));
   });
 
   return (
@@ -32,24 +35,34 @@ function DronePage() {
           </p>
         </div>
 
-        <div className="mt-4 max-w-md space-y-2">
+        <form
+          role="search"
+          className="mt-4 max-w-md space-y-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            results.current?.focus();
+          }}
+        >
           <Label htmlFor="drone-parts-search">부품 찾기</Label>
-          <div className="relative">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              id="drone-parts-search"
-              type="search"
-              placeholder="부품명 또는 분류 (예: 모터, 카메라, ESC)"
-              className="pl-9"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                id="drone-parts-search"
+                type="search"
+                placeholder="부품명 또는 분류 (예: 모터, 카메라, ESC)"
+                className="pl-9"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+            <Button type="submit">검색</Button>
           </div>
-        </div>
-        <p role="status" className="mt-3 text-sm text-muted-foreground">
+        </form>
+        <p ref={results} role="status" tabIndex={-1} className="mt-3 text-sm text-muted-foreground">
           전체 {sampleDroneParts.length}개 중 {parts.length}개 표시
         </p>
 
