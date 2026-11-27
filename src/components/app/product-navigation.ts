@@ -17,7 +17,7 @@ export const productPages = [
     to: "/competitors",
     label: "경쟁제품",
     icon: FileSearch,
-    description: "ESCO 공개 자료 기반 유사 업체·제품 비교",
+    description: "시연용 가상 유사업체 제품 검색",
   },
   {
     to: "/devices",
