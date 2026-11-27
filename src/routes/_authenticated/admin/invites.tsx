@@ -40,6 +40,20 @@ const labelForRole: Record<Role, InviteRole> = {
   staff: "employee",
 };
 
+const inviteLabelsKey = "enerinfra:invitation-role-labels:v1";
+
+function readInviteLabels(): Record<string, InviteRole> {
+  try {
+    const labels: unknown = JSON.parse(window.localStorage.getItem(inviteLabelsKey) ?? "{}");
+    if (!labels || typeof labels !== "object" || Array.isArray(labels)) return {};
+    return Object.fromEntries(Object.entries(labels).filter(([, choice]) =>
+      typeof choice === "string" && Object.hasOwn(INVITE_ROLES, choice),
+    ));
+  } catch {
+    return {};
+  }
+}
+
 function InviteRoleOptions() {
   return inviteRoleOptions.map(([value, { label }]) => (
     <SelectItem key={value} value={value}>{label}</SelectItem>
@@ -50,6 +64,7 @@ function Invites() {
   const { me } = useMe();
   const qc = useQueryClient();
   const [inviteToDelete, setInviteToDelete] = useState<{ id: string; email: string } | null>(null);
+  const [inviteLabels, setInviteLabels] = useState(readInviteLabels);
   const [email, setEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<InviteRole>("employee");
   const invites = useQuery({ queryKey: ["invites"], enabled: !!me?.isAdmin, queryFn: async () => (await supabase.from("invitations").select("*").order("created_at", { ascending: false })).data ?? [] });
@@ -112,7 +127,22 @@ function Invites() {
       const { data: updated, error: updateError } = await update.select("id").maybeSingle();
       if (updateError || !updated) throw new Error("초대 역할을 저장하지 못했습니다. 목록을 확인하고 다시 시도해 주세요.");
     },
-    onSuccess: () => toast.success("역할을 변경했습니다."),
+    onSuccess: (_, { id, choice }) => {
+      const role = INVITE_ROLES[choice].role;
+      if (!role) return;
+
+      const labels = { ...inviteLabels, ...readInviteLabels(), [id]: choice };
+      setInviteLabels(labels);
+      try {
+        window.localStorage.setItem(inviteLabelsKey, JSON.stringify(labels));
+      } catch {
+        // Keep the display label in memory when storage is unavailable.
+      }
+      qc.setQueryData<typeof invites.data>(["invites"], (rows) =>
+        rows?.map((row) => row.id === id ? { ...row, role } : row),
+      );
+      toast.success("역할을 변경했습니다.");
+    },
     onError: (error) => toast.error(error.message),
     onSettled: async () => {
       await Promise.all([
@@ -121,6 +151,14 @@ function Invites() {
       ]);
     },
   });
+  function displayedInviteRole(id: string, role: Role) {
+    if (changeInviteRole.isPending && changeInviteRole.variables.id === id) {
+      return changeInviteRole.variables.choice;
+    }
+    const choice = inviteLabels[id];
+    return choice && INVITE_ROLES[choice].role === role ? choice : labelForRole[role];
+  }
+
   const deleteInvite = useMutation({
     mutationFn: async (id: string) => {
       const { data, error } = await supabase.from("invitations").delete().eq("id", id).select("id").maybeSingle();
@@ -169,14 +207,14 @@ function Invites() {
           <Button type="submit" disabled={invite.isPending}>초대</Button>
         </form>
         <p className="mt-2 text-xs text-muted-foreground">
-          대표이사는 관리자 권한, 실장은 실장 권한으로 등록됩니다. 팀장·사원·근로학생은 같은 직원 권한이며 목록에서 사원으로 표시됩니다. 게스트를 저장하려면 Lovable에서 별도 게스트 권한을 설정해야 합니다.
+          대표이사는 관리자 권한, 실장은 실장 권한으로 등록됩니다. 팀장·사원·근로학생은 같은 직원 권한이며, 선택한 표시 이름은 이 브라우저에 저장됩니다. 게스트를 저장하려면 Lovable에서 별도 게스트 권한을 설정해야 합니다.
         </p>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-secondary text-left"><tr><th className="p-2">이메일</th><th className="p-2">역할</th><th className="p-2">상태</th><th className="p-2">초대일</th><th className="p-2"></th></tr></thead>
             <tbody>{(invites.data ?? []).map((i) => (
               <tr key={i.id} className="border-t"><td className="p-2">{i.email}</td><td className="p-2">
-                <Select value={labelForRole[i.role]} disabled={changeInviteRole.isPending}
+                <Select value={displayedInviteRole(i.id, i.role)} disabled={changeInviteRole.isPending}
                   onValueChange={(value) => changeInviteRole.mutate({ id: i.id, choice: value as InviteRole })}>
                   <SelectTrigger aria-label={`${i.email} 역할`} className="h-8 w-28 bg-card"><SelectValue /></SelectTrigger>
                   <SelectContent>
