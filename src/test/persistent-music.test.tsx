@@ -145,7 +145,7 @@ it("opens AI report under the AI secretary without opening the products group", 
   expect(menu.queryByRole("link", { name: "AI 리포트" })).toBeNull();
 });
 
-it("expands sales, inventory and profitability in order under the dashboard", () => {
+it("places meetings above the dashboard and expands its submenu in order", () => {
   location.pathname = "/company";
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -155,13 +155,16 @@ it("expands sales, inventory and profitability in order under the dashboard", ()
   fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
   const menu = within(screen.getByRole("dialog", { name: "메뉴" }));
   expect(menu.queryByRole("link", { name: "매출·상품" })).toBeNull();
+  expect(menu.queryByRole("link", { name: "체크리스트" })).toBeNull();
   const toggle = menu.getByRole("button", { name: "경영현황 하위 메뉴" });
   fireEvent.click(toggle);
   const links = menu.getAllByRole("link").map((link) => link.getAttribute("href"));
   const dashboardIndex = links.indexOf("/dashboard");
-  expect(links.slice(dashboardIndex + 1, dashboardIndex + 4)).toEqual([
+  expect(links[dashboardIndex - 1]).toBe("/meetings");
+  expect(links.slice(dashboardIndex + 1, dashboardIndex + 5)).toEqual([
     "/sales",
     "/inventory",
     "/profit",
+    "/checklist",
   ]);
 });

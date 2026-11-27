@@ -46,14 +46,13 @@ function AppBrand() {
 const NAV = [
   { to: "/company", label: "회사소개", icon: FileText },
   { to: "/assistant", label: "AI 비서", icon: Bot },
+  { to: "/meetings", label: "미팅·일정", icon: CalendarDays },
   { to: "/dashboard", label: "경영현황", icon: LayoutDashboard },
   { to: "/support", label: "지원사업", icon: FileSearch },
   { to: "/products", label: "우리회사제품", icon: Boxes },
-  { to: "/checklist", label: "체크리스트", icon: ListChecks },
   { to: "/attendance", label: "출·퇴근 관리", icon: Clock },
   { to: "/inquiries", label: "고객문의", icon: MessageSquare },
   { to: "/devices", label: "기기오류", icon: Wrench },
-  { to: "/meetings", label: "미팅·일정", icon: CalendarDays },
 ] as const;
 
 const ADMIN_NAV = [
@@ -67,6 +66,7 @@ const dashboardPages = [
   { to: "/sales", label: "매출·상품", icon: TrendingUp },
   { to: "/inventory", label: "재고·발주", icon: Boxes },
   { to: "/profit", label: "수익성", icon: Coins },
+  { to: "/checklist", label: "체크리스트", icon: ListChecks },
 ] as const;
 type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages)[number];
 const navGroups = new Map<NavItem["to"], readonly NavItem[]>([
