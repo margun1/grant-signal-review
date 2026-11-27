@@ -16,7 +16,8 @@ export const Route = createFileRoute("/_authenticated/admin/invites")({
   component: Invites,
 });
 
-type Role = "admin" | "manager" | "staff";
+const ROLES = ["admin", "manager", "staff"] as const;
+type Role = (typeof ROLES)[number];
 const ROLE_LABEL: Record<Role, string> = { admin: "관리자", manager: "실장", staff: "직원" };
 const INVITE_ROLES = {
   ceo: { label: "대표이사", role: "admin" },
@@ -55,6 +56,51 @@ function Invites() {
     },
     onSuccess: () => { toast.success("초대했습니다. 직원에게 회원가입 화면에서 이 이메일로 가입하도록 안내해 주세요."); setEmail(""); qc.invalidateQueries({ queryKey: ["invites"] }); },
     onError: (e) => toast.error((e as Error).message),
+  });
+  const changeInviteRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: Role }) => {
+      const { data: invitation, error } = await supabase.from("invitations")
+        .select("id,email,accepted_at,role").eq("id", id).single();
+      if (error || !invitation) throw new Error("초대 정보를 다시 불러오지 못했습니다.");
+
+      if (invitation.accepted_at) {
+        const { data: profile, error: profileError } = await supabase.from("profiles")
+          .select("id").eq("email", invitation.email).maybeSingle();
+        if (profileError || !profile) throw new Error("가입한 계정을 찾지 못했습니다.");
+        if (profile.id === me?.profile?.id) throw new Error("내 계정의 역할은 이 목록에서 바꿀 수 없습니다.");
+
+        const { data: existing, error: roleError } = await supabase.from("user_roles")
+          .select("role").eq("user_id", profile.id);
+        if (roleError) throw new Error("가입한 계정의 현재 권한을 확인하지 못했습니다.");
+
+        const desired: readonly Role[] = role === "admin" ? ["admin", "manager"] : [role];
+        const assigned = new Set(existing.map(({ role }) => role));
+        const changes = [
+          ...ROLES.filter((value) => assigned.has(value) && !desired.includes(value))
+            .map((value) => ({ value, enabled: false })),
+          ...desired.filter((value) => !assigned.has(value)).map((value) => ({ value, enabled: true })),
+        ];
+        for (const { value, enabled } of changes) {
+          const { error: changeError } = await supabase.rpc("set_user_role", {
+            _user_id: profile.id, _role: value, _enabled: enabled,
+          });
+          if (changeError) throw new Error("계정 권한 변경을 완료하지 못했습니다. 현재 권한을 확인하고 다시 시도해 주세요.");
+        }
+      }
+
+      let update = supabase.from("invitations").update({ role }).eq("id", id).eq("role", invitation.role);
+      update = invitation.accepted_at ? update.eq("accepted_at", invitation.accepted_at) : update.is("accepted_at", null);
+      const { data: updated, error: updateError } = await update.select("id").maybeSingle();
+      if (updateError || !updated) throw new Error("초대 역할을 저장하지 못했습니다. 목록을 확인하고 다시 시도해 주세요.");
+    },
+    onSuccess: () => toast.success("역할을 변경했습니다."),
+    onError: (error) => toast.error(error.message),
+    onSettled: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["invites"] }),
+        qc.invalidateQueries({ queryKey: ["people"] }),
+      ]);
+    },
   });
   const revoke = useMutation({
     mutationFn: async (id: string) => { await supabase.from("invitations").update({ revoked: true }).eq("id", id); },
@@ -100,7 +146,15 @@ function Invites() {
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-secondary text-left"><tr><th className="p-2">이메일</th><th className="p-2">역할</th><th className="p-2">상태</th><th className="p-2">초대일</th><th className="p-2"></th></tr></thead>
             <tbody>{(invites.data ?? []).map((i) => (
-              <tr key={i.id} className="border-t"><td className="p-2">{i.email}</td><td className="p-2">{ROLE_LABEL[i.role as Role]}</td>
+              <tr key={i.id} className="border-t"><td className="p-2">{i.email}</td><td className="p-2">
+                <Select value={i.role} disabled={changeInviteRole.isPending}
+                  onValueChange={(value) => changeInviteRole.mutate({ id: i.id, role: value as Role })}>
+                  <SelectTrigger aria-label={`${i.email} 역할`} className="h-8 w-28 bg-card"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map((role) => <SelectItem key={role} value={role}>{ROLE_LABEL[role]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </td>
                 <td className="p-2"><StatusBadge label={i.revoked ? "취소됨" : i.accepted_at ? "가입 완료" : "가입 대기"} tone={i.revoked ? "bad" : i.accepted_at ? "good" : "warn"} /></td>
                 <td className="p-2">{kst(i.created_at)}</td>
                 <td className="p-2 text-right">{!i.revoked && !i.accepted_at && <Button size="sm" variant="outline" onClick={() => revoke.mutate(i.id)}>초대 취소</Button>}</td></tr>
