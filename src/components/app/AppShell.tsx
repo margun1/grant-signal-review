@@ -53,7 +53,7 @@ const NAV = [
   { to: "/drone", label: "드론", icon: Boxes },
   { to: "/competitors", label: "경쟁제품", icon: FileSearch },
   { to: "/checklist", label: "체크리스트", icon: ListChecks },
-  { to: "/attendance", label: "출퇴근", icon: Clock },
+  { to: "/attendance", label: "출·퇴근 관리", icon: Clock },
   { to: "/inquiries", label: "고객문의", icon: MessageSquare },
   { to: "/devices", label: "기기오류", icon: Wrench },
   { to: "/meetings", label: "미팅·일정", icon: CalendarDays },

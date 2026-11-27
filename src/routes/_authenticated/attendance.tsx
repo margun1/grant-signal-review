@@ -13,7 +13,7 @@ import { PageHeader, Panel, StatusBadge, todayKst } from "@/components/app/ui";
 import { RangePicker, exportXlsx, presetRange, type Range } from "@/components/app/data";
 
 export const Route = createFileRoute("/_authenticated/attendance")({
-  head: () => ({ meta: [{ title: "출퇴근 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "출근·퇴근 기록과 수정 요청" }] }),
+  head: () => ({ meta: [{ title: "출·퇴근 관리 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "출근·퇴근 기록과 수정 요청" }] }),
   component: AttendancePage,
 });
 
@@ -44,7 +44,7 @@ function AttendancePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader title="출퇴근" desc="서버 시각으로 기록하고 한국 시간으로 표시합니다. 버튼을 여러 번 눌러도 처음 기록만 남습니다." />
+      <PageHeader title="출·퇴근 관리" desc="서버 시각으로 기록하고 한국 시간으로 표시합니다. 버튼을 여러 번 눌러도 처음 기록만 남습니다." />
       <Panel title={`오늘 (${today})`} accent="primary">
         <div className="grid gap-3 sm:grid-cols-2">
           <Button size="lg" className="h-16 text-lg" disabled={!!mine?.check_in || clock.isPending} onClick={() => clock.mutate("in")}><LogIn className="size-5" />출근 {t(mine?.check_in ?? null) ?? ""}</Button>
