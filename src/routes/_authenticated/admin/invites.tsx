@@ -23,8 +23,9 @@ const INVITE_ROLES = {
   director: { label: "실장", role: "manager" },
   teamLead: { label: "팀장", role: "staff" },
   employee: { label: "사원", role: "staff" },
+  guest: { label: "게스트", role: null },
   studentWorker: { label: "근로학생", role: "staff" },
-} as const satisfies Record<string, { label: string; role: Role }>;
+} as const satisfies Record<string, { label: string; role: Role | null }>;
 
 type InviteRole = keyof typeof INVITE_ROLES;
 
@@ -43,9 +44,11 @@ function Invites() {
   });
   const invite = useMutation({
     mutationFn: async () => {
+      const role = INVITE_ROLES[inviteRole].role;
+      if (!role) throw new Error("게스트 초대에는 별도 권한 설정이 필요합니다.");
       const { error } = await supabase.from("invitations").insert({
         email: email.trim().toLowerCase(),
-        role: INVITE_ROLES[inviteRole].role,
+        role,
         invited_by: me?.profile?.id ?? null,
       });
       if (error) throw new Error(error.message.includes("duplicate") ? "이미 초대한 이메일입니다." : "초대하지 못했습니다.");
@@ -83,7 +86,7 @@ function Invites() {
               <SelectTrigger id="invite-role" className="w-36 bg-card"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(INVITE_ROLES).map(([value, option]) => (
-                  <SelectItem key={value} value={value}>{option.label}</SelectItem>
+                  <SelectItem key={value} value={value} disabled={option.role === null}>{option.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -91,7 +94,7 @@ function Invites() {
           <Button type="submit" disabled={invite.isPending}>초대</Button>
         </form>
         <p className="mt-2 text-xs text-muted-foreground">
-          초대 목록에는 부여된 권한이 표시됩니다. 대표이사는 관리자, 실장은 실장, 팀장·사원·근로학생은 직원 권한으로 등록됩니다.
+          초대 목록에는 부여된 권한이 표시됩니다. 대표이사는 관리자, 실장은 실장, 팀장·사원·근로학생은 직원 권한으로 등록됩니다. 게스트 초대에는 별도 권한 설정이 필요합니다.
         </p>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
