@@ -15,7 +15,6 @@ import {
   ListChecks,
   Clock,
   MessageSquare,
-  Wrench,
   CalendarDays,
   Bot,
   FileText,
@@ -52,7 +51,6 @@ const NAV = [
   { to: "/support", label: "지원사업", icon: FileSearch },
   { to: "/attendance", label: "출·퇴근 관리", icon: Clock },
   { to: "/inquiries", label: "고객문의", icon: MessageSquare },
-  { to: "/devices", label: "기기오류", icon: Wrench },
 ] as const;
 
 const ADMIN_NAV = [

@@ -107,6 +107,7 @@ it("expands the product links in the compact navigation", () => {
   const menu = within(screen.getByRole("dialog", { name: "메뉴" }));
   const toggle = menu.getByRole("button", { name: "우리회사제품 하위 메뉴" });
   expect(menu.getByRole("link", { name: "우리회사제품" })).toHaveAttribute("href", "/products");
+  expect(menu.queryByRole("link", { name: "기기오류" })).toBeNull();
   expect(menu.queryByRole("link", { name: "재고·발주" })).toBeNull();
   expect(menu.queryByRole("link", { name: "드론" })).toBeNull();
 
@@ -114,10 +115,11 @@ it("expands the product links in the compact navigation", () => {
   expect(toggle).toHaveAttribute("aria-expanded", "true");
   const links = menu.getAllByRole("link").map((link) => link.getAttribute("href"));
   const productIndex = links.indexOf("/products");
-  expect(links.slice(productIndex + 1, productIndex + 4)).toEqual([
+  expect(links.slice(productIndex + 1, productIndex + 5)).toEqual([
     "/powerboard",
     "/drone",
     "/competitors",
+    "/devices",
   ]);
   expect(menu.getByRole("link", { name: "POWERBOARD" })).toHaveAttribute("href", "/powerboard");
   expect(menu.getByRole("link", { name: "드론" })).toHaveAttribute("href", "/drone");

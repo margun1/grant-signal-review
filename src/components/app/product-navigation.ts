@@ -1,4 +1,4 @@
-import { Boxes, FileSearch, TrendingUp } from "lucide-react";
+import { Boxes, FileSearch, TrendingUp, Wrench } from "lucide-react";
 
 export const productPages = [
   {
@@ -18,5 +18,11 @@ export const productPages = [
     label: "경쟁제품",
     icon: FileSearch,
     description: "ESCO 공개 자료 기반 유사 업체·제품 비교",
+  },
+  {
+    to: "/devices",
+    label: "기기오류",
+    icon: Wrench,
+    description: "POWERBOARD와 드론 오류 등록 및 처리 상태 관리",
   },
 ] as const;
