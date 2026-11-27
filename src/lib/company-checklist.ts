@@ -25,3 +25,32 @@ export async function registerCompanyChecklist(today: string) {
   ]);
   if (tasks.error || templates.error) throw new Error("기본 체크리스트를 등록하지 못했습니다.");
 }
+
+const oldInquiryLabel = "미답면 문의하기";
+const inquiryLabel = "미답변 문의하기";
+
+export function correctChecklistTitle(title: string) {
+  return title.replaceAll(oldInquiryLabel, inquiryLabel);
+}
+
+export async function correctStoredChecklistTitles() {
+  for (const table of ["checklist_templates", "tasks"] as const) {
+    let previousId: string | undefined;
+    while (true) {
+      let query = supabase.from(table).select("id,title")
+        .like("title", `%${oldInquiryLabel}%`).order("id").limit(100);
+      if (previousId) query = query.gt("id", previousId);
+      const { data: rows, error } = await query;
+      if (error) throw error;
+      if (!rows?.length) break;
+      const titles = new Set(rows.map(({ title }) => title));
+      for (const title of titles) {
+        const { error: updateError } = await supabase.from(table)
+          .update({ title: correctChecklistTitle(title) }).eq("title", title);
+        if (updateError) throw updateError;
+      }
+      if (rows.length < 100) break;
+      previousId = rows[rows.length - 1].id;
+    }
+  }
+}

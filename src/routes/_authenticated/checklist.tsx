@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PageHeader, Panel, todayKst } from "@/components/app/ui";
 import { AssigneeSelect } from "@/components/app/AssigneeSelect";
 import { useStaff } from "@/hooks/use-staff";
-import { registerCompanyChecklist } from "@/lib/company-checklist";
+import { correctChecklistTitle, correctStoredChecklistTitles, registerCompanyChecklist } from "@/lib/company-checklist";
 
 export const Route = createFileRoute("/_authenticated/checklist")({
   head: () => ({ meta: [{ title: "체크리스트 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "반복 체크리스트와 할 일" }] }),
@@ -54,7 +54,7 @@ function ScheduleButtons({ value, weekday, once, onChange, onWeekdayChange }: {
 
 async function addRecurring(title: string, assignee: string | null, frequency: Frequency, weekday: string, today: string) {
   const { error } = await supabase.from("checklist_templates").insert({
-    title, assignee, frequency, weekday: frequency === "매주" ? Number(weekday) : null,
+    title: correctChecklistTitle(title), assignee, frequency, weekday: frequency === "매주" ? Number(weekday) : null,
   });
   if (error) {
     if (frequency === "매월" && error.code === "23514") {
@@ -74,6 +74,12 @@ function ChecklistPage() {
         await registerCompanyChecklist(today);
       } catch {
         toast.error("기본 체크리스트를 등록하지 못했습니다.");
+      }
+
+      try {
+        await correctStoredChecklistTitles();
+      } catch {
+        toast.error("체크리스트의 문의 제목을 수정하지 못했습니다.");
       }
 
       const { error } = await supabase.rpc("generate_checklist", { _date: today });
@@ -99,7 +105,7 @@ function ChecklistPage() {
   const [t, setT] = useState({ title: "", assignee: null as string | null, due: today, freq: "한 번" as Frequency, wd: "1" });
   const add = useMutation({ mutationFn: async () => { if (!t.title.trim()) throw new Error("할 일을 입력해 주세요.");
     if (t.freq !== "한 번") return addRecurring(t.title.trim(), t.assignee, t.freq, t.wd, today);
-    const { error } = await supabase.from("tasks").insert({ title: t.title.trim(), assignee: t.assignee, due_date: t.due || null }); if (error) throw new Error("추가하지 못했습니다."); },
+    const { error } = await supabase.from("tasks").insert({ title: correctChecklistTitle(t.title.trim()), assignee: t.assignee, due_date: t.due || null }); if (error) throw new Error("추가하지 못했습니다."); },
     onSuccess: () => { setT({ ...t, title: "" }); setTaskDialogOpen(false); qc.invalidateQueries({ queryKey: ["tasks"] }); qc.invalidateQueries({ queryKey: ["tpls"] }); }, onError: (e) => toast.error((e as Error).message) });
   const toggle = useMutation({ mutationFn: async (v: { id: string; done: boolean }) => { await supabase.from("tasks").update({ done: v.done, done_at: v.done ? new Date().toISOString() : null }).eq("id", v.id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }) });
