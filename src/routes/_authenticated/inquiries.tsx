@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Sparkles, Send, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -85,6 +86,7 @@ function InquiriesPage() {
     ...samples,
   ].sort((a, b) => Date.parse(b.received_at) - Date.parse(a.received_at));
   const cur = rows.find((x) => x.id === sel);
+  const sampleTrigger = useRef<HTMLButtonElement | null>(null);
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="고객문의 (C/S)" desc={`회신 이메일: ${settings.data?.reply_email ?? "미설정"} · 카카오톡 채널: ${settings.data?.kakao_channel_url ? "등록됨 (답변 연동 대기)" : "미개설"}`} />
@@ -95,7 +97,10 @@ function InquiriesPage() {
             가상 문의 표시
           </label>
           <ul className="divide-y">{rows.map((x) => (
-            <li key={x.id}><button type="button" onClick={() => setSel(x.id)} className={`w-full rounded-md p-3 text-left hover:bg-accent ${sel === x.id ? "bg-accent" : ""}`}>
+            <li key={x.id}><button type="button" aria-haspopup={x.sample ? "dialog" : undefined} onClick={(event) => {
+              if (x.sample) sampleTrigger.current = event.currentTarget;
+              setSel(x.id);
+            }} className={`w-full rounded-md p-3 text-left hover:bg-accent ${sel === x.id ? "bg-accent" : ""}`}>
               <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><span>{x.channel} · {kst(x.received_at)}</span><span className="flex shrink-0 items-center gap-1.5">{x.sample && <StatusBadge label="가상" tone="warn" />}<StatusBadge label={x.status} tone={tone(x.status)} /></span></div>
               <p className="mt-1 line-clamp-2 text-sm">{x.content}</p></button></li>))}
             {rows.length === 0 && <li className="py-6 text-center text-muted-foreground">문의가 없습니다.</li>}</ul>
@@ -107,12 +112,25 @@ function InquiriesPage() {
             <Button type="submit" size="sm">등록</Button>
           </form>
         </Panel>
-        {cur ? (
-          cur.sample ? <SampleDetail key={cur.id} q={cur} onSave={saveSample} /> : <Detail key={cur.id} q={cur} />
+        {cur && !cur.sample ? (
+          <Detail key={cur.id} q={cur} />
         ) : (
           <Panel><p className="py-10 text-center text-muted-foreground">목록에서 문의를 선택하세요.</p></Panel>
         )}
       </div>
+      <Dialog open={Boolean(cur?.sample)} onOpenChange={(open) => { if (!open) setSel(null); }}>
+        <DialogContent
+          aria-describedby={undefined}
+          className="max-h-[85dvh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto overscroll-contain rounded-xl px-3 pb-3 pt-10 data-[state=open]:slide-in-from-bottom-16 data-[state=closed]:slide-out-to-bottom-16 motion-reduce:animate-none sm:px-4 sm:pb-4"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            sampleTrigger.current?.focus({ preventScroll: true });
+          }}
+        >
+          <DialogTitle className="sr-only">가상 문의 상세</DialogTitle>
+          {cur?.sample && <SampleDetail key={cur.id} q={cur} onSave={saveSample} />}
+        </DialogContent>
+      </Dialog>
       <Panel title="홈페이지 문의 양식 연결 방법">
         <p className="text-sm">홈페이지 문의 양식의 전송 주소를 아래 주소로 바꾸면 문의가 이 화면에 들어옵니다. 받는 칸 이름: name, org(선택), email, content</p>
         <code className="mt-2 block break-all rounded bg-secondary p-2 text-sm">{typeof window !== "undefined" ? window.location.origin : ""}/api/public/inquiry</code>
