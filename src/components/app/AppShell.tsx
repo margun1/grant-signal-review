@@ -29,16 +29,16 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import { YouTubeIntro } from "@/components/app/YouTubeIntro";
 
-function AppBrand() {
+function AppBrand({ className, onNav }: { className?: string; onNav?: () => void }) {
   return (
-    <div className="space-y-0.5">
+    <Link to="/company" onClick={onNav} className={cn("block space-y-0.5", className)}>
       <div className="text-xs font-semibold tracking-wider text-gold">ENERINFRA</div>
       <div className="text-sm font-bold leading-snug text-card-foreground">주식회사 에너인프라의</div>
       <div className="flex items-center gap-2 text-base font-bold leading-snug text-card-foreground">
         <span>경영비서</span>
         <img src="/enerinfra-logo.png" alt="" width={96} height={17} className="h-auto w-24" />
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -191,9 +191,10 @@ export function AppShell() {
   const currentPage = items.flatMap((item) => [item, ...(navGroups.get(item.to) ?? [])]).find(({ to }) => path === to || path.startsWith(`${to}/`));
   const side = (
     <div className="flex min-h-full flex-col gap-6 p-4">
-      <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
-        <AppBrand />
-      </div>
+      <AppBrand
+        className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
+        onNav={() => setOpen(false)}
+      />
       <NavLinks items={items} activePath={currentPage?.to ?? ""} onNav={() => setOpen(false)} />
       <div className="mt-auto border-t pt-4 text-sm">
         <div className="truncate font-medium">{me.profile?.display_name}</div>
