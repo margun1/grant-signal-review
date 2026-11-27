@@ -47,3 +47,33 @@ it("reads the XML form without inferring product names", async () => {
     companies: [{ name: "업체", product: "" }],
   });
 });
+
+it("reports an ESCO permission error from the portal XML wrapper even in JSON mode", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => new Response(
+    "<OpenAPI_ServiceResponse><cmmMsgHeader><returnReasonCode>20</returnReasonCode></cmmMsgHeader></OpenAPI_ServiceResponse>",
+    { status: 500 },
+  )));
+  await expect(fetchEscoCompanies("test-key", "json")).rejects.toThrow("ESCO API 이용 권한이 없습니다");
+});
+
+it("reports a missing registered key from a portal error returned with HTTP 200", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => Response.json({ response: { header: { resultCode: "30" } } })));
+  await expect(fetchEscoCompanies("test-key", "json")).rejects.toThrow("등록되지 않은 인증키");
+});
+
+it("accepts a valid empty ESCO response with an empty items object", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => Response.json({
+    response: { header: { resultCode: "00" }, body: { totalCount: 0, items: {} } },
+  })));
+  await expect(fetchEscoCompanies("test-key", "json")).resolves.toEqual({ complete: true, companies: [] });
+});
+
+it("does not forward the service key on redirects", async () => {
+  const mock = vi.fn(async (_url: URL, _init: RequestInit) =>
+    new Response(null, { status: 302, headers: { location: "https://example.com/" } }),
+  );
+  vi.stubGlobal("fetch", mock);
+  await expect(fetchEscoCompanies("test-key", "json")).rejects.toThrow("상세기능의 요청 주소");
+  expect(mock).toHaveBeenCalledTimes(1);
+  expect(mock.mock.calls[0]?.[1].redirect).toBe("manual");
+});
