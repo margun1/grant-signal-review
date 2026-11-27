@@ -13,12 +13,16 @@ export const Route = createFileRoute("/_authenticated/drone")({
   component: DronePage,
 });
 
+const partNames = [...new Set(sampleDroneParts.map(([, , name]) => name))];
+
 function DronePage() {
   const [query, setQuery] = useState("");
+  const [selectedPart, setSelectedPart] = useState<string | null>(null);
   const results = useRef<HTMLParagraphElement>(null);
   const keywords = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const compactQuery = keywords.join("");
   const parts = sampleDroneParts.filter((part) => {
+    if (selectedPart !== null && part[2] !== selectedPart) return false;
     const text = part.join(" ").toLowerCase().replace(/\s+/g, "");
     return text.includes(compactQuery) || keywords.every((keyword) => text.includes(keyword));
   });
@@ -35,6 +39,28 @@ function DronePage() {
             단가입니다.
           </p>
         </div>
+
+        <fieldset className="mt-4">
+          <legend className="mb-2 text-sm font-semibold">부품명으로 보기</legend>
+          <div className="flex max-h-56 flex-wrap content-start gap-2 overflow-y-auto rounded-md border p-2">
+            {[null, ...partNames].map((name) => (
+              <Button
+                key={name ?? "all"}
+                type="button"
+                size="sm"
+                variant={selectedPart === name ? "default" : "outline"}
+                aria-pressed={selectedPart === name}
+                className="h-auto min-h-8 whitespace-normal text-left"
+                onClick={() => {
+                  setSelectedPart(name);
+                  setQuery("");
+                }}
+              >
+                {name ?? "전체"}
+              </Button>
+            ))}
+          </div>
+        </fieldset>
 
         <form
           role="search"
