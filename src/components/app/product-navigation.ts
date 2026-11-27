@@ -3,7 +3,7 @@ import { Boxes, FileSearch, TrendingUp } from "lucide-react";
 export const productPages = [
   {
     to: "/powerboard",
-    label: "POWERBOARD 실증",
+    label: "POWERBOARD",
     icon: TrendingUp,
     description: "가상 실증 자료와 월별 계측·절감 현황",
   },

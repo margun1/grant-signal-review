@@ -105,7 +105,7 @@ it("expands the three product links from the compact navigation", () => {
 
   fireEvent.click(toggle);
   expect(toggle).toHaveAttribute("aria-expanded", "true");
-  expect(menu.getByRole("link", { name: "POWERBOARD 실증" })).toHaveAttribute(
+  expect(menu.getByRole("link", { name: "POWERBOARD" })).toHaveAttribute(
     "href",
     "/powerboard",
   );
