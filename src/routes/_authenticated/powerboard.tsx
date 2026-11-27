@@ -48,8 +48,8 @@ function PowerboardPage() {
       <p className="mt-2 text-muted-foreground">모의 요금·바우처·계약금액입니다. 실제 매출·수익성·AI 브리핑에는 반영하지 않습니다.</p>
     </div>
     <div className="flex flex-wrap items-end gap-4">
-      <div className="min-w-40 space-y-2"><label className="text-sm" htmlFor="pilot-category">데이터 구분</label><Select value={category} onValueChange={setCategory}><SelectTrigger id="pilot-category"><SelectValue /></SelectTrigger><SelectContent>{["전체", ...pilotCategories].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
-      <div className="min-w-40 space-y-2"><label className="text-sm" htmlFor="pilot-month">기준월</label><Select value={month} onValueChange={setMonth}><SelectTrigger id="pilot-month"><SelectValue /></SelectTrigger><SelectContent>{["전체", ...pilotMonths].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+      <div className="min-w-40 space-y-2"><label className="text-sm" htmlFor="pilot-category">데이터 구분</label><Select value={category} onValueChange={setCategory}><SelectTrigger id="pilot-category" className="bg-white"><SelectValue /></SelectTrigger><SelectContent>{["전체", ...pilotCategories].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+      <div className="min-w-40 space-y-2"><label className="text-sm" htmlFor="pilot-month">기준월</label><Select value={month} onValueChange={setMonth}><SelectTrigger id="pilot-month" className="bg-white"><SelectValue /></SelectTrigger><SelectContent>{["전체", ...pilotMonths].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
       <Button variant="outline" className="sm:ml-auto" onClick={download} disabled={!rows.length}><Download />선택 자료 CSV</Button>
     </div>
     <dl className="grid grid-cols-2 gap-x-5 gap-y-6 border-y py-6 lg:grid-cols-3">{metrics.map(([label, value]) => <div key={label}><dt className="text-sm text-muted-foreground">{label}</dt><dd className="mt-2 break-words text-xl font-bold">{value}</dd></div>)}</dl>
