@@ -50,7 +50,6 @@ const NAV = [
   { to: "/support", label: "지원사업", icon: FileSearch },
   { to: "/sales", label: "매출·상품", icon: TrendingUp },
   { to: "/profit", label: "수익성", icon: Coins },
-  { to: "/inventory", label: "재고·발주", icon: Boxes },
   { to: "/products", label: "우리회사제품", icon: Boxes },
   { to: "/checklist", label: "체크리스트", icon: ListChecks },
   { to: "/attendance", label: "출·퇴근 관리", icon: Clock },
