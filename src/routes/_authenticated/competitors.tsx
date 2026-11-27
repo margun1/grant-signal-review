@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { PageHeader, Panel } from "@/components/app/ui";
+import { SampleCompetitorProducts } from "@/components/app/SampleCompetitorProducts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,7 +67,8 @@ function Competitors({ userId }: { userId: string }) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader title="경쟁제품" desc="한국에너지공단 · 에너지절약전문기업(ESCO) 등록업체" />
+      <PageHeader title="경쟁제품" desc="가상 유사제품 검색과 한국에너지공단 ESCO 등록업체 조회" />
+      <SampleCompetitorProducts />
       <Panel title="내 조건" accent="primary">
         <form
           className="space-y-4"
