@@ -105,11 +105,37 @@ it("expands the three product links from the compact navigation", () => {
 
   fireEvent.click(toggle);
   expect(toggle).toHaveAttribute("aria-expanded", "true");
-  expect(menu.getByRole("link", { name: "POWERBOARD 실증" })).toHaveAttribute("href", "/powerboard");
+  expect(menu.getByRole("link", { name: "POWERBOARD 실증" })).toHaveAttribute(
+    "href",
+    "/powerboard",
+  );
   expect(menu.getByRole("link", { name: "드론" })).toHaveAttribute("href", "/drone");
   expect(menu.getByRole("link", { name: "경쟁제품" })).toHaveAttribute("href", "/competitors");
 
   fireEvent.click(toggle);
   expect(toggle).toHaveAttribute("aria-expanded", "false");
   expect(menu.queryByRole("link", { name: "드론" })).toBeNull();
+});
+
+it("opens AI report under the AI secretary without opening the products group", () => {
+  location.pathname = "/assistant";
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AppShell />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
+  const menu = within(screen.getByRole("dialog", { name: "메뉴" }));
+  const toggle = menu.getByRole("button", { name: "AI 비서 하위 메뉴" });
+  expect(menu.queryByRole("link", { name: "AI 리포트" })).toBeNull();
+
+  fireEvent.click(toggle);
+  expect(menu.getByRole("link", { name: "AI 리포트" })).toHaveAttribute("href", "/reports");
+  expect(menu.getByRole("button", { name: "우리회사제품 하위 메뉴" })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+
+  fireEvent.click(toggle);
+  expect(menu.queryByRole("link", { name: "AI 리포트" })).toBeNull();
 });

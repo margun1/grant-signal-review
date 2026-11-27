@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   LayoutDashboard,
   FileSearch,
@@ -48,7 +48,6 @@ const NAV = [
   { to: "/assistant", label: "AI 비서", icon: Bot },
   { to: "/dashboard", label: "경영현황", icon: LayoutDashboard },
   { to: "/support", label: "지원사업", icon: FileSearch },
-  { to: "/reports", label: "AI 리포트", icon: FileText },
   { to: "/sales", label: "매출·상품", icon: TrendingUp },
   { to: "/profit", label: "수익성", icon: Coins },
   { to: "/inventory", label: "재고·발주", icon: Boxes },
@@ -65,6 +64,37 @@ const ADMIN_NAV = [
   { to: "/admin/settings", label: "연락 설정", icon: Settings },
 ] as const;
 const ALL_NAV = [...NAV, ...ADMIN_NAV];
+const assistantPages = [{ to: "/reports", label: "AI 리포트", icon: FileText }] as const;
+
+function NavGroup({ label, activeChild, link, children }: {
+  label: string;
+  activeChild: string | undefined;
+  link: ReactNode;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(Boolean(activeChild));
+
+  useEffect(() => {
+    if (activeChild) setOpen(true);
+  }, [activeChild]);
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="flex items-center gap-1">
+        {link}
+        <CollapsibleTrigger asChild>
+          <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0"
+            aria-label={`${label} 하위 메뉴`}>
+            <ChevronDown aria-hidden="true" className={cn("transition-transform", open && "rotate-180")} />
+          </Button>
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent className="ml-5 mt-1 flex flex-col gap-1 border-l pl-2">
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 function NavLinks({
   items,
@@ -75,14 +105,7 @@ function NavLinks({
   activePath?: string;
   onNav: () => void;
 }) {
-  const productPageActive = productPages.some(({ to }) => to === activePath);
-  const [productsOpen, setProductsOpen] = useState(productPageActive);
-
-  useEffect(() => {
-    if (productPageActive) setProductsOpen(true);
-  }, [activePath, productPageActive]);
-
-  function renderLink(item: (typeof ALL_NAV)[number] | (typeof productPages)[number]) {
+  function renderLink(item: (typeof ALL_NAV)[number] | (typeof productPages)[number] | (typeof assistantPages)[number]) {
     const active = activePath === item.to;
     return (
       <Link
@@ -103,27 +126,17 @@ function NavLinks({
 
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
-      {items.map((item) => item.to === "/products" ? (
-        <Collapsible key={item.to} open={productsOpen} onOpenChange={setProductsOpen}>
-          <div className="flex items-center gap-1">
-            {renderLink(item)}
-            <CollapsibleTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-11 shrink-0"
-                aria-label="우리회사제품 하위 메뉴"
-              >
-                <ChevronDown aria-hidden="true" className={cn("transition-transform", productsOpen && "rotate-180")} />
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent className="ml-5 mt-1 flex flex-col gap-1 border-l pl-2">
-            {productPages.map(renderLink)}
-          </CollapsibleContent>
-        </Collapsible>
-      ) : renderLink(item))}
+      {items.map((item) => {
+        const children = item.to === "/products" ? productPages
+          : item.to === "/assistant" ? assistantPages : null;
+        if (!children) return renderLink(item);
+        return (
+          <NavGroup key={item.to} label={item.label} link={renderLink(item)}
+            activeChild={children.find(({ to }) => to === activePath)?.to}>
+            {children.map(renderLink)}
+          </NavGroup>
+        );
+      })}
     </nav>
   );
 }
@@ -166,7 +179,7 @@ export function AppShell() {
     );
 
   const items = me.isAdmin ? ALL_NAV : NAV;
-  const currentPage = [...items, ...productPages].find(({ to }) => path === to || path.startsWith(`${to}/`));
+  const currentPage = [...items, ...productPages, ...assistantPages].find(({ to }) => path === to || path.startsWith(`${to}/`));
   const side = (
     <div className="flex min-h-full flex-col gap-6 p-4">
       <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
