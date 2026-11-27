@@ -86,11 +86,12 @@ function InquiriesPage() {
     ...samples,
   ].sort((a, b) => Date.parse(b.received_at) - Date.parse(a.received_at));
   const cur = rows.find((x) => x.id === sel);
+  const realInquiry = cur && !cur.sample ? cur : undefined;
   const sampleTrigger = useRef<HTMLButtonElement | null>(null);
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="고객문의 (C/S)" desc={`회신 이메일: ${settings.data?.reply_email ?? "미설정"} · 카카오톡 채널: ${settings.data?.kakao_channel_url ? "등록됨 (답변 연동 대기)" : "미개설"}`} />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div className={realInquiry ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]" : undefined}>
         <Panel title="문의 목록" action={<Select value={filter} onValueChange={setFilter}><SelectTrigger className="h-8 w-32 bg-card" aria-label="상태 필터"><SelectValue /></SelectTrigger><SelectContent>{["전체", ...ST].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>}>
           <label className="mb-2 flex w-fit cursor-pointer items-center gap-2 py-2 text-sm">
             <input type="checkbox" checked={showSamples} onChange={(e) => setShowSamples(e.target.checked)} />
@@ -112,11 +113,7 @@ function InquiriesPage() {
             <Button type="submit" size="sm">등록</Button>
           </form>
         </Panel>
-        {cur && !cur.sample ? (
-          <Detail key={cur.id} q={cur} />
-        ) : (
-          <Panel><p className="py-10 text-center text-muted-foreground">목록에서 문의를 선택하세요.</p></Panel>
-        )}
+        {realInquiry && <Detail key={realInquiry.id} q={realInquiry} />}
       </div>
       <Dialog open={Boolean(cur?.sample)} onOpenChange={(open) => { if (!open) setSel(null); }}>
         <DialogContent
