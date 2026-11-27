@@ -37,6 +37,6 @@ it("filters the sample parts by classification and name and restores all rows wh
   fireEvent.change(search, { target: { value: "프레임키트" } });
   expect(screen.getByRole("status")).toHaveTextContent("전체 255개 중 5개 표시");
 
-  fireEvent.click(screen.getByRole("button", { name: "전체", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: /^전체$/ }));
   expect(screen.getByRole("status")).toHaveTextContent("전체 255개 중 255개 표시");
 });
