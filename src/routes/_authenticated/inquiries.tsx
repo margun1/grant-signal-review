@@ -133,6 +133,79 @@ function InquirySummary({ q }: { q: Inq }) {
   );
 }
 
+const sampleAssigneeKey = "enerinfra:sample-inquiry-assignees:v1";
+const defaultSampleAssignees = sampleCustomerInquiries.flatMap(({ assignee }) => assignee ? [assignee] : []);
+
+function readSampleAssignees(): string[] {
+  try {
+    const names: unknown = JSON.parse(window.localStorage.getItem(sampleAssigneeKey) ?? "[]");
+    return Array.isArray(names)
+      ? names.filter((name): name is string => typeof name === "string" && name.trim().length > 0)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function SampleAssigneeSelect({ value, onChange }: { value: string | null; onChange: (name: string | null) => void }) {
+  const [customNames, setCustomNames] = useState(readSampleAssignees);
+  const [newName, setNewName] = useState<string | null>(null);
+  const names = [...new Set([...defaultSampleAssignees, ...customNames, ...(value ? [value] : [])])];
+
+  function addAssignee() {
+    const name = newName?.trim();
+    if (!name) return;
+    if (!names.includes(name)) {
+      const updated = [...new Set([...readSampleAssignees(), ...customNames, name])];
+      try {
+        window.localStorage.setItem(sampleAssigneeKey, JSON.stringify(updated));
+      } catch {
+        toast.error("담당자를 저장하지 못했습니다.");
+        return;
+      }
+      setCustomNames(updated);
+    }
+    onChange(name);
+    setNewName(null);
+  }
+
+  return (
+    <div className="space-y-1">
+      <Label htmlFor="sample-inquiry-assignee">담당자</Label>
+      <Select value={value ? `name:${value}` : "none"} onValueChange={(option) => {
+        if (option === "add") setNewName("");
+        else {
+          onChange(option === "none" ? null : option.slice("name:".length));
+          setNewName(null);
+        }
+      }}>
+        <SelectTrigger id="sample-inquiry-assignee" className="w-full"><SelectValue /></SelectTrigger>
+        <SelectContent position="popper">
+          <SelectItem value="none">미지정</SelectItem>
+          {names.map((name) => <SelectItem key={name} value={`name:${name}`}>{name}</SelectItem>)}
+          <SelectItem value="add" className="mt-1 border-t font-semibold text-primary">+ 담당자 추가</SelectItem>
+        </SelectContent>
+      </Select>
+      {newName !== null && (
+        <div className="space-y-2 rounded-md border p-2">
+          <Label htmlFor="sample-new-assignee">새 담당자 이름</Label>
+          <Input id="sample-new-assignee" value={newName} onChange={(event) => setNewName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+                event.preventDefault();
+                addAssignee();
+              }
+            }} />
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" disabled={!newName.trim()} onClick={addAssignee}>추가</Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setNewName(null)}>취소</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SampleDetail({ q, onSave }: { q: Inq; onSave: (id: string, edits: SampleEdits) => boolean }) {
   const [draft, setDraft] = useState<SampleEdits | null>(null);
   if (draft) {
@@ -162,11 +235,8 @@ function SampleDetail({ q, onSave }: { q: Inq; onSave: (id: string, edits: Sampl
                 <SelectContent>{ST.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="sample-inquiry-assignee">담당자</Label>
-              <Input id="sample-inquiry-assignee" value={draft.assignee ?? ""}
-                onChange={(event) => setDraft({ ...draft, assignee: event.target.value })} />
-            </div>
+            <SampleAssigneeSelect value={draft.assignee}
+              onChange={(assignee) => setDraft({ ...draft, assignee })} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="sample-inquiry-reply">답변 예시</Label>
