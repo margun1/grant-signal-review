@@ -20,6 +20,9 @@ import {
   Bot,
   FileText,
 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { productPages } from "@/components/app/product-navigation";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -49,9 +52,7 @@ const NAV = [
   { to: "/sales", label: "매출·상품", icon: TrendingUp },
   { to: "/profit", label: "수익성", icon: Coins },
   { to: "/inventory", label: "재고·발주", icon: Boxes },
-  { to: "/powerboard", label: "POWERBOARD 실증", icon: TrendingUp },
-  { to: "/drone", label: "드론", icon: Boxes },
-  { to: "/competitors", label: "경쟁제품", icon: FileSearch },
+  { to: "/products", label: "우리회사제품", icon: Boxes },
   { to: "/checklist", label: "체크리스트", icon: ListChecks },
   { to: "/attendance", label: "출·퇴근 관리", icon: Clock },
   { to: "/inquiries", label: "고객문의", icon: MessageSquare },
@@ -74,26 +75,55 @@ function NavLinks({
   activePath?: string;
   onNav: () => void;
 }) {
+  const productPageActive = productPages.some(({ to }) => to === activePath);
+  const [productsOpen, setProductsOpen] = useState(productPageActive);
+
+  useEffect(() => {
+    if (productPageActive) setProductsOpen(true);
+  }, [activePath, productPageActive]);
+
+  function renderLink(item: (typeof ALL_NAV)[number] | (typeof productPages)[number]) {
+    const active = activePath === item.to;
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        onClick={onNav}
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-3 rounded-md border-l-4 px-3 py-2.5 text-sm transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring",
+          active ? "border-primary bg-accent font-bold" : "border-transparent text-foreground",
+        )}
+        aria-current={active ? "page" : undefined}
+      >
+        <item.icon className="size-4 shrink-0 text-taupe" aria-hidden />
+        {item.label}
+      </Link>
+    );
+  }
+
   return (
     <nav className="flex flex-col gap-1" aria-label="주 메뉴">
-      {items.map((it) => {
-        const active = activePath === it.to;
-        return (
-          <Link
-            key={it.to}
-            to={it.to}
-            onClick={onNav}
-            className={cn(
-              "flex items-center gap-3 rounded-md border-l-4 px-3 py-2.5 text-sm transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring",
-              active ? "border-primary bg-accent font-bold" : "border-transparent text-foreground",
-            )}
-            aria-current={active ? "page" : undefined}
-          >
-            <it.icon className="size-4 text-taupe" aria-hidden />
-            {it.label}
-          </Link>
-        );
-      })}
+      {items.map((item) => item.to === "/products" ? (
+        <Collapsible key={item.to} open={productsOpen} onOpenChange={setProductsOpen}>
+          <div className="flex items-center gap-1">
+            {renderLink(item)}
+            <CollapsibleTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-11 shrink-0"
+                aria-label="우리회사제품 하위 메뉴"
+              >
+                <ChevronDown aria-hidden="true" className={cn("transition-transform", productsOpen && "rotate-180")} />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="ml-5 mt-1 flex flex-col gap-1 border-l pl-2">
+            {productPages.map(renderLink)}
+          </CollapsibleContent>
+        </Collapsible>
+      ) : renderLink(item))}
     </nav>
   );
 }
@@ -136,7 +166,7 @@ export function AppShell() {
     );
 
   const items = me.isAdmin ? ALL_NAV : NAV;
-  const currentPage = items.find(({ to }) => path === to || path.startsWith(`${to}/`));
+  const currentPage = [...items, ...productPages].find(({ to }) => path === to || path.startsWith(`${to}/`));
   const side = (
     <div className="flex min-h-full flex-col gap-6 p-4">
       <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
