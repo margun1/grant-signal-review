@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Activity, Download } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { exportXlsx } from "@/components/app/data";
+import { DroneEducationStatistics } from "@/components/app/DroneEducationStatistics";
 import { PageHeader, Panel } from "@/components/app/ui";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,6 +45,7 @@ function DronePage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader title="드론" desc="교육용 드론 가상 실증 · 2026년 8~11월"
         action={<Button asChild variant="outline"><Link to="/drone/parts">드론 부품찾기</Link></Button>} />
+      <DroneEducationStatistics />
       <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm font-semibold">
         <Activity className="size-4 shrink-0" aria-hidden="true" />시연용 가상 실증 데이터
       </div>
