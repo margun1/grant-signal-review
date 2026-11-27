@@ -4,7 +4,19 @@ type Supa = any;
 export async function runHourly(admin: Supa) {
   const k = new Date(Date.now() + 9 * 3600000); const today = k.toISOString().slice(0, 10); const dow = k.getUTCDay(); const hour = k.getUTCHours();
   const { data: tpls } = await admin.from("checklist_templates").select("*").eq("active", true);
-  const rows = (tpls ?? []).filter((t: { frequency: string; weekday: number | null }) => t.frequency === "매일" || t.weekday === dow).map((t: { id: string; title: string; assignee: string | null }) => ({ title: t.title, assignee: t.assignee, due_date: today, template_id: t.id }));
+  const day = k.getUTCDate();
+  const monthEnd = new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth() + 1, 0)).getUTCDate();
+  const rows = (tpls ?? [])
+    .filter((t: { frequency: string; weekday: number | null; created_at: string }) => {
+      if (t.frequency === "매일") return true;
+      if (t.frequency === "매주") return t.weekday === dow;
+      if (t.frequency !== "매월") return false;
+      const registrationDay = new Date(Date.parse(t.created_at) + 9 * 3600000).getUTCDate();
+      return day === Math.min(registrationDay, monthEnd);
+    })
+    .map((t: { id: string; title: string; assignee: string | null }) => ({
+      title: t.title, assignee: t.assignee, due_date: today, template_id: t.id,
+    }));
   if (rows.length) await admin.from("tasks").upsert(rows, { onConflict: "template_id,due_date", ignoreDuplicates: true });
   const { data: s } = await admin.from("company_settings").select("report_weekday,report_hour").eq("id", 1).maybeSingle();
   let report = "skip";
