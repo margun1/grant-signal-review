@@ -141,6 +141,7 @@ function ChecklistPage() {
         </Select>
         {task && (
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border p-3">
+            <p className="basis-full break-words text-sm font-semibold">{task.title}</p>
             <label className="flex min-w-0 flex-1 items-center gap-2 text-sm">
               <Checkbox checked={task.done} onCheckedChange={(value) => toggle.mutate({ id: task.id, done: !!value })} />
               {task.done ? "완료됨" : "완료로 표시"}
@@ -178,6 +179,7 @@ function ChecklistPage() {
         </Select>
         {template && (
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border p-3 text-sm">
+            <p className="basis-full break-words text-sm font-semibold">{template.title}</p>
             <span>{template.frequency}{template.frequency === "매주" && template.weekday !== null ? ` ${DOW[template.weekday]}요일` : ""}</span>
             <span className="min-w-0 flex-1 truncate">{nameOf(template.assignee)}</span>
             <Button size="sm" variant="outline" onClick={() => toggleTpl.mutate({ id: template.id, active: !template.active })}>
