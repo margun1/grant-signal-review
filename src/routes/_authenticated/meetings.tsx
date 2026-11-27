@@ -61,13 +61,45 @@ const scheduleEmojis = [
   ["🎉", "행사"],
   ["☕", "휴식"],
 ] as const;
+type CalendarEditDraft = CalendarEdit & { emoji: string };
+
+function formatScheduleTitle(value: string, emoji: string) {
+  const text = value.trim();
+  if (!text) throw new Error("일정 제목을 입력해 주세요.");
+  const title = emoji === "none" ? text : `${emoji} ${text}`;
+  if (title.length > 250) throw new Error("이모티콘을 포함한 일정 제목은 250자 이하여야 합니다.");
+  return title;
+}
+
+function ScheduleEmojiSelect({ id, value, onChange, disabled }: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>이모티콘</Label>
+      <Select value={value} disabled={disabled} onValueChange={onChange}>
+        <SelectTrigger id={id} className="w-32 bg-card"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">없음</SelectItem>
+          {scheduleEmojis.map(([emoji, label]) => (
+            <SelectItem key={emoji} value={emoji}>{emoji} {label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 type CalendarEntry = { label: string; type: ScheduleType; edit?: CalendarEdit | undefined };
 
 function MeetingsPage() {
   const qc = useQueryClient(); const confirmFn = useServerFn(confirmMeeting); const gFn = useServerFn(getGoogleEvents); const syncFn = useServerFn(syncMeetingToCalendar); const today = todayKst();
   const [month, setMonth] = useState(today.slice(0, 7));
   const { me } = useMe();
-  const [editing, setEditing] = useState<CalendarEdit | null>(null);
+  const [editing, setEditing] = useState<CalendarEditDraft | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleteEvent = useServerFn(deleteCalendarEvent);
   const refreshCalendar = () => Promise.all([
@@ -86,12 +118,12 @@ function MeetingsPage() {
   const updateMeeting = useServerFn(updateCalendarMeeting);
   const updateGoogle = useServerFn(updateGoogleCalendarEvent);
   const update = useMutation({
-    mutationFn: (edit: CalendarEdit) => {
+    mutationFn: (edit: CalendarEditDraft) => {
       const start = edit.allDay ? edit.start : new Date(`${edit.start}+09:00`).toISOString();
       const end = edit.allDay ? shiftDate(edit.end, 1) : new Date(`${edit.end}+09:00`).toISOString();
-      if (!edit.title.trim()) throw new Error("일정 제목을 입력해 주세요.");
+      const title = formatScheduleTitle(edit.title, edit.emoji);
       if (Date.parse(end) <= Date.parse(start)) throw new Error("종료 시간을 확인해 주세요.");
-      const data = { id: edit.id, title: edit.title, start, end };
+      const data = { id: edit.id, title, start, end };
       if (edit.source === "meeting") return updateMeeting({ data });
       return edit.allDay
         ? updateGoogle({ data: { ...data, allDay: true } })
@@ -113,7 +145,12 @@ function MeetingsPage() {
     setConfirmDelete(false);
     remove.reset();
     update.reset();
-    setEditing(event);
+    const existingEmoji = scheduleEmojis.find(([emoji]) => event.title.startsWith(`${emoji} `))?.[0];
+    setEditing({
+      ...event,
+      title: existingEmoji ? event.title.slice(existingEmoji.length + 1) : event.title,
+      emoji: existingEmoji ?? "none",
+    });
   };
   const reqs = useQuery({ queryKey: ["meet-req"], queryFn: async () => (await supabase.from("meetings").select("*").eq("kind", "외부 미팅").gte("end_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("start_at")).data ?? [] });
   const monthStart = `${month}-01`; const next = new Date(`${monthStart}T00:00:00Z`); next.setUTCMonth(next.getUTCMonth() + 1); const monthEnd = next.toISOString().slice(0, 10);
@@ -163,10 +200,7 @@ function MeetingsPage() {
   const createGoogle = useServerFn(addGoogleCalendarEvent);
   const addSchedule = useMutation({
     mutationFn: async (schedule: typeof draft) => {
-      const text = schedule.title.trim();
-      if (!text) throw new Error("일정 제목을 입력해 주세요.");
-      const title = schedule.emoji === "none" ? text : `${schedule.emoji} ${text}`;
-      if (title.length > 250) throw new Error("이모티콘을 포함한 일정 제목은 250자 이하여야 합니다.");
+      const title = formatScheduleTitle(schedule.title, schedule.emoji);
       if (schedule.type === "deadline") {
         let url = schedule.url.trim();
         if (url) {
@@ -278,21 +312,8 @@ function MeetingsPage() {
             ))}
           </ul>
           <fieldset disabled={addSchedule.isPending} className="flex flex-wrap items-end gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="schedule-emoji">이모티콘</Label>
-              <Select value={draft.emoji} disabled={addSchedule.isPending}
-                onValueChange={(emoji) => setDraft({ ...draft, emoji })}>
-                <SelectTrigger id="schedule-emoji" className="w-32 bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">없음</SelectItem>
-                  {scheduleEmojis.map(([emoji, label]) => (
-                    <SelectItem key={emoji} value={emoji}>{emoji} {label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <ScheduleEmojiSelect id="schedule-emoji" value={draft.emoji} disabled={addSchedule.isPending}
+              onChange={(emoji) => setDraft({ ...draft, emoji })} />
             <div className="min-w-48 flex-1 space-y-2">
               <Label htmlFor="schedule-title">일정 제목</Label>
               <Input id="schedule-title" required maxLength={250} value={draft.title}
@@ -340,6 +361,8 @@ function MeetingsPage() {
               event.preventDefault();
               if (!confirmDelete && !saving) update.mutate(editing);
             }}>
+              <ScheduleEmojiSelect id="edit-calendar-emoji" value={editing.emoji}
+                disabled={saving || confirmDelete} onChange={(emoji) => setEditing({ ...editing, emoji })} />
               <div className="space-y-2">
                 <Label htmlFor="edit-calendar-title">제목</Label>
                 <Input id="edit-calendar-title" required maxLength={250} value={editing.title}
