@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it } from "vitest";
-import { Route } from "@/routes/_authenticated/drone";
+import { Route } from "@/routes/_authenticated/drone_.parts";
 
 it("filters the sample parts by classification and name and restores all rows when cleared", () => {
   const DronePage = Route.options.component;

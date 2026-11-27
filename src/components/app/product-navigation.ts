@@ -11,7 +11,7 @@ export const productPages = [
     to: "/drone",
     label: "드론",
     icon: Boxes,
-    description: "교육용 드론 부품 목록과 가상 단가 검색",
+    description: "교육용 드론 가상 실증 현황과 부품찾기",
   },
   {
     to: "/competitors",

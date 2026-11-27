@@ -69,10 +69,12 @@ const dashboardPages = [
   { to: "/checklist", label: "체크리스트", icon: ListChecks },
 ] as const;
 const powerboardPages = [{ to: "/powerboard/parts", label: "POWERBOARD 부품찾기", icon: FileSearch }] as const;
-type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages | typeof settingsPages | typeof powerboardPages)[number];
+const dronePages = [{ to: "/drone/parts", label: "드론 부품찾기", icon: FileSearch }] as const;
+type NavItem = (typeof ALL_NAV | typeof productPages | typeof assistantPages | typeof dashboardPages | typeof settingsPages | typeof powerboardPages | typeof dronePages)[number];
 const navGroups = new Map<NavItem["to"], readonly NavItem[]>([
   ["/products", productPages],
   ["/powerboard", powerboardPages],
+  ["/drone", dronePages],
   ["/assistant", assistantPages],
   ["/dashboard", dashboardPages],
   ["/admin/settings", settingsPages],

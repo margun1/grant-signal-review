@@ -36,6 +36,7 @@ import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedAdminInvitesRouteImport } from './routes/_authenticated/admin/invites'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
+import { Route as AuthenticatedDronePartsRouteImport } from './routes/_authenticated/drone_.parts'
 import { Route as AuthenticatedPowerboardPartsRouteImport } from './routes/_authenticated/powerboard_.parts'
 import { Route as ApiPublicInquiryRouteImport } from './routes/api/public/inquiry'
 import { Route as ApiPublicJobsHourlyRouteImport } from './routes/api/public/jobs/hourly'
@@ -178,6 +179,11 @@ const AuthenticatedAdminSettingsRoute =
     path: '/admin/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDronePartsRoute = AuthenticatedDronePartsRouteImport.update({
+  id: '/drone_/parts',
+  path: '/drone/parts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPowerboardPartsRoute =
   AuthenticatedPowerboardPartsRouteImport.update({
     id: '/powerboard_/parts',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/drone/parts': typeof AuthenticatedDronePartsRoute
   '/powerboard/parts': typeof AuthenticatedPowerboardPartsRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/support': typeof AuthenticatedSupportRoute
   '/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/drone/parts': typeof AuthenticatedDronePartsRoute
   '/powerboard/parts': typeof AuthenticatedPowerboardPartsRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/admin/invites': typeof AuthenticatedAdminInvitesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/drone_/parts': typeof AuthenticatedDronePartsRoute
   '/_authenticated/powerboard_/parts': typeof AuthenticatedPowerboardPartsRoute
   '/api/public/inquiry': typeof ApiPublicInquiryRoute
   '/api/public/jobs/hourly': typeof ApiPublicJobsHourlyRoute
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/invites'
     | '/admin/settings'
+    | '/drone/parts'
     | '/powerboard/parts'
     | '/api/public/inquiry'
     | '/api/public/jobs/hourly'
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin/invites'
     | '/admin/settings'
+    | '/drone/parts'
     | '/powerboard/parts'
     | '/api/public/inquiry'
     | '/api/public/jobs/hourly'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support'
     | '/_authenticated/admin/invites'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/drone_/parts'
     | '/_authenticated/powerboard_/parts'
     | '/api/public/inquiry'
     | '/api/public/jobs/hourly'
@@ -603,6 +615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/drone_/parts': {
+      id: '/_authenticated/drone_/parts'
+      path: '/drone/parts'
+      fullPath: '/drone/parts'
+      preLoaderRoute: typeof AuthenticatedDronePartsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/powerboard_/parts': {
       id: '/_authenticated/powerboard_/parts'
       path: '/powerboard/parts'
@@ -654,6 +673,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedAdminInvitesRoute: typeof AuthenticatedAdminInvitesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedDronePartsRoute: typeof AuthenticatedDronePartsRoute
   AuthenticatedPowerboardPartsRoute: typeof AuthenticatedPowerboardPartsRoute
 }
 
@@ -677,6 +697,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedAdminInvitesRoute: AuthenticatedAdminInvitesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedDronePartsRoute: AuthenticatedDronePartsRoute,
   AuthenticatedPowerboardPartsRoute: AuthenticatedPowerboardPartsRoute,
 }
 

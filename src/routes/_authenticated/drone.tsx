@@ -1,177 +1,104 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Search } from "lucide-react";
-import { useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { Activity, Download } from "lucide-react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { exportXlsx } from "@/components/app/data";
 import { PageHeader, Panel } from "@/components/app/ui";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { won } from "@/lib/biz";
-import { sampleDroneParts } from "@/lib/sample-drone-parts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { sampleDronePilot, summarizeDronePilot } from "@/lib/sample-drone-pilot";
 
 export const Route = createFileRoute("/_authenticated/drone")({
-  head: () => ({ meta: [{ title: "드론 · 에너인프라 경영비서" }] }),
+  head: () => ({ meta: [{ title: "드론 가상 실증 · 에너인프라 경영비서" }] }),
   component: DronePage,
 });
 
-const partCategories = [...new Set(sampleDroneParts.map(([, category]) => category))];
+const categories = [...new Set(sampleDronePilot.map(({ category }) => category))];
+const months = [...new Set(sampleDronePilot.map(({ month }) => month))];
+const format = (value: number) => value.toLocaleString("ko-KR", { maximumFractionDigits: 1 });
 
 function DronePage() {
-  const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const results = useRef<HTMLParagraphElement>(null);
-  const keywords = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const compactQuery = keywords.join("");
-  const parts = sampleDroneParts.filter((part) => {
-    if (selectedCategory !== null && part[1] !== selectedCategory) return false;
-    const text = part.join(" ").toLowerCase().replace(/\s+/g, "");
-    return text.includes(compactQuery) || keywords.every((keyword) => text.includes(keyword));
-  });
+  const [category, setCategory] = useState("전체");
+  const [month, setMonth] = useState("전체");
+  const categoryRows = sampleDronePilot.filter((row) => category === "전체" || row.category === category);
+  const rows = categoryRows.filter((row) => month === "전체" || row.month === month);
+  const summary = summarizeDronePilot(rows);
+  const series = months.map((period) => ({
+    month: period,
+    completion: summarizeDronePilot(categoryRows.filter((row) => row.month === period)).completion,
+  }));
+  const metrics = [
+    ["실증 장소", `${summary.sites}곳`],
+    ["시험 횟수", `${summary.attempts}회`],
+    ["정상 완료", `${summary.completed}회`],
+    ["완료율", `${format(summary.completion)}%`],
+    ["평균 비행 시간", `${format(summary.averageMinutes)}분`],
+    ["추가 점검", `${summary.checks}건`],
+  ];
+  const detailRows = rows.map((row) => ({
+    기준월: row.month, 장소: row.site, 유형: row.category, 시험: row.attempts,
+    정상완료: row.completed, 평균비행시간_분: row.minutes, 추가점검: row.checks,
+  }));
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader title="드론" desc="드론 조립용 가상 부품 카탈로그" />
-      <Panel title="부품 목록 및 가상 단가" accent="gold">
-        <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
-          <strong>가상 데이터 · 실제 제품 사양 및 구매 단가 아님</strong>
-          <p className="mt-1">
-            51개 부품 유형 · {sampleDroneParts.length}개 가상 모델. 규격·재고·보관 위치는
-            시연용이며, 모델 조합의 호환성은 확인되지 않았습니다. 재고 금액은 모델별 재고 ×
-            단가입니다.
-          </p>
+      <PageHeader title="드론" desc="교육용 드론 가상 실증 · 2026년 8~11월"
+        action={<Button asChild variant="outline"><Link to="/drone/parts">드론 부품찾기</Link></Button>} />
+      <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm font-semibold">
+        <Activity className="size-4 shrink-0" aria-hidden="true" />시연용 가상 실증 데이터
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="w-40" aria-label="실증 유형"><SelectValue /></SelectTrigger>
+          <SelectContent>{["전체", ...categories].map((value) => <SelectItem key={value} value={value}>{value === "전체" ? "전체 실증 유형" : value}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={month} onValueChange={setMonth}>
+          <SelectTrigger className="w-40" aria-label="기준월"><SelectValue /></SelectTrigger>
+          <SelectContent>{["전체", ...months].map((value) => <SelectItem key={value} value={value}>{value === "전체" ? "전체 기준월" : value}</SelectItem>)}</SelectContent>
+        </Select>
+        <Button type="button" variant="outline" className="sm:ml-auto"
+          onClick={() => exportXlsx([{ name: "가상 실증", rows: detailRows }], "드론_가상실증.xlsx")}>
+          <Download aria-hidden="true" />선택 자료 엑셀
+        </Button>
+      </div>
+      <Panel title="가상 실증 요약">
+        <dl className="grid grid-cols-2 gap-5 sm:grid-cols-3">
+          {metrics.map(([label, value]) => <div key={label}>
+            <dt className="text-sm text-muted-foreground">{label}</dt>
+            <dd className="mt-1 text-xl font-bold">{value}</dd>
+          </div>)}
+        </dl>
+        <p className="mt-4 text-xs text-muted-foreground">완료율은 정상 완료 ÷ 시험 횟수, 평균 비행 시간은 정상 완료 횟수로 가중한 값입니다.</p>
+      </Panel>
+      <Panel title="월별 정상 완료율">
+        <div className="h-64 min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={series}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+              <XAxis dataKey="month" /><YAxis unit="%" domain={[0, 100]} />
+              <Tooltip formatter={(value) => typeof value === "number" ? `${format(value)}%` : value} />
+              <Line type="linear" dataKey="completion" name="완료율" stroke="var(--primary)" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-
-        <fieldset className="mt-4">
-          <legend className="mb-2 text-sm font-semibold">카테고리별 보기</legend>
-          <div className="flex flex-wrap gap-2 rounded-md border p-2">
-            {[null, ...partCategories].map((category) => (
-              <Button
-                key={category ?? "all"}
-                type="button"
-                size="sm"
-                variant={selectedCategory === category ? "default" : "outline"}
-                aria-pressed={selectedCategory === category}
-                className="h-auto min-h-11 whitespace-normal px-4 text-left text-sm"
-                onClick={() => {
-                  setSelectedCategory(category);
-                  setQuery("");
-                }}
-              >
-                {category ?? "전체"}
-              </Button>
-            ))}
-          </div>
-        </fieldset>
-
-        <form
-          role="search"
-          className="mt-4 max-w-md space-y-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            results.current?.focus();
-          }}
-        >
-          <Label htmlFor="drone-parts-search">부품 찾기</Label>
-          <div className="flex gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search
-                aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                id="drone-parts-search"
-                type="search"
-                placeholder="부품명, 모델명, 번호, 규격 등 (예: 프레임키트)"
-                className="pl-9"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </div>
-            <Button type="submit">검색</Button>
-          </div>
-        </form>
-        <p ref={results} role="status" tabIndex={-1} className="mt-3 text-sm text-muted-foreground">
-          전체 {sampleDroneParts.length}개 중 {parts.length}개 표시
-        </p>
-
-        {parts.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">검색어와 일치하는 부품이 없습니다.</p>
-        ) : (
-          <div
-            className="mt-3 max-h-[65dvh] overflow-auto rounded-md border"
-            tabIndex={0}
-            aria-label="드론 부품 표"
-          >
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-secondary text-left">
-                <tr>
-                  {[
-                    "부품 번호",
-                    "카테고리",
-                    "부품명",
-                    "가상 모델명",
-                    "필요 구분",
-                    "가상 규격",
-                    "조립 참고 수량",
-                    "단위",
-                    "가상 재고",
-                    "가상 단가",
-                    "재고 금액",
-                    "호환 확인 사항",
-                    "가상 보관 위치",
-                    "원본 유형 번호",
-                  ].map((label) => (
-                    <th key={label} scope="col" className="whitespace-nowrap p-2">
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {parts.map(
-                  ([
-                    id,
-                    category,
-                    name,
-                    model,
-                    requirement,
-                    specification,
-                    quantity,
-                    unit,
-                    stock,
-                    unitPrice,
-                    stockValue,
-                    compatibility,
-                    ,
-                    ,
-                    location,
-                    partType,
-                  ]) => (
-                    <tr key={id} className="border-t bg-card align-top">
-                      <td className="whitespace-nowrap p-2">{id}</td>
-                      <td className="whitespace-nowrap p-2">{category}</td>
-                      <th scope="row" className="min-w-36 p-2 text-left font-medium">
-                        {name}
-                      </th>
-                      <td className="whitespace-nowrap p-2">{model}</td>
-                      <td className="whitespace-nowrap p-2">{requirement}</td>
-                      <td className="min-w-52 p-2">{specification}</td>
-                      <td className="whitespace-nowrap p-2">{quantity}</td>
-                      <td className="whitespace-nowrap p-2">{unit}</td>
-                      <td className="whitespace-nowrap p-2 text-right">
-                        {stock.toLocaleString("ko-KR")}
-                      </td>
-                      <td className="whitespace-nowrap p-2 text-right">{won(unitPrice)}</td>
-                      <td className="whitespace-nowrap p-2 text-right">{won(stockValue)}</td>
-                      <td className="min-w-48 p-2">{compatibility}</td>
-                      <td className="whitespace-nowrap p-2">{location}</td>
-                      <td className="whitespace-nowrap p-2">{partType}</td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <p className="text-xs text-muted-foreground">선택한 실증 유형의 전체 월을 비교합니다.</p>
+      </Panel>
+      <Panel title={`실증 기록 · ${rows.length}건`}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[40rem] text-left text-sm">
+            <thead className="bg-secondary"><tr>{["기준월", "실증 장소", "유형", "시험", "정상 완료", "평균 비행 시간", "추가 점검"].map((label) => (
+              <th key={label} scope="col" className="p-3">{label}</th>
+            ))}</tr></thead>
+            <tbody>{rows.map((row) => (
+              <tr key={`${row.month}-${row.site}`} className="border-t">
+                <td className="p-3">{row.month}</td><td className="p-3">{row.site}</td>
+                <td className="p-3">{row.category}</td><td className="p-3">{row.attempts}회</td>
+                <td className="p-3">{row.completed}회</td><td className="p-3">{format(row.minutes)}분</td>
+                <td className="p-3">{row.checks}건</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
       </Panel>
     </div>
   );
