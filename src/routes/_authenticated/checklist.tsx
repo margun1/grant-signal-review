@@ -40,6 +40,8 @@ function ChecklistPage() {
     void prepareChecklist();
   }, [today, qc]);
   const [showDone, setShowDone] = useState(false);
+  const [taskId, setTaskId] = useState("");
+  const [templateId, setTemplateId] = useState("");
   const tasks = useQuery({ queryKey: ["tasks", showDone], queryFn: async () => {
     let q = supabase.from("tasks").select("*").order("due_date", { ascending: true, nullsFirst: false }).order("created_at");
     if (!showDone) q = q.eq("done", false);
@@ -59,6 +61,11 @@ function ChecklistPage() {
     onSuccess: () => { setR({ ...r, title: "" }); qc.invalidateQueries(); }, onError: (e) => toast.error((e as Error).message) });
   const toggleTpl = useMutation({ mutationFn: async (v: { id: string; active: boolean }) => { await supabase.from("checklist_templates").update({ active: v.active }).eq("id", v.id); }, onSuccess: () => qc.invalidateQueries({ queryKey: ["tpls"] }) });
 
+  const taskRows = tasks.data ?? [];
+  const templateRows = tpls.data ?? [];
+  const task = taskRows.find(({ id }) => id === taskId);
+  const template = templateRows.find(({ id }) => id === templateId);
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title="체크리스트" desc="반복 항목은 지정한 날 처음 화면을 열 때 한 번만 만들어집니다." />
@@ -69,15 +76,29 @@ function ChecklistPage() {
           <div className="space-y-1.5"><Label htmlFor="td">기한</Label><Input id="td" type="date" className="bg-card" value={t.due} onChange={(e) => setT({ ...t, due: e.target.value })} /></div>
           <Button type="submit">추가</Button>
         </form>
-        <ul className="divide-y">{(tasks.data ?? []).map((x) => (
-          <li key={x.id} className="flex flex-wrap items-center gap-3 py-2">
-            <Checkbox aria-label={`${x.title} 완료`} checked={x.done} onCheckedChange={(v) => toggle.mutate({ id: x.id, done: !!v })} />
-            <span className={`flex-1 ${x.done ? "text-muted-foreground line-through" : ""}`}>{x.title}{x.template_id && <span className="ml-2 text-xs text-muted-foreground">반복</span>}</span>
-            {x.due_date && <StatusBadge label={x.due_date} tone={!x.done && x.due_date < today ? "bad" : x.due_date === today ? "warn" : "info"} />}
-            <AssigneeSelect value={x.assignee} onChange={(a) => setAssignee.mutate({ id: x.id, a })} className="w-36 h-8" />
-          </li>))}
-          {(tasks.data ?? []).length === 0 && <li className="py-6 text-center text-muted-foreground">할 일이 없습니다.</li>}
-        </ul>
+        <Select value={task?.id ?? ""} onValueChange={setTaskId}>
+          <SelectTrigger className="w-full bg-card text-left" aria-label="할 일 선택" disabled={!taskRows.length}>
+            <SelectValue placeholder={tasks.isPending ? "할 일 불러오는 중" : taskRows.length ? "할 일을 선택하세요" : "할 일이 없습니다"} />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            {taskRows.map((item) => (
+              <SelectItem key={item.id} value={item.id}>
+                {item.title}{item.due_date ? ` · ${item.due_date}` : ""}{item.done ? " · 완료" : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {task && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border p-3">
+            <label className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+              <Checkbox checked={task.done} onCheckedChange={(value) => toggle.mutate({ id: task.id, done: !!value })} />
+              {task.done ? "완료됨" : "완료로 표시"}
+            </label>
+            {task.template_id && <span className="text-xs text-muted-foreground">반복</span>}
+            {task.due_date && <StatusBadge label={task.due_date} tone={!task.done && task.due_date < today ? "bad" : task.due_date === today ? "warn" : "info"} />}
+            <AssigneeSelect value={task.assignee} onChange={(a) => setAssignee.mutate({ id: task.id, a })} className="w-36 h-8" />
+          </div>
+        )}
       </Panel>
       <Panel title="반복 체크리스트 설정">
         <form className="mb-4 flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); addTpl.mutate(); }}>
@@ -87,9 +108,25 @@ function ChecklistPage() {
           <div className="space-y-1.5"><Label>담당자</Label><AssigneeSelect value={r.assignee} onChange={(a) => setR({ ...r, assignee: a })} /></div>
           <Button type="submit">반복 항목 추가</Button>
         </form>
-        <ul className="divide-y text-sm">{(tpls.data ?? []).map((x) => (
-          <li key={x.id} className="flex items-center gap-3 py-2"><span className="flex-1">{x.title}</span><span>{x.frequency}{x.frequency === "매주" && x.weekday !== null ? ` ${DOW[x.weekday]}요일` : ""}</span><span className="w-32 truncate">{nameOf(x.assignee)}</span>
-            <Button size="sm" variant="outline" onClick={() => toggleTpl.mutate({ id: x.id, active: !x.active })}>{x.active ? "중지" : "다시 사용"}</Button></li>))}</ul>
+        <Select value={template?.id ?? ""} onValueChange={setTemplateId}>
+          <SelectTrigger className="w-full bg-card text-left" aria-label="반복 체크리스트 항목 선택" disabled={!templateRows.length}>
+            <SelectValue placeholder={tpls.isPending ? "반복 항목 불러오는 중" : templateRows.length ? "반복 항목을 선택하세요" : "반복 항목이 없습니다"} />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            {templateRows.map((item) => (
+              <SelectItem key={item.id} value={item.id}>{item.title}{item.active ? "" : " · 중지됨"}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {template && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border p-3 text-sm">
+            <span>{template.frequency}{template.frequency === "매주" && template.weekday !== null ? ` ${DOW[template.weekday]}요일` : ""}</span>
+            <span className="min-w-0 flex-1 truncate">{nameOf(template.assignee)}</span>
+            <Button size="sm" variant="outline" onClick={() => toggleTpl.mutate({ id: template.id, active: !template.active })}>
+              {template.active ? "중지" : "다시 사용"}
+            </Button>
+          </div>
+        )}
       </Panel>
     </div>
   );
