@@ -4,6 +4,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-auth";
+import {
+  AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +49,7 @@ function InviteRoleOptions() {
 function Invites() {
   const { me } = useMe();
   const qc = useQueryClient();
+  const [inviteToDelete, setInviteToDelete] = useState<{ id: string; email: string } | null>(null);
   const [email, setEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<InviteRole>("employee");
   const invites = useQuery({ queryKey: ["invites"], enabled: !!me?.isAdmin, queryFn: async () => (await supabase.from("invitations").select("*").order("created_at", { ascending: false })).data ?? [] });
@@ -116,6 +121,18 @@ function Invites() {
       ]);
     },
   });
+  const deleteInvite = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.from("invitations").delete().eq("id", id).select("id").maybeSingle();
+      if (error || !data) throw new Error("초대 기록을 삭제하지 못했습니다.");
+    },
+    onSuccess: async () => {
+      setInviteToDelete(null);
+      toast.success("초대 기록을 삭제했습니다.");
+      await qc.invalidateQueries({ queryKey: ["invites"] });
+    },
+    onError: (error) => toast.error(error.message),
+  });
   const revoke = useMutation({
     mutationFn: async (id: string) => { await supabase.from("invitations").update({ revoked: true }).eq("id", id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["invites"] }),
@@ -169,11 +186,37 @@ function Invites() {
               </td>
                 <td className="p-2"><StatusBadge label={i.revoked ? "취소됨" : i.accepted_at ? "가입 완료" : "가입 대기"} tone={i.revoked ? "bad" : i.accepted_at ? "good" : "warn"} /></td>
                 <td className="p-2">{kst(i.created_at)}</td>
-                <td className="p-2 text-right">{!i.revoked && !i.accepted_at && <Button size="sm" variant="outline" onClick={() => revoke.mutate(i.id)}>초대 취소</Button>}</td></tr>
+                <td className="p-2">
+                  <div className="flex justify-end gap-2">
+                    {!i.revoked && !i.accepted_at && <Button size="sm" variant="outline" onClick={() => revoke.mutate(i.id)}>초대 취소</Button>}
+                    <Button type="button" size="sm" variant="outline" className="text-destructive"
+                      aria-label={`${i.email} 초대 기록 삭제`} onClick={() => setInviteToDelete(i)}>삭제</Button>
+                  </div>
+                </td>
+              </tr>
             ))}</tbody>
           </table>
         </div>
       </Panel>
+      <AlertDialog open={inviteToDelete !== null} onOpenChange={(open) => {
+        if (!open && !deleteInvite.isPending) setInviteToDelete(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>초대 기록을 삭제할까요?</AlertDialogTitle>
+            <AlertDialogDescription className="break-words">
+              {inviteToDelete?.email}의 초대 기록을 삭제합니다. 이미 가입한 직원은 계정과 권한을 유지합니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteInvite.isPending}>취소</AlertDialogCancel>
+            <Button type="button" variant="destructive" disabled={deleteInvite.isPending}
+              onClick={() => { if (inviteToDelete) deleteInvite.mutate(inviteToDelete.id); }}>
+              {deleteInvite.isPending ? "삭제 중…" : "삭제"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Panel title="직원 역할·계정 상태">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
