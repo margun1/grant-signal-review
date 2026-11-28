@@ -11,8 +11,8 @@ function CompanyPage() {
   const { me } = useMe();
   return (
     <article className="mx-auto max-w-4xl space-y-5">
-      <section aria-labelledby="powerboard-intro" className="grid overflow-hidden rounded-3xl border border-[#E1E4E8] bg-[#F6F7F9] text-[#101722] xl:pointer-fine:grid-cols-[0.9fr_1.1fr]">
-        <div className="flex flex-col justify-center p-5 sm:p-8 xl:pointer-fine:p-10">
+      <section aria-labelledby="powerboard-intro" className="grid overflow-hidden rounded-3xl border border-[#E1E4E8] bg-[#F6F7F9] text-[#101722] lg:pointer-fine:grid-cols-[0.9fr_1.1fr]">
+        <div className="flex flex-col justify-center p-5 sm:p-8 lg:pointer-fine:p-10">
           <p className="mb-4 w-fit rounded-full bg-[#FFF0D5] px-3 py-1 text-xs font-bold tracking-wider text-[#805000]">
             <span aria-hidden="true" className="mr-2 inline-block size-1.5 rounded-full bg-[#E69713] align-middle" />EVERYDAY
           </p>
@@ -42,7 +42,7 @@ function CompanyPage() {
             ))}
           </ul>
         </div>
-        <div className="relative aspect-[3/2] min-h-0 xl:pointer-fine:aspect-auto">
+        <div className="relative aspect-[3/2] min-h-0 lg:pointer-fine:aspect-auto">
           <img src="/powerboard-family.jpg" width={1305} height={860} fetchPriority="high"
             alt="벽에 설치된 POWERBOARD 전력 사용량 화면을 함께 보는 아이와 보호자"
             className="absolute inset-0 size-full object-cover object-center" />
