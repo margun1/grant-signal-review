@@ -37,8 +37,8 @@ function AttendancePage() {
   const uid = me?.profile?.id; const isAdmin = !!me?.isAdmin;
   const [range, setRange] = useState<Range>(() => presetRange(7));
   const [draftRange, setDraftRange] = useState(range);
-  const [view, setView] = useState<"date" | "employee">("date");
   const [employee, setEmployee] = useState("all");
+  const [appliedEmployee, setAppliedEmployee] = useState("all");
   const recs = useQuery({
     queryKey: ["att", uid, range],
     enabled: !!uid,
@@ -57,11 +57,13 @@ function AttendancePage() {
     },
   });
 
-  function searchAttendance() {
+  function searchAttendance(selectedEmployee: string) {
     if (!draftRange.start || !draftRange.end || draftRange.start > draftRange.end) {
       toast.error("시작일과 종료일을 올바르게 선택해 주세요.");
       return;
     }
+    setEmployee(selectedEmployee);
+    setAppliedEmployee(selectedEmployee);
     if (draftRange.start === range.start && draftRange.end === range.end) {
       void recs.refetch();
     } else {
@@ -81,7 +83,7 @@ function AttendancePage() {
     onSuccess: () => qc.invalidateQueries(), onError: (e) => toast.error((e as Error).message) });
 
   const people = list.filter(({ id }) =>
-    isAdmin ? view === "date" || employee === "all" || id === employee : id === uid,
+    isAdmin ? appliedEmployee === "all" || id === appliedEmployee : id === uid,
   );
   const recordsByDayAndUser = new Map(
     (recs.data ?? []).map((record) => [`${record.work_date}:${record.user_id}`, record]),
@@ -91,10 +93,7 @@ function AttendancePage() {
     if (weekend && !record?.check_in && !record?.check_out) return [];
     return [{ d: date, p: person, r: record }];
   }));
-  if (isAdmin && view === "employee") {
-    const employeeOrder = new Map(people.map(({ id }, index) => [id, index]));
-    rows.sort((a, b) => (employeeOrder.get(a.p.id) ?? 0) - (employeeOrder.get(b.p.id) ?? 0));
-  }
+
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -111,28 +110,20 @@ function AttendancePage() {
             presets={[[7, "최근 7일"], [30, "최근 30일"]]} />
           {isAdmin && (
             <>
-              <Button type="button" size="sm" className="h-9" onClick={searchAttendance}
+              <Select value={employee} onValueChange={setEmployee}>
+                <SelectTrigger aria-label="조회할 직원" className="h-9 w-40 bg-card sm:w-48"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체 직원</SelectItem>
+                  {list.map((person) => <SelectItem key={person.id} value={person.id}>{person.display_name || person.email}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button type="button" size="sm" className="h-9" onClick={() => searchAttendance(employee)}
                 disabled={recs.isFetching}>조회</Button>
-              <div className="flex flex-wrap gap-2" role="group" aria-label="출퇴근 조회 방식">
-                <Button type="button" size="sm" className="h-9" variant={view === "employee" ? "default" : "outline"}
-                  aria-pressed={view === "employee"} onClick={() => setView("employee")}>직원별 조회</Button>
-                <Button type="button" size="sm" className="h-9" variant={view === "date" ? "default" : "outline"}
-                  aria-pressed={view === "date"} onClick={() => setView("date")}>날짜별 조회</Button>
-              </div>
+              <Button type="button" size="sm" className="h-9" variant="outline"
+                onClick={() => searchAttendance("all")} disabled={recs.isFetching}>날짜별 조회</Button>
             </>
           )}
         </div>
-        {isAdmin && view === "employee" && (
-          <div className="mt-3">
-            <Select value={employee} onValueChange={setEmployee}>
-              <SelectTrigger aria-label="조회할 직원" className="w-full bg-card sm:w-64"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">전체 직원</SelectItem>
-                {list.map((person) => <SelectItem key={person.id} value={person.id}>{person.display_name || person.email}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
         {recs.isError && <p role="alert" className="mt-3 text-sm text-destructive">출퇴근 기록을 불러오지 못했습니다.</p>}
         <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[480px] text-sm"><thead className="bg-secondary text-left"><tr><th className="p-2">날짜</th>{isAdmin && <th className="p-2">직원</th>}<th className="p-2">출근</th><th className="p-2">퇴근</th></tr></thead>
           <tbody>{recs.isSuccess && rows.map(({ d, p, r }) => <tr key={d + p.id} className="border-t"><td className="p-2">{d}</td>{isAdmin && <td className="p-2">{p.display_name || p.email}</td>}
