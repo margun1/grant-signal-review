@@ -19,6 +19,7 @@ import { AssigneeSelect } from "@/components/app/AssigneeSelect";
 import { useStaff } from "@/hooks/use-staff";
 
 export const Route = createFileRoute("/_authenticated/devices")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "기기오류 · 주식회사 에너인프라의 경영비서" },

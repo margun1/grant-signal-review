@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/contact")({
+  staticData: { sitemap: true },
   head: () => ({ meta: [{ title: "POWERBOARD 문의하기 · 주식회사 에너인프라" }] }),
   component: ContactPage,
 });
@@ -55,7 +56,7 @@ function ContactPage() {
             <Button type="submit" disabled={status === "sending"}>{status === "sending" ? "접수 중…" : "문의 보내기"}</Button>
           </form>
         )}
-        <Link to="/company" className="mt-5 inline-block text-sm underline">회사소개로 돌아가기</Link>
+        <Link to="/" className="mt-5 inline-block text-sm underline">회사소개로 돌아가기</Link>
       </section>
     </main>
   );

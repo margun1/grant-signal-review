@@ -10,6 +10,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/api/public/inquiry")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),

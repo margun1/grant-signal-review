@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { sampleDronePilot, summarizeDronePilot } from "@/lib/sample-drone-pilot";
 
 export const Route = createFileRoute("/_authenticated/drone")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "드론 가상 실증 · 에너인프라 경영비서" }] }),
   component: DronePage,
 });

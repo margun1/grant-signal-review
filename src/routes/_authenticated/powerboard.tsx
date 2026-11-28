@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/app/ui";
 import { filterPilot, pilotCategories, pilotColumns, pilotMonths, pilotSeries, summarizePilot } from "@/lib/powerboard";
 
 export const Route = createFileRoute("/_authenticated/powerboard")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "POWERBOARD · 에너인프라 경영비서" },
     { name: "description", content: "POWERBOARD 가상 실증 자료의 월별 계측·절감·기관 도입 현황" },

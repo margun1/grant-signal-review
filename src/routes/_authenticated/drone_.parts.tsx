@@ -9,6 +9,7 @@ import { won } from "@/lib/biz";
 import { sampleDroneParts } from "@/lib/sample-drone-parts";
 
 export const Route = createFileRoute("/_authenticated/drone_/parts")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "드론 부품찾기 · 에너인프라 경영비서" }] }),
   component: DronePartsPage,
 });

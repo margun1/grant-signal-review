@@ -83,6 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "google-site-verification", content: "j59z8QrdFpFdDy1f0JSkrbsFQ5mvPlmeShmjoSsW-48" },
       { title: "주식회사 에너인프라의 경영비서" },
       { name: "description", content: "주식회사 에너인프라 사내 경영비서" },
       { property: "og:title", content: "주식회사 에너인프라의 경영비서" },
@@ -100,6 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   shellComponent: RootShell,
   component: RootComponent,
+  staticData: { sitemap: false },
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });

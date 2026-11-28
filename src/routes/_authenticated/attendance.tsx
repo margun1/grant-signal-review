@@ -14,6 +14,7 @@ import { PageHeader, Panel, StatusBadge, todayKst } from "@/components/app/ui";
 import { RangePicker, exportXlsx, fetchAll, presetRange, type Range } from "@/components/app/data";
 
 export const Route = createFileRoute("/_authenticated/attendance")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "출·퇴근 관리 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "출근·퇴근 기록과 수정 요청" }] }),
   component: AttendancePage,
 });

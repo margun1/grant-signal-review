@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PageHeader, Panel, StatusBadge, kst } from "@/components/app/ui";
 
 export const Route = createFileRoute("/_authenticated/admin/invites")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "직원 초대 관리 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "직원 초대와 역할 관리" }] }),
   component: Invites,
 });

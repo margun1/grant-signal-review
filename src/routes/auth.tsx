@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "로그인 · 주식회사 에너인프라의 경영비서" },
     { name: "description", content: "에너인프라 경영비서 로그인" },

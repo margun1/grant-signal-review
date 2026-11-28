@@ -6,6 +6,7 @@ import { kstDay, shortAnswer } from "@/lib/secretary";
 import { DEFAULT_PREFERENCES, preferencesSchema } from "@/lib/support";
 
 export const Route = createFileRoute("/api/public/secretary/chat")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/signup")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "회원가입 · 주식회사 에너인프라의 경영비서" },
     { name: "description", content: "누구나 이메일로 가입하고 로그인해 회사소개를 볼 수 있습니다." },

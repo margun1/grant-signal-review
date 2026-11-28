@@ -15,6 +15,7 @@ import { sampleInventoryItems, sampleInventorySnaps, samplePurchaseOrders } from
 import { cnt, parseInventory, recommendOrder } from "@/lib/biz";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "재고·발주 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "재고 엑셀 업로드, 부족 재고, 권장 발주량, 발주 기록" }] }),
   component: InventoryPage,
 });

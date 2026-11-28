@@ -11,6 +11,7 @@ import { RangePicker, presetRange, type Range } from "@/components/app/data";
 import { generateReport } from "@/lib/assistant.functions";
 
 export const Route = createFileRoute("/_authenticated/reports")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "AI 리포트 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "주간 자동 리포트와 기간별 리포트" }] }),
   component: ReportsPage,
 });

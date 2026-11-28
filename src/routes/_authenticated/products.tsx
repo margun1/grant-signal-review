@@ -4,6 +4,7 @@ import { productPages } from "@/components/app/product-navigation";
 import { PageHeader } from "@/components/app/ui";
 
 export const Route = createFileRoute("/_authenticated/products")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "우리회사제품 · 에너인프라 경영비서" }] }),
   component: ProductsPage,
 });

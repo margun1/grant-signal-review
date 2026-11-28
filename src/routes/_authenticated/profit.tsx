@@ -12,6 +12,7 @@ import { loadCosts, loadSales } from "@/lib/biz-queries";
 import { sampleSales, sampleSalesRange } from "@/lib/sample-sales";
 
 export const Route = createFileRoute("/_authenticated/profit")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "수익성 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "원가 엑셀 업로드와 상품별 매출총이익" }] }),
   component: ProfitPage,
 });

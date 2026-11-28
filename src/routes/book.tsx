@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getOpenSlots, requestMeeting } from "@/lib/booking.functions";
 
 export const Route = createFileRoute("/book")({
+  staticData: { sitemap: true },
   head: () => ({ meta: [
     { title: "미팅 예약 · 주식회사 에너인프라" }, { name: "description", content: "주식회사 에너인프라와의 미팅 시간을 골라 예약을 요청하세요." },
     { property: "og:title", content: "미팅 예약 · 주식회사 에너인프라" }, { property: "og:description", content: "가능한 시간을 골라 미팅을 요청하세요." },

@@ -11,6 +11,7 @@ import { IntegrationStatusSettings } from "@/components/app/IntegrationStatusSet
 import { PageHeader, Panel } from "@/components/app/ui";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "설정 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "회신 이메일과 카카오톡 채널 설정" }] }),
   component: Settings,
 });

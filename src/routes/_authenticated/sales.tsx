@@ -13,6 +13,7 @@ import { lastUpload, loadSales } from "@/lib/biz-queries";
 import { sampleSales, sampleSalesRange } from "@/lib/sample-sales";
 
 export const Route = createFileRoute("/_authenticated/sales")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "매출·상품 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "매출 엑셀 업로드와 기간별 매출, 상품별 판매량" }] }),
   component: SalesPage,
 });

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/reset-password")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "새 비밀번호 설정 · 주식회사 에너인프라의 경영비서" },
     { name: "description", content: "새 비밀번호를 설정합니다." },

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AuthShell } from "@/components/app/AuthShell";
 
 export const Route = createFileRoute("/find-account")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "이메일·계정 찾기 · 주식회사 에너인프라의 경영비서" },
     { name: "description", content: "가입한 이메일을 찾는 방법을 안내합니다." },

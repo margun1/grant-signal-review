@@ -17,6 +17,7 @@ import { confirmMeeting } from "@/lib/booking.functions";
 import { addGoogleCalendarEvent, deleteCalendarEvent, getGoogleEvents, syncMeetingToCalendar, updateCalendarMeeting, updateGoogleCalendarEvent } from "@/lib/calendar.functions";
 
 export const Route = createFileRoute("/_authenticated/meetings")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "미팅·일정 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "외부 미팅 예약 확인과 내부 일정 달력" }] }),
   component: MeetingsPage,
 });

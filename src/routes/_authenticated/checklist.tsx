@@ -16,6 +16,7 @@ import { useStaff } from "@/hooks/use-staff";
 import { correctChecklistTitle, correctStoredChecklistTitles, registerCompanyChecklist } from "@/lib/company-checklist";
 
 export const Route = createFileRoute("/_authenticated/checklist")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "체크리스트 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "반복 체크리스트와 할 일" }] }),
   component: ChecklistPage,
 });

@@ -18,6 +18,7 @@ import { Route as FindAccountRouteImport } from './routes/find-account'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
@@ -85,6 +86,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/checklist': typeof AuthenticatedChecklistRoute
@@ -255,6 +262,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/checklist': typeof AuthenticatedChecklistRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/checklist': typeof AuthenticatedChecklistRoute
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/sitemap.xml'
     | '/assistant'
     | '/attendance'
     | '/checklist'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/sitemap.xml'
     | '/assistant'
     | '/attendance'
     | '/checklist'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/sitemap.xml'
     | '/_authenticated/assistant'
     | '/_authenticated/attendance'
     | '/_authenticated/checklist'
@@ -432,6 +444,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicInquiryRoute: typeof ApiPublicInquiryRoute
   ApiPublicJobsHourlyRoute: typeof ApiPublicJobsHourlyRoute
   ApiPublicSecretaryChatRoute: typeof ApiPublicSecretaryChatRoute
@@ -500,6 +513,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/assistant': {
@@ -734,6 +754,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicInquiryRoute: ApiPublicInquiryRoute,
   ApiPublicJobsHourlyRoute: ApiPublicJobsHourlyRoute,
   ApiPublicSecretaryChatRoute: ApiPublicSecretaryChatRoute,

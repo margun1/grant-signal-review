@@ -17,6 +17,7 @@ import { sampleCustomerInquiries } from "@/lib/sample-customer-inquiries";
 import { draftInquiryReply, sendInquiryReply } from "@/lib/inquiries.functions";
 
 export const Route = createFileRoute("/_authenticated/inquiries")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "고객문의 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "홈페이지·카카오톡 문의와 답변" }] }),
   component: InquiriesPage,
 });

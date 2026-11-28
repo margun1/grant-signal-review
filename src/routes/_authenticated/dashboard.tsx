@@ -11,6 +11,7 @@ import { PageHeader, Panel, kstDate, todayKst } from "@/components/app/ui";
 import { WeatherCard } from "@/components/app/WeatherCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "경영현황 · 주식회사 에너인프라의 경영비서" }, { name: "description", content: "남양주시 날씨, 오늘 처리할 일과 에너인프라 경영 실적" }, { property: "og:title", content: "경영현황 · 에너인프라 경영비서" }, { property: "og:description", content: "남양주시 날씨와 오늘의 업무·경영 실적" }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Dashboard,
 });

@@ -44,6 +44,7 @@ const screenOptions = queryOptions({
   retry: false,
 });
 export const Route = createFileRoute("/_authenticated/assistant")({
+  staticData: { sitemap: false },
   loader: ({ context }) => context.queryClient.ensureQueryData(screenOptions),
   head: () => ({
     meta: [

@@ -15,6 +15,7 @@ import { supportPreferencesOptions, useSupportRecommendations } from "@/lib/supp
 import { INTERESTS, preferencesSchema } from "@/lib/support";
 
 export const Route = createFileRoute("/_authenticated/support")({
+  staticData: { sitemap: false },
   loader: ({ context }) => context.queryClient.ensureQueryData(supportPreferencesOptions),
   head: () => ({
     meta: [

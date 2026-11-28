@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { samplePowerboardParts } from "@/lib/sample-powerboard-parts";
 
 export const Route = createFileRoute("/_authenticated/powerboard_/parts")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "POWERBOARD 부품찾기 · 주식회사 에너인프라" }] }),
   component: PowerboardPartsPage,
 });
