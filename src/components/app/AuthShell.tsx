@@ -4,7 +4,7 @@ import { APP_TITLE } from "@/lib/company";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
-export function AuthShell({ title, children, links }: { title: string; children: ReactNode; links: { to: "/auth" | "/signup" | "/forgot-password" | "/find-account"; label: string }[] }) {
+export function AuthShell({ title, children, links }: { title: string; children: ReactNode; links: { to: "/auth" | "/signup" | "/forgot-password" | "/find-account" | "/guest"; label: string }[] }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">

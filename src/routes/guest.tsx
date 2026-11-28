@@ -16,7 +16,7 @@ export const Route = createFileRoute("/guest")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    page: guestPages.find(([id]) => id === search.page)?.[0] ?? "company",
+    page: guestPages.find(([id]) => id === search["page"])?.[0] ?? "company",
   }),
   component: GuestPage,
 });
