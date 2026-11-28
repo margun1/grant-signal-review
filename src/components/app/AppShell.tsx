@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, Navigate, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
 import {
@@ -186,14 +186,26 @@ export function AppShell() {
   }
 
   if (loading) return <div className="p-10 text-muted-foreground">불러오는 중…</div>;
+  if (session && me?.profile?.active && me.roles.length === 0) {
+    if (path !== "/company" && path !== "/company/") return <Navigate to="/company" replace />;
+    return (
+      <>
+        <header className="flex items-center justify-between gap-4 border-b bg-card px-4 py-3 sm:px-8">
+          <AppBrand />
+          <Button variant="outline" onClick={signOut}>로그아웃</Button>
+        </header>
+        <main className="p-4 md:p-8"><Outlet /></main>
+      </>
+    );
+  }
   if (!me?.isStaff)
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="max-w-md rounded-lg border bg-card p-8 text-center">
           <ShieldAlert className="mx-auto mb-3 size-8 text-destructive" aria-hidden />
-          <h1 className="text-lg font-bold">관리자 승인 대기 중입니다</h1>
+          <h1 className="text-lg font-bold">접근 권한이 없습니다</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            가입은 완료되었습니다. 관리자가 직원 권한을 승인하면 사내 메뉴를 이용할 수 있습니다.
+            계정 상태를 확인해 주세요. 도움이 필요하면 관리자에게 문의하세요.
           </p>
           <Button variant="outline" className="mt-5" onClick={signOut}>
             로그아웃

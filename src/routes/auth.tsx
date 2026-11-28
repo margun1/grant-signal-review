@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [
     { title: "로그인 · 주식회사 에너인프라의 경영비서" },
-    { name: "description", content: "에너인프라 직원 전용 경영비서 로그인" },
+    { name: "description", content: "에너인프라 경영비서 로그인" },
     { property: "og:title", content: "로그인 · 주식회사 에너인프라의 경영비서" },
-    { property: "og:description", content: "에너인프라 직원 전용 경영비서 로그인" },
+    { property: "og:description", content: "에너인프라 경영비서 로그인" },
   ] }),
   component: Login,
 });

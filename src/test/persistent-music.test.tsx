@@ -5,9 +5,11 @@ import { expect, it, vi } from "vitest";
 import { AppShell } from "@/components/app/AppShell";
 
 const location = vi.hoisted(() => ({ pathname: "/company" }));
+const account = vi.hoisted(() => ({ publicSignup: false }));
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => <a href={to}>{children}</a>,
+  Navigate: ({ to }: { to: string }) => <div>이동 {to}</div>,
   Outlet: () => <div>{location.pathname}</div>,
   useNavigate: () => vi.fn(),
   useRouterState: ({ select }: { select: (state: { location: typeof location }) => unknown }) =>
@@ -15,7 +17,9 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
-  useMe: () => ({ me: { isStaff: true, isAdmin: true }, loading: false, session: null }),
+  useMe: () => account.publicSignup
+    ? { me: { isStaff: false, isAdmin: false, profile: { active: true }, roles: [] }, loading: false, session: {} }
+    : { me: { isStaff: true, isAdmin: true }, loading: false, session: null },
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
@@ -178,4 +182,24 @@ it("places meetings above the dashboard and expands its submenu in order", () =>
     "/profit",
     "/checklist",
   ]);
+});
+
+it("lets public signups open the company page without exposing staff pages", () => {
+  account.publicSignup = true;
+  location.pathname = "/company";
+  try {
+    const client = new QueryClient();
+    const app = () => <QueryClientProvider client={client}><AppShell /></QueryClientProvider>;
+    const { rerender } = render(app());
+    expect(within(screen.getByRole("main")).getByText("/company")).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "주 메뉴" })).toBeNull();
+
+    location.pathname = "/inventory";
+    rerender(app());
+    expect(screen.getByText("이동 /company")).toBeInTheDocument();
+    expect(screen.queryByText("/inventory")).toBeNull();
+  } finally {
+    account.publicSignup = false;
+    location.pathname = "/company";
+  }
 });

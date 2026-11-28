@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMe } from "@/hooks/use-auth";
 import { ArrowRight, ArrowUpRight, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/company")({
@@ -7,6 +8,7 @@ export const Route = createFileRoute("/_authenticated/company")({
 });
 
 function CompanyPage() {
+  const { me } = useMe();
   return (
     <article className="mx-auto max-w-4xl space-y-5">
       <header className="rounded-2xl border bg-card p-6 sm:p-9">
@@ -34,12 +36,14 @@ function CompanyPage() {
             - EnerInfra -
           </cite>
         </blockquote>
-        <Link
-          to="/assistant"
-          className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-        >
-          AI 비서 열기 <ArrowRight aria-hidden="true" className="size-4" />
-        </Link>
+        {me?.isStaff && (
+          <Link
+            to="/assistant"
+            className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            AI 비서 열기 <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
+        )}
       </header>
 
       <section aria-labelledby="company-overview" className="rounded-2xl border bg-card p-6 sm:p-8">

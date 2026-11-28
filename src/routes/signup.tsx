@@ -12,9 +12,9 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [
     { title: "회원가입 · 주식회사 에너인프라의 경영비서" },
-    { name: "description", content: "누구나 이메일로 경영비서에 가입할 수 있습니다. 사내 자료는 관리자 승인 후 이용할 수 있습니다." },
+    { name: "description", content: "누구나 이메일로 가입하고 로그인해 회사소개를 볼 수 있습니다." },
     { property: "og:title", content: "회원가입 · 주식회사 에너인프라의 경영비서" },
-    { property: "og:description", content: "누구나 이메일로 경영비서에 가입할 수 있습니다. 사내 자료는 관리자 승인 후 이용할 수 있습니다." },
+    { property: "og:description", content: "누구나 이메일로 가입하고 로그인해 회사소개를 볼 수 있습니다." },
   ] }),
   component: Signup,
 });
@@ -60,7 +60,7 @@ function Signup() {
       ) : (
         <>
           <p className="mb-4 text-sm text-muted-foreground">
-            {inviteToken ? "공유 링크로 가입할 이메일을 입력해 주세요." : "누구나 가입할 수 있습니다. 가입 후 관리자가 승인하면 사내 메뉴를 이용할 수 있습니다."}
+            {inviteToken ? "공유 링크로 가입할 이메일을 입력해 주세요." : "누구나 가입하고 로그인해 회사소개를 볼 수 있습니다."}
           </p>
           {!inviteToken && <><GoogleButton label="Google로 가입하기" /><Divider /></>}
           <form onSubmit={submit} className="space-y-4">
