@@ -194,7 +194,7 @@ export function AppShell() {
           <AppBrand />
           <Button variant="outline" onClick={signOut}>로그아웃</Button>
         </header>
-        <main className="p-4 md:p-8"><Outlet /></main>
+        <main className="p-4 xl:pointer-fine:p-8"><Outlet /></main>
       </>
     );
   }
@@ -237,12 +237,12 @@ export function AppShell() {
   );
 
   return (
-    <div className="min-h-screen md:pointer-fine:flex">
-      <aside className="hidden w-64 shrink-0 border-r bg-sidebar md:pointer-fine:sticky md:pointer-fine:top-0 md:pointer-fine:block md:pointer-fine:h-dvh md:pointer-fine:overflow-y-auto">
+    <div className="min-h-screen xl:pointer-fine:flex">
+      <aside className="hidden w-64 shrink-0 border-r bg-sidebar xl:pointer-fine:sticky xl:pointer-fine:top-0 xl:pointer-fine:block xl:pointer-fine:h-dvh xl:pointer-fine:overflow-y-auto">
         {side}
       </aside>
       <Sheet open={open} onOpenChange={setOpen}>
-        <header className="sticky top-0 z-40 border-b bg-card px-4 pt-3 shadow-sm md:pointer-fine:hidden">
+        <header className="sticky top-0 z-40 border-b bg-card px-4 pt-3 shadow-sm xl:pointer-fine:hidden">
           <div className="flex items-center justify-between gap-3 pb-3">
             <AppBrand />
             <SheetTrigger asChild>
@@ -274,7 +274,7 @@ export function AppShell() {
           </div>
         </SheetContent>
       </Sheet>
-      <main className="min-w-0 flex-1 p-4 md:p-8">
+      <main className="min-w-0 flex-1 p-4 xl:pointer-fine:p-8">
         <Outlet />
         {(isDashboard || musicOpened) && (
           <aside
