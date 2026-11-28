@@ -16,6 +16,7 @@ import { Route as BookRouteImport } from './routes/book'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FindAccountRouteImport } from './routes/find-account'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as GuestRouteImport } from './routes/guest'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
@@ -75,6 +76,11 @@ const FindAccountRoute = FindAccountRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuestRoute = GuestRouteImport.update({
+  id: '/guest',
+  path: '/guest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/find-account': typeof FindAccountRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/guest': typeof GuestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/assistant': typeof AuthenticatedAssistantRoute
@@ -253,6 +260,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/find-account': typeof FindAccountRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/guest': typeof GuestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/assistant': typeof AuthenticatedAssistantRoute
@@ -289,6 +297,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/find-account': typeof FindAccountRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/guest': typeof GuestRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/find-account'
     | '/forgot-password'
+    | '/guest'
     | '/reset-password'
     | '/signup'
     | '/assistant'
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/find-account'
     | '/forgot-password'
+    | '/guest'
     | '/reset-password'
     | '/signup'
     | '/assistant'
@@ -394,6 +405,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/find-account'
     | '/forgot-password'
+    | '/guest'
     | '/reset-password'
     | '/signup'
     | '/_authenticated/assistant'
@@ -430,6 +442,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FindAccountRoute: typeof FindAccountRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  GuestRoute: typeof GuestRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   ApiPublicInquiryRoute: typeof ApiPublicInquiryRoute
@@ -486,6 +499,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guest': {
+      id: '/guest'
+      path: '/guest'
+      fullPath: '/guest'
+      preLoaderRoute: typeof GuestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -732,6 +752,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FindAccountRoute: FindAccountRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  GuestRoute: GuestRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   ApiPublicInquiryRoute: ApiPublicInquiryRoute,

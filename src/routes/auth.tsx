@@ -35,7 +35,7 @@ function Login() {
     if (error) toast.error(error.message.includes("confirmed") ? "이메일 인증을 먼저 완료해 주세요." : "이메일 또는 비밀번호가 올바르지 않습니다.");
   }
   return (
-    <AuthShell title="로그인" links={[{ to: "/signup", label: "회원가입" }, { to: "/find-account", label: "이메일·계정 찾기" }, { to: "/forgot-password", label: "비밀번호 찾기" }]}>
+    <AuthShell title="로그인" links={[{ to: "/guest", label: "심사용 게스트 모드" }, { to: "/signup", label: "회원가입" }, { to: "/find-account", label: "이메일·계정 찾기" }, { to: "/forgot-password", label: "비밀번호 찾기" }]}>
       <GoogleButton />
       <Divider />
       <form onSubmit={submit} className="space-y-4">
