@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { prepareSharedSignup } from "@/lib/share-invite.functions";
 import { useEffect, useState } from "react";
@@ -15,11 +15,14 @@ export const Route = createFileRoute("/signup")({
     { name: "description", content: "누구나 이메일로 가입하고 로그인해 회사소개를 볼 수 있습니다." },
     { property: "og:title", content: "회원가입 · 주식회사 에너인프라의 경영비서" },
     { property: "og:description", content: "누구나 이메일로 가입하고 로그인해 회사소개를 볼 수 있습니다." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
   ] }),
   component: Signup,
 });
 
 function Signup() {
+  const navigate = useNavigate();
   const prepare = useServerFn(prepareSharedSignup);
   const [inviteToken, setInviteToken] = useState("");
   useEffect(() => {
@@ -43,12 +46,16 @@ function Signup() {
       setBusy(false);
       return;
     }
-    const { error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password: pw, options: { emailRedirectTo: window.location.origin, data: { full_name: name } } });
+    const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password: pw, options: { emailRedirectTo: window.location.origin, data: { full_name: name } } });
     setBusy(false);
     if (error) {
       if (/already|registered/i.test(error.message)) toast.error("이미 가입된 이메일입니다. 로그인해 주세요.");
       else if (/rate|security purposes/i.test(error.message)) toast.error("요청이 너무 잦습니다. 잠시 뒤 다시 시도해 주세요.");
       else toast.error("가입을 완료하지 못했습니다. 입력 내용을 확인해 주세요.");
+      return;
+    }
+    if (data.session) {
+      await navigate({ to: "/company", replace: true });
       return;
     }
     setSent(true);
@@ -60,7 +67,7 @@ function Signup() {
       ) : (
         <>
           <p className="mb-4 text-sm text-muted-foreground">
-            {inviteToken ? "공유 링크로 가입할 이메일을 입력해 주세요." : "누구나 가입하고 로그인해 회사소개를 볼 수 있습니다."}
+            {inviteToken ? "공유 링크로 가입할 이메일을 입력해 주세요." : "초대나 관리자 승인 없이 가입하고 접속할 수 있습니다. 이메일 인증이 필요한 경우 인증 후 로그인해 주세요."}
           </p>
           {!inviteToken && <><GoogleButton label="Google로 가입하기" /><Divider /></>}
           <form onSubmit={submit} className="space-y-4">
