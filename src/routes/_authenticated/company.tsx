@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMe } from "@/hooks/use-auth";
-import { ArrowRight, ArrowUpRight, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/company")({
   head: () => ({ meta: [{ title: "회사소개 · 주식회사 에너인프라" }] }),
@@ -11,6 +11,43 @@ function CompanyPage() {
   const { me } = useMe();
   return (
     <article className="mx-auto max-w-4xl space-y-5">
+      <section aria-labelledby="powerboard-intro" className="grid overflow-hidden rounded-3xl border border-[#E1E4E8] bg-[#F6F7F9] text-[#101722] md:grid-cols-[0.9fr_1.1fr]">
+        <div className="flex flex-col justify-center p-5 sm:p-8 lg:p-10">
+          <p className="mb-4 w-fit rounded-full bg-[#FFF0D5] px-3 py-1 text-xs font-bold tracking-wider text-[#805000]">
+            <span aria-hidden="true" className="mr-2 inline-block size-1.5 rounded-full bg-[#E69713] align-middle" />EVERYDAY
+          </p>
+          <h2 id="powerboard-intro" className="break-keep text-[clamp(1.65rem,4vw,2.6rem)] leading-tight font-extrabold tracking-tight">
+            아이가 먼저<br />콘센트를 뽑습니다.
+          </h2>
+          <p className="mt-4 break-keep text-sm leading-relaxed text-[#526071] sm:text-base">
+            아이가 있는 실증 9가정 모두, 아이가 먼저 콘센트를 뽑았습니다.
+            숫자를 몰라도 색과 표정으로 알 수 있습니다.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            <a href="https://enerinfra.github.io/product.html?lang=ko"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#153367] px-4 text-sm font-bold text-white hover:bg-[#10254B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#153367]">
+              자세히 보기 <ArrowRight aria-hidden="true" className="size-4" />
+            </a>
+            <a href="https://enerinfra.github.io/contact.html?lang=ko"
+              className="inline-flex min-h-11 items-center rounded-full border border-[#B8C0CC] bg-white px-4 text-sm font-bold hover:bg-[#E8EDF5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#153367]">
+              문의하기
+            </a>
+          </div>
+          <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#DCE0E6] pt-4 text-sm font-semibold">
+            {["전기 공사 없이", "앱 없이", "항상 켜진 화면"].map((feature) => (
+              <li key={feature} className="flex items-center gap-1.5">
+                <Check aria-hidden="true" className="size-4 rounded-full bg-[#F5A51A] p-0.5" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative aspect-[3/2] min-h-0 md:aspect-auto">
+          <img src="/powerboard-family.jpg" width={1305} height={860} fetchPriority="high"
+            alt="벽에 설치된 POWERBOARD 전력 사용량 화면을 함께 보는 아이와 보호자"
+            className="absolute inset-0 size-full object-cover object-center" />
+        </div>
+      </section>
       <header className="rounded-2xl border bg-card p-6 sm:p-9">
         <div className="flex items-center gap-2 text-sm font-semibold text-gold">
           <Zap aria-hidden="true" className="size-4 shrink-0" />
