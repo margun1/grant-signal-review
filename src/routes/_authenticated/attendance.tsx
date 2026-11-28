@@ -18,8 +18,17 @@ export const Route = createFileRoute("/_authenticated/attendance")({
 });
 
 const t = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit" }) : null;
-function days(r: Range) { const out: string[] = []; const d = new Date(r.start + "T00:00:00Z"); const e = new Date(r.end + "T00:00:00Z");
-  while (d <= e && out.length < 400) { const s = d.toISOString().slice(0, 10); const w = d.getUTCDay(); if (w !== 0 && w !== 6) out.push(s); d.setUTCDate(d.getUTCDate() + 1); } return out.reverse(); }
+function days(range: Range) {
+  const dates: { date: string; weekend: boolean }[] = [];
+  const day = new Date(`${range.start}T00:00:00Z`);
+  const end = new Date(`${range.end}T00:00:00Z`);
+  while (day <= end && dates.length < 400) {
+    const weekday = day.getUTCDay();
+    dates.push({ date: day.toISOString().slice(0, 10), weekend: weekday === 0 || weekday === 6 });
+    day.setUTCDate(day.getUTCDate() + 1);
+  }
+  return dates.reverse();
+}
 const toIso = (date: string, hm: string) => hm ? new Date(`${date}T${hm}:00+09:00`).toISOString() : null;
 
 function AttendancePage() {
@@ -40,7 +49,14 @@ function AttendancePage() {
     onSuccess: () => qc.invalidateQueries(), onError: (e) => toast.error((e as Error).message) });
 
   const people = isAdmin ? list : list.filter((p) => p.id === uid);
-  const rows = days(range).flatMap((d) => people.map((p) => { const r = (recs.data ?? []).find((x) => x.user_id === p.id && x.work_date === d); return { d, p, r }; }));
+  const recordsByDayAndUser = new Map(
+    (recs.data ?? []).map((record) => [`${record.work_date}:${record.user_id}`, record]),
+  );
+  const rows = days(range).flatMap(({ date, weekend }) => people.flatMap((person) => {
+    const record = recordsByDayAndUser.get(`${date}:${person.id}`);
+    if (weekend && !record?.check_in && !record?.check_out) return [];
+    return [{ d: date, p: person, r: record }];
+  }));
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
