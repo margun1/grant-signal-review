@@ -28,10 +28,10 @@ function CompanyPage() {
               className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#153367] px-4 text-sm font-bold text-white hover:bg-[#10254B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#153367]">
               자세히 보기 <ArrowRight aria-hidden="true" className="size-4" />
             </a>
-            <a href="https://enerinfra.github.io/contact.html?lang=ko"
+            <Link to="/contact"
               className="inline-flex min-h-11 items-center rounded-full border border-[#B8C0CC] bg-white px-4 text-sm font-bold hover:bg-[#E8EDF5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#153367]">
               문의하기
-            </a>
+            </Link>
           </div>
           <ul className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#DCE0E6] pt-4 text-sm font-semibold">
             {["전기 공사 없이", "앱 없이", "항상 켜진 화면"].map((feature) => (
