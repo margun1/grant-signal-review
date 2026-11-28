@@ -83,6 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "googlebot", content: "noindex" },
       { title: "주식회사 에너인프라의 경영비서" },
       { name: "description", content: "주식회사 에너인프라 사내 경영비서" },
       { property: "og:title", content: "주식회사 에너인프라의 경영비서" },
