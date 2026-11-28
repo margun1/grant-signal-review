@@ -237,12 +237,12 @@ export function AppShell() {
   );
 
   return (
-    <div className="min-h-screen xl:pointer-fine:flex">
-      <aside className="hidden w-64 shrink-0 border-r bg-sidebar xl:pointer-fine:sticky xl:pointer-fine:top-0 xl:pointer-fine:block xl:pointer-fine:h-dvh xl:pointer-fine:overflow-y-auto">
+    <div className="min-h-screen md:flex">
+      <aside className="hidden w-64 shrink-0 border-r bg-sidebar md:sticky md:top-0 md:block md:h-dvh md:overflow-y-auto">
         {side}
       </aside>
       <Sheet open={open} onOpenChange={setOpen}>
-        <header className="sticky top-0 z-40 border-b bg-card px-4 pt-3 shadow-sm xl:pointer-fine:hidden">
+        <header className="sticky top-0 z-40 border-b bg-card px-4 pt-3 shadow-sm md:hidden">
           <div className="flex items-center justify-between gap-3 pb-3">
             <AppBrand />
             <SheetTrigger asChild>
